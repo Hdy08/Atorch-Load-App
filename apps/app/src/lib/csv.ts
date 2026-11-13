@@ -188,7 +188,10 @@ export function parseCsvBytes(bytes: Uint8Array): Telemetry[] {
 }
 
 export function parseCsvBase64(encoded: string): Telemetry[] {
-  return parseCsvBytes(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0)));
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return parseCsvBytes(bytes);
 }
 
 export function download(name: string, content: string) {

@@ -27,6 +27,7 @@ import { ChartTimeSelect } from "./ChartTimeSelect";
 import { sampleElapsedMs, type ChartTimeMode } from "../lib/chartTime";
 import { samplesInChartRange } from "../lib/chartInteraction";
 import { completeRecordCounters } from "../lib/records";
+import { chartRangeSummary } from "../lib/chartData";
 
 const pageSizes = [10, 20, 50, 100];
 const pageSizeStorageKey = "atorch-review-page-size";
@@ -96,8 +97,20 @@ export function DataReview({
   );
   const stats = useMemo(
     () =>
-      Object.fromEntries(keys.map((key) => [key, summarize(exportRows, key)])),
-    [exportRows, keys],
+      Object.fromEntries(
+        keys.map((key) => [
+          key,
+          chartRangeSummary(rows, key, chartRange, timeMode === "elapsed"),
+        ]),
+      ),
+    [rows, chartRange, timeMode, keys],
+  );
+  const calculated = useMemo(
+    () => ({
+      energy: exportRows.some((row) => row.energyCalculated),
+      capacity: exportRows.some((row) => row.capacityCalculated),
+    }),
+    [exportRows],
   );
   const pages = Math.max(1, Math.ceil(exportRows.length / pageSize));
   const currentPage = Math.min(page, pages - 1);
@@ -177,11 +190,11 @@ export function DataReview({
           onImage={onImage}
           imageBusy={busy}
           onRangeChange={setChartRange}
-          exportAction={() => (
+          exportAction={(visible, getCurrentRows) => (
             <Button
               icon={<ArrowDownload20Regular />}
-              disabled={busy || !exportRows.length}
-              onClick={() => onExport(exportRows)}
+              disabled={busy || !visible.length}
+              onClick={() => onExport(getCurrentRows())}
             >
               导出 CSV
             </Button>
@@ -210,10 +223,8 @@ export function DataReview({
                   <TableRow key={key}>
                     <TableCell>
                       {measurements[key].name} / {measurements[key].unit}
-                      {((key === "energy" &&
-                        exportRows.some((row) => row.energyCalculated)) ||
-                        (key === "capacity" &&
-                          exportRows.some((row) => row.capacityCalculated))) &&
+                      {((key === "energy" && calculated.energy) ||
+                        (key === "capacity" && calculated.capacity)) &&
                         " (计算)"}
                     </TableCell>
                     <TableCell>{stats[key]?.count ?? 0}</TableCell>

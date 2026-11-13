@@ -124,6 +124,7 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
           return series.get(series.mapDimension(axis), index);
         };
         const lastIndex = data("voltage").count() - 1;
+        const lastValue = (key: string) => at(key, "y", data(key).count() - 1);
         const range = model.getComponent("dataZoom").getValueRange("x", 0);
         return {
           processed: chart
@@ -138,13 +139,23 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
               ).every(Boolean),
             })),
           type: model.getComponent("xAxis").get("type"),
+          plotWidth: model.getComponent("grid").coordinateSystem.getRect()
+            .width,
+          mode: document
+            .querySelector(".trend-chart")!
+            .getAttribute("data-render-mode"),
+          sourceCount: Number(
+            document
+              .querySelector(".trend-chart")!
+              .getAttribute("data-source-count"),
+          ),
           points: lastIndex + 1,
           first: at("voltage", "x", 0),
           last: at("voltage", "x", lastIndex),
-          voltage: at("voltage", "y", lastIndex),
-          current: at("current", "y", lastIndex),
-          energy: at("energy", "y", lastIndex),
-          capacity: at("capacity", "y", lastIndex),
+          voltage: lastValue("voltage"),
+          current: lastValue("current"),
+          energy: lastValue("energy"),
+          capacity: lastValue("capacity"),
           range: {
             start: range[0],
             end: range[1],
@@ -153,12 +164,15 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
       },
       { applyZoom },
     );
-  await expect.poll(async () => (await inspect()).points).toBe(count);
+  await expect.poll(async () => (await inspect()).sourceCount).toBe(count);
   const clock = await inspect();
   for (const series of clock.processed) {
-    expect(series.count, `${series.id} retained every original sample`).toBe(
-      count,
-    );
+    if (clock.mode === "viewport")
+      expect(
+        series.count,
+        `${series.id} respects the pixel budget`,
+      ).toBeLessThanOrEqual(Math.ceil(clock.plotWidth) * 2 + 2);
+    else expect(series.count).toBe(count);
     expect(series.aligned).toBe(true);
   }
   // At full-file scale every channel must report the very same source row.
@@ -212,7 +226,11 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
     .selectOption("elapsed");
   await expect.poll(async () => (await inspect()).type).toBe("value");
   const elapsed = await inspect();
-  expect(elapsed).toMatchObject({ first: 0, last: duration, points: count });
+  expect(elapsed).toMatchObject({
+    first: 0,
+    last: duration,
+    sourceCount: count,
+  });
   await page
     .locator(".review-card")
     .screenshot({ path: `${folder}/csv-relative-time.png` });

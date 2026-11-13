@@ -898,11 +898,11 @@ export function App() {
                         </Button>
                       </div>
                     }
-                    exportAction={(rows) => (
+                    exportAction={(rows, getCurrentRows) => (
                       <Button
                         icon={<ArrowDownload20Regular />}
                         disabled={!rows.length || busy}
-                        onClick={() => saveRows(rows)}
+                        onClick={() => saveRows(getCurrentRows())}
                       >
                         导出
                       </Button>

@@ -1,7 +1,20 @@
 import type { Telemetry } from "./types";
 import { sampleElapsedMs } from "./chartTime.ts";
+import { cachedChartData, lowerBound } from "./chartData.ts";
+import { clockGaps } from "./chartGaps.ts";
+export { clockGaps } from "./chartGaps.ts";
 
 export type ChartTimeRange = { startValue: number; endValue: number };
+const rangeCache = new WeakMap<
+  Telemetry[],
+  {
+    start: number;
+    end: number;
+    elapsed: boolean;
+    origin: number;
+    rows: Telemetry[];
+  }
+>();
 
 export function samplesInChartRange(
   samples: Telemetry[],
@@ -10,10 +23,42 @@ export function samplesInChartRange(
   origin: number,
 ): Telemetry[] {
   if (!range) return samples;
-  return samples.filter((row) => {
-    const time = elapsed ? sampleElapsedMs(row, origin) : row.timestamp;
-    return time >= range.startValue && time <= range.endValue;
+  const cached = rangeCache.get(samples);
+  if (
+    cached &&
+    cached.start === range.startValue &&
+    cached.end === range.endValue &&
+    cached.elapsed === elapsed &&
+    cached.origin === origin
+  )
+    return cached.rows;
+  const index = cachedChartData(samples);
+  const view = elapsed
+    ? origin === samples[0]?.timestamp
+      ? index?.elapsed
+      : undefined
+    : index?.clock;
+  const rows =
+    view && !view.order
+      ? (() => {
+          const first = lowerBound(view.times, range.startValue),
+            last = lowerBound(view.times, range.endValue, true);
+          return first === 0 && last === samples.length
+            ? samples
+            : samples.slice(first, last);
+        })()
+      : samples.filter((row) => {
+          const time = elapsed ? sampleElapsedMs(row, origin) : row.timestamp;
+          return time >= range.startValue && time <= range.endValue;
+        });
+  rangeCache.set(samples, {
+    start: range.startValue,
+    end: range.endValue,
+    elapsed,
+    origin,
+    rows,
   });
+  return rows;
 }
 
 // Nulls break the line and its fill, and belong only to the rendered chart.
@@ -40,47 +85,6 @@ export function chartTimeline(
     });
   });
   return result;
-}
-
-const gapsCache = new WeakMap<Telemetry[], number[]>();
-
-export function clockGaps(rows: Telemetry[]): number[] {
-  const cached = gapsCache.get(rows);
-  if (cached) return cached;
-  const intervals: number[] = [];
-  let uniform = true;
-  for (let i = 1; i < rows.length; i++) {
-    const delta = rows[i].timestamp - rows[i - 1].timestamp;
-    if (delta > 0) {
-      if (intervals.length && delta !== intervals[0]) uniform = false;
-      intervals.push(delta);
-    }
-  }
-  // Uniform device exports need no O(n log n) median sort.
-  const cadence = uniform
-    ? intervals[0]
-    : intervals.sort((a, b) => a - b)[Math.floor((intervals.length - 1) / 2)];
-  const gaps: number[] = [];
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i],
-      previous = rows[i - 1];
-    const delta = row.timestamp - previous.timestamp;
-    const paused =
-      row.elapsedMs !== undefined &&
-      previous.elapsedMs !== undefined &&
-      delta - (row.elapsedMs - previous.elapsedMs) > 50;
-    const segment =
-      row.segmentId !== undefined &&
-      previous.segmentId !== undefined &&
-      row.segmentId !== previous.segmentId;
-    const missing =
-      (row.segmentId === undefined || previous.segmentId === undefined) &&
-      cadence !== undefined &&
-      delta > cadence * 1.5;
-    if (delta > 0 && (paused || segment || missing)) gaps.push(i);
-  }
-  gapsCache.set(rows, gaps);
-  return gaps;
 }
 
 export function zoomAxisRange(

@@ -47,10 +47,10 @@ test("CSV worker accepts browser files and terminates after a parse failure", as
   expect(result.workers).toEqual({ created: 2, terminated: 2 });
 });
 
-test("large CSV imports off the UI thread, retains every point and shares full-resolution chart data", async ({
+test("large CSV renders pixel extrema, loads visible detail, preserves raw hover/export and keeps pan gestures", async ({
   page,
 }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   const count = 250_003;
   const origin = Date.parse("2026-11-14T00:00:00Z");
   const csv =
@@ -93,7 +93,7 @@ test("large CSV imports off the UI thread, retains every point and shares full-r
       Object.assign(window, {
         isTauri: true,
         __TAURI_INTERNALS__: {
-          invoke: async (command: string) => {
+          invoke: async (command: string, args: any) => {
             if (command === "open_csv") {
               perf.start = performance.now();
               return {
@@ -103,8 +103,12 @@ test("large CSV imports off the UI thread, retains every point and shares full-r
               };
             }
             if (command === "register_recording") {
-              perf.parsed = performance.now();
+              if (!perf.parsed) perf.parsed = performance.now();
               return {};
+            }
+            if (command === "save_csv") {
+              (window as any).csvLodExport = args.content;
+              return "fixture/export.csv";
             }
             if (command === "get_snapshot")
               return {
@@ -170,22 +174,30 @@ test("large CSV imports off the UI thread, retains every point and shares full-r
       const chart = getInstanceByDom(document.querySelector(".trend-chart"));
       const series = chart.getModel().getSeries();
       const v = series.find((s: any) => s.id === "voltage").getData();
-      const a = series.find((s: any) => s.id === "current").getData();
-      const x = v.mapDimension("x"),
-        y = v.mapDimension("y"),
-        current = a.mapDimension("y");
-      let complete = v.count() === count && a.count() === count;
-      for (let i = 0; i < count && complete; i++)
-        complete =
-          v.get(x, i) === origin + i * 100 &&
-          v.get(y, i) === 5 + (i % 777) / 1000 &&
-          a.get(current, i) === -(i % 31) / 100;
+      let exact = true;
+      for (const channel of series) {
+        const data = channel.getData();
+        for (let i = 0; i < data.count(); i++) {
+          const raw = data.getRawDataItem(i);
+          const index = raw[2];
+          exact &&=
+            raw[0] === origin + index * 100 &&
+            raw[1] ===
+              (channel.id === "voltage"
+                ? 5 + (index % 777) / 1000
+                : -(index % 31) / 100);
+        }
+      }
       return {
         ...perf,
         importMs: perf.parsed - perf.start,
-        complete,
-        count: v.count(),
-        sharedStore: v.getStore() === a.getStore(),
+        exact,
+        rendered: v.count(),
+        sourceCount: count,
+        plotWidth: chart
+          .getModel()
+          .getComponent("grid")
+          .coordinateSystem.getRect().width,
       };
     },
     { count, origin },
@@ -193,9 +205,31 @@ test("large CSV imports off the UI thread, retains every point and shares full-r
   expect(report.workers).toBe(1);
   expect(report.terminated).toBe(1);
   expect(report.ticks).toBeGreaterThan(5);
-  expect(report.longestTask).toBeLessThan(1000);
-  expect(report.complete).toBe(true);
-  expect(report.sharedStore).toBe(true);
+  expect(report.longestTask).toBeLessThan(350);
+  expect(report.exact).toBe(true);
+  expect(report.rendered).toBeLessThanOrEqual(
+    Math.ceil(report.plotWidth) * 2 + 2,
+  );
+  await expect(page.locator(".trend-chart")).toHaveAttribute(
+    "data-render-mode",
+    "viewport",
+  );
+  // Export proves every original row survives the display reduction.
+  await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
+  const exported = await page.evaluate(
+    () => (window as any).csvLodExport as string,
+  );
+  const raw = exported.trim().split(/\r?\n/).slice(1);
+  expect(raw).toHaveLength(count);
+  for (let i = 0; i < count; i++) {
+    const cells = raw[i].split(",");
+    if (
+      Date.parse(cells[0]) !== origin + i * 100 ||
+      Number(cells[1]) !== 5 + (i % 777) / 1000 ||
+      Number(cells[2]) !== -(i % 31) / 100
+    )
+      throw new Error(`Export changed original sample ${i}`);
+  }
   for (const key of ["功率 (W)", "电量 (Wh)", "容量 (mAh)", "CPU 温度 (°C)"])
     await page.getByRole("checkbox", { name: key, exact: true }).check();
   await page.evaluate(async () => {
@@ -205,10 +239,19 @@ test("large CSV imports off the UI thread, retains every point and shares full-r
       .find((url) => url.includes("/echarts_core.js"))!;
     const { getInstanceByDom } = await import(url);
     const chart = getInstanceByDom(document.querySelector(".trend-chart"));
+    const power = chart
+      .getModel()
+      .getSeries()
+      .find((s: any) => s.id === "power");
+    const data = power.getData();
+    let peak = -1;
+    for (let i = 0; i < data.count(); i++)
+      if (data.getRawDataItem(i)[2] === 123456) peak = i;
+    if (peak < 0) throw new Error("Pixel sampling dropped the 400 W peak");
     chart.dispatchAction({
       type: "showTip",
-      seriesIndex: 0,
-      dataIndex: 123456,
+      seriesIndex: power.seriesIndex,
+      dataIndex: peak,
     });
   });
   await expect(page.locator(".curve-tooltip")).toContainText("400");
@@ -224,6 +267,67 @@ test("large CSV imports off the UI thread, retains every point and shares full-r
   expect(await page.locator(".curve-tooltip").innerText()).not.toMatch(
     /\d+\.\d{5,}/,
   );
+  // Hover an original current reading omitted from that channel's points.
+  const hoverPosition = await page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType("resource")
+      .map((e) => e.name)
+      .find((url) => url.includes("/echarts_core.js"))!;
+    const { getInstanceByDom } = await import(url);
+    const element = document.querySelector(".trend-chart")!;
+    const chart = getInstanceByDom(element);
+    const grid = chart
+      .getModel()
+      .getComponent("grid")
+      .coordinateSystem.getRect();
+    const box = element.getBoundingClientRect();
+    chart.getZr().on("mousemove", (event: any) => {
+      const time = chart.convertFromPixel({ xAxisIndex: 0 }, event.offsetX);
+      const index = Math.round(
+        (time - Date.parse("2026-11-14T00:00:00Z")) / 100,
+      );
+      const data = chart
+        .getModel()
+        .getSeries()
+        .find((s: any) => s.id === "current")
+        .getData();
+      let rendered = false;
+      for (let i = 0; i < data.count(); i++)
+        rendered ||= data.getRawDataItem(i)[2] === index;
+      (window as any).csvLodHover = { index, rendered };
+    });
+    const prototype = Object.getPrototypeOf(chart);
+    const original = prototype.setOption;
+    (window as any).chartLodUpdates = [];
+    prototype.setOption = function (...args: any[]) {
+      const start = performance.now();
+      const result = original.apply(this, args);
+      if (!args[1]?.notMerge)
+        (window as any).chartLodUpdates.push(performance.now() - start);
+      return result;
+    };
+    return { x: box.x + grid.x + grid.width * 0.373, y: box.y + grid.y + 80 };
+  });
+  await page.mouse.move(hoverPosition.x, hoverPosition.y);
+  const hovered = await page.evaluate(() => (window as any).csvLodHover);
+  expect(hovered.rendered).toBe(false);
+  const expectedValues = [
+    5 + (hovered.index % 777) / 1000,
+    -(hovered.index % 31) / 100,
+    hovered.index === 123456 ? 400 : 5,
+    hovered.index / 123456789,
+    hovered.index / 1000,
+    hovered.index % 100,
+  ].map((value) =>
+    value.toLocaleString("en-US", {
+      maximumFractionDigits: 4,
+      useGrouping: false,
+    }),
+  );
+  await expect(page.locator(".curve-tooltip-row strong")).toHaveText(
+    expectedValues,
+  );
+  await page.mouse.move(0, 0);
   await page
     .getByLabel("曲线时间坐标", { exact: true })
     .selectOption("elapsed");
@@ -247,9 +351,180 @@ test("large CSV imports off the UI thread, retains every point and shares full-r
     .getByRole("row")
     .filter({ hasText: "功率 / W" });
   await expect(power.getByRole("cell").nth(3)).toHaveText("400");
-  await mkdir("artifacts/large-csv", { recursive: true });
+  const inspect = () =>
+    page.evaluate(async () => {
+      const url = performance
+        .getEntriesByType("resource")
+        .map((e) => e.name)
+        .find((url) => url.includes("/echarts_core.js"))!;
+      const { getInstanceByDom } = await import(url);
+      const element = document.querySelector(".trend-chart")!;
+      const chart = getInstanceByDom(element),
+        model = chart.getModel();
+      const data = model.getSeriesByIndex(0).getData();
+      const range = model.getComponent("dataZoom").getValueRange("x", 0);
+      const grid = model.getComponent("grid").coordinateSystem.getRect();
+      const box = element.getBoundingClientRect();
+      return {
+        start: range[0],
+        end: range[1],
+        left: box.x,
+        top: box.y,
+        width: chart.getWidth(),
+        height: chart.getHeight(),
+        grid: { x: grid.x, width: grid.width },
+        points: Array.from(
+          { length: data.count() },
+          (_, i) => data.getRawDataItem(i) as number[],
+        ),
+      };
+    });
+  await expect
+    .poll(
+      async () =>
+        (await inspect()).points.filter(
+          (p) => p[0] >= 12_345_600 && p[0] <= 12_346_000,
+        ).length,
+    )
+    .toBe(5);
+  const coreZoom = async (start: number, end: number) =>
+    page.evaluate(
+      async ({ start, end }) => {
+        const url = performance
+          .getEntriesByType("resource")
+          .map((e) => e.name)
+          .find((url) => url.includes("/echarts_core.js"))!;
+        const { getInstanceByDom } = await import(url);
+        getInstanceByDom(document.querySelector(".trend-chart")).dispatchAction(
+          { type: "dataZoom", start, end },
+        );
+      },
+      { start, end },
+    );
+  await coreZoom(30, 70);
+  const beforeWheel = await inspect();
+  await page.evaluate(
+    ({ x, y }) => {
+      const element = document.querySelector(".trend-chart")!;
+      for (let i = 0; i < 7; i++)
+        element.dispatchEvent(
+          new WheelEvent("wheel", {
+            clientX: x,
+            clientY: y,
+            deltaY: -100,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+    },
+    {
+      x: beforeWheel.left + beforeWheel.grid.x + beforeWheel.grid.width / 2,
+      y: beforeWheel.top + beforeWheel.height - 40,
+    },
+  );
+  const afterWheel = await inspect();
+  expect(
+    (afterWheel.end - afterWheel.start) / (beforeWheel.end - beforeWheel.start),
+  ).toBeCloseTo(Math.exp(-0.2 * 7), 6);
+  await page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType("resource")
+      .map((e) => e.name)
+      .find((url) => url.includes("/echarts_core.js"))!;
+    const { getInstanceByDom } = await import(url);
+    getInstanceByDom(document.querySelector(".trend-chart")).dispatchAction({
+      type: "dataZoom",
+      start: 20,
+      end: 60,
+    });
+    Array.from(document.querySelectorAll("button"))
+      .find((button) => button.textContent === "重置缩放")!
+      .click();
+  });
+  await expect(
+    page.getByText(
+      `${count.toLocaleString()} / ${count.toLocaleString()} 个采样点`,
+      { exact: false },
+    ),
+  ).toBeVisible();
+  await page.waitForTimeout(160);
+  const reset = await inspect();
+  expect(reset.start).toBe(0);
+  expect(reset.end).toBe((count - 1) * 100);
+  expect(reset.points[0][2]).toBe(0);
+  for (const target of ["plot", "slider"]) {
+    await coreZoom(30, 70);
+    await page.waitForTimeout(180);
+    const start = await inspect();
+    const x = start.left + start.grid.x + start.grid.width / 2;
+    const y = start.top + (target === "plot" ? 100 : start.height - 9);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 35, y, { steps: 5 });
+    await page.waitForTimeout(150);
+    const middle = await inspect();
+    expect(middle.points[0][2]).not.toBe(start.points[0][2]);
+    await page.mouse.move(x + 85, y, { steps: 8 });
+    await page.waitForTimeout(150);
+    const last = await inspect();
+    expect(
+      (last.start - middle.start) * (target === "plot" ? -1 : 1),
+    ).toBeGreaterThan(0);
+    await page.mouse.up();
+    expect(last.points.length).toBeLessThanOrEqual(
+      Math.ceil(last.grid.width) * 2 + 4,
+    );
+  }
+  // Export reads the current zoom immediately, before the delayed statistics.
+  await page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType("resource")
+      .map((e) => e.name)
+      .find((url) => url.includes("/echarts_core.js"))!;
+    const { getInstanceByDom } = await import(url);
+    getInstanceByDom(document.querySelector(".trend-chart")).dispatchAction({
+      type: "dataZoom",
+      startValue: 12_345_600,
+      endValue: 12_346_000,
+    });
+    (window as any).csvLodExport = "";
+    Array.from(document.querySelectorAll("button"))
+      .find((button) => button.textContent === "导出 CSV")!
+      .click();
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as any).csvLodExport.split(/\r?\n/).filter(Boolean).length,
+      ),
+    )
+    .toBe(6);
+  const updateTimes = await page.evaluate(
+    () => (window as any).chartLodUpdates as number[],
+  );
+  expect(updateTimes.length).toBeGreaterThan(5);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "全屏", exact: true }).click();
+  await expect
+    .poll(async () => (await inspect()).points.length)
+    .toBeLessThanOrEqual(390 * 2 + 4);
+  await page.getByRole("button", { name: "退出全屏", exact: true }).click();
+  await mkdir("artifacts/chart-lod", { recursive: true });
   await writeFile(
-    "artifacts/large-csv/ui-performance.json",
-    JSON.stringify(report, null, 2),
+    "artifacts/chart-lod/ui-performance.json",
+    JSON.stringify(
+      {
+        ...report,
+        hoveredOriginalIndex: hovered.index,
+        updates: updateTimes.length,
+        maxUpdateMs: Math.max(...updateTimes),
+        medianUpdateMs: updateTimes.sort((a, b) => a - b)[
+          Math.floor(updateTimes.length / 2)
+        ],
+      },
+      null,
+      2,
+    ),
   );
 });

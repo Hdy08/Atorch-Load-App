@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import { parseCsvBase64, readCsv } from "./csv";
-import { packedChartData } from "./chartData";
+import { indexedChartData, chartIndexBuffers } from "./chartData";
 import { summarizeMeasurements } from "./analysis";
 import {
   packCsvRows,
@@ -15,12 +15,11 @@ self.onmessage = async (event: MessageEvent<CsvImportRequest>) => {
         ? await readCsv(event.data.file)
         : parseCsvBase64(event.data.base64);
     const values = packCsvRows(rows);
-    const chart = packedChartData(rows);
     const summaries = summarizeMeasurements(rows);
+    const chart = indexedChartData(rows);
     const transfer = [values.buffer];
     if (chart) {
-      transfer.push(chart.clock.buffer);
-      if (chart.elapsed !== chart.clock) transfer.push(chart.elapsed.buffer);
+      transfer.push(...chartIndexBuffers(chart));
     }
     self.postMessage({ values, chart, summaries } satisfies CsvImportResponse, {
       transfer,

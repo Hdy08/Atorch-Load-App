@@ -20,13 +20,17 @@ import {
   GridComponent,
   TooltipComponent,
   DataZoomComponent,
-  DatasetComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import type { Telemetry } from "../lib/types";
 import { measurementColor } from "../lib/theme";
 import { formatElapsedTime, formatClockTime } from "../lib/chartTime";
-import { chartDimensions, packedChartData } from "../lib/chartData";
+import {
+  indexedChartData,
+  chartViewportData,
+  nearestChartSample,
+} from "../lib/chartData";
+import { sampleElapsedMs } from "../lib/chartTime";
 import {
   chartTimeline,
   samplesInChartRange,
@@ -50,7 +54,6 @@ use([
   GridComponent,
   TooltipComponent,
   DataZoomComponent,
-  DatasetComponent,
   CanvasRenderer,
 ]);
 
@@ -76,7 +79,10 @@ export function TrendChart({
   imageBusy?: boolean;
   onImage?: (url: string) => void;
   footerActions?: ReactNode | ((rows: Telemetry[]) => ReactNode);
-  exportAction?: (rows: Telemetry[]) => ReactNode;
+  exportAction?: (
+    rows: Telemetry[],
+    getCurrentRows: () => Telemetry[],
+  ) => ReactNode;
   onRangeChange?: (range: ChartTimeRange | undefined) => void;
   elapsed?: { origin: number; current: number; fromZero: boolean };
 }) {
@@ -95,18 +101,27 @@ export function TrendChart({
   const [interactionRevision, setInteractionRevision] = useState(0);
   const queuedUpdate = useRef(false);
   const queuedResize = useRef(false);
+  const viewportUpdate = useRef(() => {});
+  const viewportFrame = useRef(0);
+  const publishTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const pendingRange = useRef<ChartTimeRange | undefined>(undefined);
+  const lazy = useRef(false);
   const [yRanges, setYRanges] = useState<Record<string, ChartTimeRange>>({});
   const [selectedRange, setSelectedRange] = useState<ChartTimeRange>();
   const elapsedMode = elapsed !== undefined;
   const origin = elapsed?.origin ?? 0;
-  const packed = useMemo(() => packedChartData(samples), [samples]);
+  const index = useMemo(() => indexedChartData(samples), [samples]);
+  lazy.current = !!index;
+  const coordinate = elapsedMode ? index?.elapsed : index?.clock;
   const timeline = useMemo(
-    () => (packed ? [] : chartTimeline(samples, elapsedMode, origin)),
-    [samples, packed, elapsedMode, origin],
+    () => (index ? [] : chartTimeline(samples, elapsedMode, origin)),
+    [samples, index, elapsedMode, origin],
   );
   const seriesData = useMemo(
     () =>
-      packed
+      index
         ? undefined
         : Object.fromEntries(
             selected.map((key) => [
@@ -114,9 +129,14 @@ export function TrendChart({
               timeline.map(({ time, row }) => [time, row?.[key] ?? null]),
             ]),
           ),
-    [packed, selected, timeline],
+    [index, selected, timeline],
   );
   const domain = useMemo(() => {
+    if (coordinate)
+      return {
+        startValue: coordinate.times[0],
+        endValue: coordinate.times.at(-1)!,
+      };
     let startValue = Infinity,
       endValue = -Infinity;
     for (const row of samples) {
@@ -127,7 +147,7 @@ export function TrendChart({
       endValue = Math.max(endValue, value);
     }
     return { startValue, endValue };
-  }, [samples, elapsedMode, origin]);
+  }, [samples, coordinate, elapsedMode, origin]);
   const hasSamples = samples.length > 0;
   const canShowPointer = useRef(false);
   canShowPointer.current = hasSamples && selected.length > 0;
@@ -174,15 +194,28 @@ export function TrendChart({
       Number.isFinite(range.endValue)
         ? { startValue: range.startValue, endValue: range.endValue }
         : undefined;
+    const changed =
+      zoom.current?.startValue !== next?.startValue ||
+      zoom.current?.endValue !== next?.endValue;
     zoom.current = next
       ? { ...next, followEnd: range!.end >= 100 - 1e-6 }
       : undefined;
-    setSelectedRange((previous) =>
-      previous?.startValue === next?.startValue &&
-      previous?.endValue === next?.endValue
-        ? previous
-        : next,
-    );
+    pendingRange.current = next;
+    const publish = () =>
+      setSelectedRange((previous) =>
+        previous?.startValue === next?.startValue &&
+        previous?.endValue === next?.endValue
+          ? previous
+          : next,
+      );
+    if (lazy.current && changed) {
+      cancelAnimationFrame(viewportFrame.current);
+      viewportFrame.current = requestAnimationFrame(() =>
+        viewportUpdate.current(),
+      );
+      clearTimeout(publishTimer.current);
+      if (!interacting.current) publishTimer.current = setTimeout(publish, 120);
+    } else if (!lazy.current) publish();
   }, []);
   const visibleSamples = useMemo(
     () => samplesInChartRange(samples, selectedRange, elapsedMode, origin),
@@ -279,6 +312,77 @@ export function TrendChart({
       ),
     };
   }, [axes, theme]);
+  const viewportData = () =>
+    coordinate
+      ? chartViewportData(
+          samples,
+          coordinate,
+          selected,
+          zoom.current,
+          Math.max(
+            1,
+            (chart.current?.getWidth() ?? ref.current?.clientWidth ?? 1000) -
+              layout.left -
+              layout.right,
+          ),
+        )
+      : undefined;
+  viewportUpdate.current = () => {
+    if (!coordinate || !chart.current) return;
+    const data = viewportData()!;
+    // Merge only series data. Keeping the zoom/grid models alive preserves the
+    // current pointer gesture while the newly visible detail arrives.
+    chart.current.setOption(
+      { series: selected.map((key) => ({ id: key, data: data[key] ?? [] })) },
+      { silent: true },
+    );
+    showPointer();
+  };
+  const rawTooltip = (input: unknown) => {
+    if (!coordinate) return "";
+    const first = (Array.isArray(input) ? input[0] : input) as
+      { axisValue?: number; value?: number[] } | undefined;
+    const position = pointer.current;
+    let row: Telemetry | undefined;
+    if (
+      position &&
+      chart.current?.containPixel({ gridIndex: 0 }, [position.x, position.y])
+    )
+      row = nearestChartSample(
+        samples,
+        coordinate,
+        Number(chart.current.convertFromPixel({ xAxisIndex: 0 }, position.x)),
+      );
+    else if (first?.value && first.value[2] >= 0) row = samples[first.value[2]];
+    else if (first?.axisValue !== undefined)
+      row = nearestChartSample(samples, coordinate, Number(first.axisValue));
+    if (!row) return "";
+    const time = elapsedMode
+      ? formatElapsedTime(sampleElapsedMs(row, origin), true)
+      : formatClockTime(row.timestamp, true);
+    const escape = (value: string) =>
+      value.replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[c]!,
+      );
+    return (
+      `<div>${time}</div>` +
+      selected
+        .filter((key) => row[key] != null && Number.isFinite(row[key]))
+        .map(
+          (key) =>
+            `<div class="curve-tooltip-row"><span><i style="background:${escape(bounds?.[key]?.color ?? measurementColor(theme, key))}"></i>${seriesInfo[key].name} (${seriesInfo[key].unit})</span><strong>${row[key]!.toLocaleString("en-US", { maximumFractionDigits: 4, useGrouping: false })}</strong></div>`,
+        )
+        .join("")
+    );
+  };
   wheel.current = (event) => {
     const instance = chart.current;
     if (!instance || !ref.current || !event.deltaY) return;
@@ -330,7 +434,7 @@ export function TrendChart({
         );
       }
       const next = zoomAxisRange(
-        selectedRange ?? timeDomain,
+        zoom.current ?? timeDomain,
         (x - layout.left) / (right - layout.left),
         event.deltaY,
         1,
@@ -345,6 +449,7 @@ export function TrendChart({
     chart.current.on("datazoom", syncSelectedRange);
     chart.current.getZr().on("mousemove", (event) => {
       pointer.current = { x: event.offsetX, y: event.offsetY };
+      if (lazy.current) showPointer();
     });
     chart.current.getZr().on("globalout", () => {
       pointer.current = undefined;
@@ -371,6 +476,11 @@ export function TrendChart({
           chart.current?.resize();
         }
         if (queuedUpdate.current) setInteractionRevision((value) => value + 1);
+        if (lazy.current) {
+          viewportUpdate.current();
+          clearTimeout(publishTimer.current);
+          setSelectedRange(pendingRange.current);
+        }
       });
     };
     element.addEventListener("pointerdown", startInteraction, true);
@@ -387,12 +497,15 @@ export function TrendChart({
         return;
       }
       chart.current?.resize();
+      viewportUpdate.current();
       showPointer();
     });
     resize.observe(ref.current);
     return () => {
       resize.disconnect();
       cancelAnimationFrame(releaseFrame);
+      cancelAnimationFrame(viewportFrame.current);
+      clearTimeout(publishTimer.current);
       element.removeEventListener("pointerdown", startInteraction, true);
       window.removeEventListener("pointerup", endInteraction, true);
       window.removeEventListener("pointercancel", endInteraction, true);
@@ -418,19 +531,11 @@ export function TrendChart({
             : { endValue: zoom.current.endValue }),
         }
       : { start: 0, end: 100 };
+    const displayed = viewportData();
     chart.current?.setOption(
       {
         backgroundColor: "transparent",
         animation: false,
-        dataset: packed
-          ? {
-              dimensions: chartDimensions.map((name) => ({
-                name,
-                type: "float",
-              })),
-              source: elapsedMode ? packed.elapsed : packed.clock,
-            }
-          : undefined,
         textStyle: {
           fontFamily: theme.fontFamilyBase,
           fontSize: Number.parseFloat(theme.fontSizeBase200),
@@ -449,6 +554,7 @@ export function TrendChart({
           confine: true,
           transitionDuration: 0,
           hideDelay: 0,
+          formatter: coordinate ? rawTooltip : undefined,
           valueFormatter: (value: unknown) =>
             typeof value === "number"
               ? value.toLocaleString("en-US", {
@@ -472,10 +578,23 @@ export function TrendChart({
         },
         xAxis: {
           type: elapsedMode ? "value" : "time",
-          min: elapsedMode ? (elapsed?.fromZero ? 0 : "dataMin") : undefined,
-          max: elapsedMode ? Math.max(elapsed?.current ?? 0, 1) : undefined,
+          min: coordinate
+            ? elapsedMode && elapsed?.fromZero
+              ? 0
+              : domain.startValue
+            : elapsedMode
+              ? elapsed?.fromZero
+                ? 0
+                : "dataMin"
+              : undefined,
+          max: coordinate
+            ? Math.max(domain.endValue, elapsed?.current ?? -Infinity)
+            : elapsedMode
+              ? Math.max(elapsed?.current ?? 0, 1)
+              : undefined,
           axisPointer: {
             show: hasSamples && selected.length > 0 ? "auto" : false,
+            snap: coordinate ? false : undefined,
             label: {
               formatter: ({ value }: { value: number }) =>
                 elapsedMode
@@ -539,10 +658,18 @@ export function TrendChart({
           },
         })),
         dataZoom: [
-          { type: "inside", xAxisIndex: 0, filterMode: "none", ...zoomRange },
+          {
+            type: "inside",
+            xAxisIndex: 0,
+            filterMode: "none",
+            throttle: coordinate ? 32 : undefined,
+            ...zoomRange,
+          },
           {
             type: "slider",
             show: !fullscreen,
+            showDataShadow: coordinate ? false : "auto",
+            throttle: coordinate ? 32 : undefined,
             xAxisIndex: 0,
             filterMode: "none",
             height: 14,
@@ -582,8 +709,7 @@ export function TrendChart({
             (axis) => axis.unit === seriesInfo[key].unit,
           ),
           showSymbol: false,
-          // Every series must retain the same original timestamps. Independent
-          // downsampling drops different rows and splits an axis tooltip.
+          // Pixel extrema are display-only; tooltips query the original row.
           connectNulls: false,
           lineStyle: {
             width: bounds?.[key]?.width ?? defaultCurveWidth,
@@ -599,14 +725,11 @@ export function TrendChart({
                   opacity: bounds![key]!.areaOpacity,
                 }
               : undefined,
-          ...(packed
+          ...(coordinate
             ? {
-                datasetIndex: 0,
-                encode: {
-                  x: elapsedMode ? "elapsed" : "clock",
-                  y: key,
-                  tooltip: [key],
-                },
+                dimensions: ["time", "value", "sourceIndex"],
+                encode: { x: 0, y: 1, tooltip: [1] },
+                data: displayed![key] ?? [],
               }
             : { data: seriesData![key] }),
         })),
@@ -629,7 +752,8 @@ export function TrendChart({
     elapsedMode,
     elapsed?.current,
     elapsed?.fromZero,
-    packed,
+    coordinate,
+    domain,
     seriesData,
     showPointer,
     interactionRevision,
@@ -655,6 +779,8 @@ export function TrendChart({
         <div
           ref={ref}
           className="trend-chart"
+          data-render-mode={coordinate ? "viewport" : "full"}
+          data-source-count={samples.length}
           style={{
             minWidth: fullscreen ? 0 : layout.minWidth,
             height: fullscreen ? "100%" : height,
@@ -676,12 +802,15 @@ export function TrendChart({
           ? footerActions(visibleSamples)
           : footerActions}
         <div className="chart-export-actions">
-          {exportAction?.(visibleSamples)}
+          {exportAction?.(visibleSamples, () =>
+            samplesInChartRange(samples, zoom.current, elapsedMode, origin),
+          )}
           {onImage && (
             <Button
               icon={<Camera20Regular />}
               disabled={imageBusy || samples.length === 0}
               onClick={() => {
+                if (coordinate) viewportUpdate.current();
                 const url = chart.current?.getDataURL({
                   type: "png",
                   pixelRatio: 2,
@@ -711,7 +840,7 @@ export function TrendChart({
             icon={<ArrowReset20Regular />}
             disabled={!selectedRange && !Object.keys(yRanges).length}
             onClick={() => {
-              zoom.current = undefined;
+              clearTimeout(publishTimer.current);
               setYRanges({});
               chart.current?.dispatchAction({
                 type: "dataZoom",
