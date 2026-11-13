@@ -88,6 +88,90 @@ function parameter(page: Page, label: string) {
   return { input, row: page.locator(".load-parameter").filter({ has: input }) };
 }
 
+for (const width of [390, 1440]) {
+  test(`device settings share continuous sliders, numeric steps and validated limits (${width})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 1050 });
+    await fixture(page, 0, true);
+    await page.getByRole("button", { name: "设备设置", exact: true }).click();
+    await expect(page.locator(".settings-grid .load-parameter")).toHaveCount(
+      11,
+    );
+    await expect(
+      page.getByText("校准前请准备参考仪表；修改将写入设备。", { exact: true }),
+    ).toHaveCount(0);
+    for (const [label, kind, min, max, step, digits, unit] of [
+      ["充电上限电压", "fullVoltage", 0, 100, 0.1, 2, "V"],
+      ["充电截止电流", "cutoffCurrent", 0, 20, 0.1, 2, "A"],
+      ["探头温度上限", "ntcLimit", 0, 100, 1, 0, "°C"],
+      ["MOS 温度上限", "mosLimit", 0, 100, 1, 0, "°C"],
+      ["工作亮度", "brightness", 0, 9, 1, 0, ""],
+      ["待机亮度", "standbyBrightness", 0, 9, 1, 0, ""],
+      ["待机延时", "standbySeconds", 10, 60, 1, 0, "秒"],
+    ] as const) {
+      const { input, row } = parameter(page, label);
+      const slider = row.getByRole("slider", {
+        name: `${label}滑动条`,
+        exact: true,
+      });
+      const apply = row.getByRole("button", { name: "应用", exact: true });
+      await expect(input).toHaveAttribute("aria-valuemin", String(min));
+      await expect(input).toHaveAttribute("aria-valuemax", String(max));
+      await expect(slider).toHaveAttribute("min", String(min));
+      await expect(slider).toHaveAttribute("max", String(max));
+      await expect(slider).toHaveAttribute("step", String(step));
+      await expect(row.locator(".load-input-unit")).toHaveText(unit);
+      await slider.focus();
+      await slider.press("Home");
+      await expect(input).toHaveValue(min.toFixed(digits));
+      await slider.press("ArrowRight");
+      await expect(input).toHaveValue((min + step).toFixed(digits));
+      await input.fill(String(min));
+      await input.press("ArrowUp");
+      await expect(input).toHaveValue((min + step).toFixed(digits));
+      const before = await page.evaluate(
+        () => (window as any).loadCalls.length,
+      );
+      for (const invalid of [
+        min - step,
+        max + step,
+        min + 10 ** -(digits + 1),
+      ]) {
+        await input.fill(String(invalid));
+        await apply.click();
+        await expect(
+          row.locator(".fui-Field__validationMessage"),
+        ).toBeVisible();
+      }
+      expect(await page.evaluate(() => (window as any).loadCalls.length)).toBe(
+        before,
+      );
+      await slider.focus();
+      await slider.press("End");
+      await expect(input).toHaveValue(max.toFixed(digits));
+      await apply.click();
+      await expect(apply).toBeEnabled();
+      expect(
+        await page.evaluate(() => (window as any).loadCalls.at(-1)),
+      ).toEqual({ kind, value: max, expectedMode: 0 });
+      expect(
+        await row
+          .locator(".fui-Slider__rail")
+          .evaluate((el) => getComputedStyle(el, "::before").backgroundImage),
+      ).toBe("none");
+    }
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    await mkdir("artifacts/chart-detail-settings", { recursive: true });
+    await page.screenshot({
+      path: `artifacts/chart-detail-settings/device-settings-${width}.png`,
+      fullPage: true,
+    });
+  });
+}
+
 for (const [mode, label, value, up, down, fine, invalid] of [
   [0, "目标电流", "1.234", "1.300", "1.200", "1.237", "1.2371"],
   [1, "目标电压", "5.67", "5.70", "5.60", "6.78", "6.789"],

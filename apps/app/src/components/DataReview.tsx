@@ -1,11 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
-  Field,
   Input,
-  MessageBar,
-  MessageBarBody,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -17,7 +15,6 @@ import {
 import { ArrowDownload20Regular } from "@fluentui/react-icons";
 import type { Telemetry } from "../lib/types";
 import {
-  filterSamples,
   measurements,
   measurementKeys,
   summarize,
@@ -30,6 +27,19 @@ import { ChartTimeSelect } from "./ChartTimeSelect";
 import { sampleElapsedMs, type ChartTimeMode } from "../lib/chartTime";
 import { samplesInChartRange } from "../lib/chartInteraction";
 import { completeRecordCounters } from "../lib/records";
+
+const pageSizes = [10, 20, 50, 100];
+const pageSizeStorageKey = "atorch-review-page-size";
+
+function readPageSize() {
+  try {
+    const value = Number(localStorage.getItem(pageSizeStorageKey));
+    if (pageSizes.includes(value)) return value;
+  } catch {
+    // Use the default when storage is unavailable.
+  }
+  return 10;
+}
 
 const format = (value: number | null | undefined) =>
   value == null
@@ -65,9 +75,9 @@ export function DataReview({
   onSelectionChange: (selected: MeasurementKey[]) => void;
 }) {
   const rows = useMemo(() => completeRecordCounters(sourceRows), [sourceRows]);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [pageSize, setPageSize] = useState(readPageSize);
   const [page, setPage] = useState(0);
+  const [pageText, setPageText] = useState("1");
   const [chartRange, setChartRange] = useState<ChartTimeRange>();
   const available = useMemo(
     () =>
@@ -79,33 +89,41 @@ export function DataReview({
     [rows],
   );
   const keys = selected;
-  const start = from ? new Date(from).getTime() : undefined;
-  const end = to ? new Date(to).getTime() : undefined;
-  const invalidRange =
-    (start !== undefined && !Number.isFinite(start)) ||
-    (end !== undefined && !Number.isFinite(end)) ||
-    (start !== undefined && end !== undefined && start > end);
-  const filtered = useMemo(
-    () => filterSamples(rows, start, end),
-    [rows, start, end],
-  );
   const origin = rows[0]?.timestamp ?? 0;
   const exportRows = useMemo(
-    () =>
-      samplesInChartRange(filtered, chartRange, timeMode === "elapsed", origin),
-    [filtered, chartRange, timeMode, origin],
+    () => samplesInChartRange(rows, chartRange, timeMode === "elapsed", origin),
+    [rows, chartRange, timeMode, origin],
   );
   const stats = useMemo(
     () =>
       Object.fromEntries(keys.map((key) => [key, summarize(exportRows, key)])),
     [exportRows, keys],
   );
-  const pages = Math.max(1, Math.ceil(exportRows.length / 100));
+  const pages = Math.max(1, Math.ceil(exportRows.length / pageSize));
   const currentPage = Math.min(page, pages - 1);
+  useEffect(() => {
+    setPage(currentPage);
+    setPageText(String(currentPage + 1));
+  }, [currentPage]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(pageSizeStorageKey, String(pageSize));
+    } catch {
+      // Pagination still works when storage is unavailable.
+    }
+  }, [pageSize]);
+  const jumpPage = () => {
+    const value = Number(pageText);
+    const next = Number.isInteger(value)
+      ? Math.max(1, Math.min(pages, value))
+      : currentPage + 1;
+    setPage(next - 1);
+    setPageText(String(next));
+  };
   const detailRows = exportRows
     .slice(
-      Math.max(0, exportRows.length - (currentPage + 1) * 100),
-      exportRows.length - currentPage * 100,
+      Math.max(0, exportRows.length - (currentPage + 1) * pageSize),
+      exportRows.length - currentPage * pageSize,
     )
     .reverse();
   const rangeLabel = exportRows.length
@@ -133,49 +151,6 @@ export function DataReview({
             />
           </div>
         </div>
-        <div className="review-time-range">
-          <Field label="开始时间">
-            <Input
-              aria-label="回看开始时间"
-              type="datetime-local"
-              step="1"
-              value={from}
-              onChange={(_, d) => {
-                setFrom(d.value);
-                setPage(0);
-              }}
-            />
-          </Field>
-          <Field label="结束时间">
-            <Input
-              aria-label="回看结束时间"
-              type="datetime-local"
-              step="1"
-              value={to}
-              onChange={(_, d) => {
-                setTo(d.value);
-                setPage(0);
-              }}
-            />
-          </Field>
-          <Button
-            disabled={!from && !to}
-            onClick={() => {
-              setFrom("");
-              setTo("");
-              setPage(0);
-            }}
-          >
-            全部时间
-          </Button>
-        </div>
-        {invalidRange && (
-          <MessageBar intent="error">
-            <MessageBarBody>
-              时间范围无效，开始时间必须早于或等于结束时间。
-            </MessageBarBody>
-          </MessageBar>
-        )}
         <MeasurementSelector
           selected={keys}
           onChange={onSelectionChange}
@@ -183,16 +158,16 @@ export function DataReview({
           theme={theme}
         />
         <TrendChart
-          key={`${from}|${to}|${timeMode}`}
-          samples={filtered}
+          key={timeMode}
+          samples={rows}
           elapsed={
             timeMode === "elapsed"
               ? {
                   origin,
-                  current: filtered.length
-                    ? sampleElapsedMs(filtered.at(-1)!, origin)
+                  current: rows.length
+                    ? sampleElapsedMs(rows.at(-1)!, origin)
                     : 0,
-                  fromZero: !from && !to,
+                  fromZero: true,
                 }
               : undefined
           }
@@ -205,7 +180,7 @@ export function DataReview({
           exportAction={() => (
             <Button
               icon={<ArrowDownload20Regular />}
-              disabled={busy || !exportRows.length || invalidRange}
+              disabled={busy || !exportRows.length}
               onClick={() => onExport(exportRows)}
             >
               导出 CSV
@@ -252,11 +227,42 @@ export function DataReview({
         </div>
       </Card>
       <Card className="table-card">
-        <div className="section-head">
+        <div className="section-head details-heading">
           <h2>采样明细</h2>
-          <span>
-            {exportRows.length.toLocaleString()} 条 · 每页 100 条 · 最新在前
-          </span>
+          <div className="review-page-controls">
+            <Select
+              aria-label="每页条数"
+              value={String(pageSize)}
+              onChange={(_, data) => {
+                setPageSize(Number(data.value));
+                setPage(0);
+                setPageText("1");
+              }}
+            >
+              {pageSizes.map((size) => (
+                <option key={size} value={size}>
+                  每页 {size} 条
+                </option>
+              ))}
+            </Select>
+            <Input
+              aria-label="跳转页码"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={pages}
+              step={1}
+              value={pageText}
+              onChange={(_, data) => setPageText(data.value)}
+              onBlur={jumpPage}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  jumpPage();
+                }
+              }}
+            />
+          </div>
         </div>
         <div className="table-scroll">
           <Table className="sample-table" aria-label="采样明细">

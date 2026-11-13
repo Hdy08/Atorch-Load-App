@@ -64,6 +64,35 @@ test("manual load values retain finer precision and reject overflow or excess di
   }
 });
 
+test("device setting ranges preserve manual hundredths and restrict coarse controls to the requested steps", () => {
+  for (const [kind, min, max, step, digits] of [
+    ["fullVoltage", 0, 100, 0.1, 2],
+    ["cutoffCurrent", 0, 20, 0.1, 2],
+    ["ntcLimit", 0, 100, 1, 0],
+    ["mosLimit", 0, 100, 1, 0],
+    ["brightness", 0, 9, 1, 0],
+    ["standbyBrightness", 0, 9, 1, 0],
+    ["standbySeconds", 10, 60, 1, 0],
+  ]) {
+    const range = loadParameterRange(kind, settings);
+    assert.deepEqual(
+      [range.min, range.max, range.step, range.digits],
+      [min, max, step, digits],
+    );
+    for (const value of [min, max, min + 10 ** -digits])
+      assert.equal(parameterError(String(value), range), "");
+    for (const value of [min - step, max + step, min + 10 ** -(digits + 1)])
+      assert.notEqual(parameterError(String(value), range), "");
+    assert.equal(stepParameter(min, -1, range), min);
+    assert.equal(stepParameter(max, 1, range), max);
+    assert.equal(stepParameter(min, 1, range), min + step);
+  }
+  const current = loadParameterRange("cutoffCurrent", settings);
+  assert.equal(parameterError("0.05", current), "");
+  assert.equal(stepParameter(0.05, 1, current), 0.1);
+  assert.equal(stepParameter(0.05, -1, current), 0);
+});
+
 test("coarse arrows land on zero-based multiples and never cross a dependent bound", () => {
   const current = loadParameterRange("target", settings);
   assert.equal(stepParameter(NaN, 1, current), 0);

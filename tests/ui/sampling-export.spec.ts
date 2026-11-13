@@ -3,10 +3,20 @@ import { mkdir } from "node:fs/promises";
 
 async function fixture(
   page: Page,
-  options: { count?: number; bluetooth?: boolean; connected?: boolean } = {},
+  options: {
+    count?: number;
+    bluetooth?: boolean;
+    connected?: boolean;
+    recording?: boolean;
+  } = {},
 ) {
   await page.addInitScript(
-    ({ count = 121, bluetooth = false, connected = true }) => {
+    ({
+      count = 121,
+      bluetooth = false,
+      connected = true,
+      recording = false,
+    }) => {
       const base = new Date(2026, 10, 13, 10).getTime();
       const row = (index: number) => ({
         timestamp: base + index * 1000,
@@ -72,7 +82,8 @@ async function fixture(
                 samplingElapsedMs: state.rows.at(-1)?.elapsedMs ?? 0,
                 connectedAt: base,
                 lastReportAt: Date.now(),
-                recording: null,
+                recording: recording ? "fixture/current.csv" : null,
+                recordingPaused: state.paused,
                 error: null,
                 logs: [],
               };
@@ -139,7 +150,10 @@ for (const bluetooth of [false, true]) {
   test(`pause and resume control sample collection (${bluetooth ? "BLE" : "USB"})`, async ({
     page,
   }) => {
-    await fixture(page, { bluetooth });
+    await fixture(page, { bluetooth, recording: true });
+    await expect(
+      page.getByText(/本机记录已暂停|正在自动保存本机记录/),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: /^(开始|停止)记录$/ }),
     ).toHaveCount(0);
@@ -147,6 +161,9 @@ for (const bluetooth of [false, true]) {
     await expect(
       page.getByRole("button", { name: "继续", exact: true }),
     ).toBeEnabled();
+    await expect(
+      page.getByText(/本机记录已暂停|正在自动保存本机记录/),
+    ).toHaveCount(0);
     await page.evaluate(() => (window as any).samplingFixture.tick());
     expect(
       await page.evaluate(() => (window as any).samplingFixture.rows.length),
@@ -412,8 +429,6 @@ for (const timeMode of ["clock", "elapsed"]) {
     );
     expect(cells.length).toBeLessThan(61);
     await page.getByRole("button", { name: "数据记录", exact: true }).click();
-    await page.getByLabel("回看开始时间").fill("2026-11-13T10:00:10");
-    await page.getByLabel("回看结束时间").fill("2026-11-13T10:01:50");
     const historyRange = await zoom(page, 20, 60);
     await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
     saved = await inspect();
@@ -556,6 +571,127 @@ async function chartState(page: Page) {
   });
 }
 
+test("time divisions render dashed grids and every unit axis keeps its position after time-mode changes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1050 });
+  await fixture(page);
+  for (const checkbox of await page
+    .getByRole("group", { name: "曲线参数", exact: true })
+    .getByRole("checkbox")
+    .all())
+    await checkbox.check();
+  const inspect = () =>
+    page.evaluate(async () => {
+      const url = performance
+        .getEntriesByType("resource")
+        .map((entry) => entry.name)
+        .find((url) => url.includes("/echarts_core.js"))!;
+      const { getInstanceByDom } = await import(url);
+      const chart = getInstanceByDom(document.querySelector(".trend-chart"));
+      const model = chart.getModel();
+      const option = chart.getOption();
+      const axes = option.yAxis.map((axis: any, index: number) => {
+        const lines: number[] = [];
+        chart
+          .getViewOfComponentModel(model.getComponent("yAxis", index))
+          .group.traverse((el: any) => {
+            if (el.anid === "line" && !el.ignore && !el.invisible)
+              lines.push(
+                el.transformCoordToGlobal(el.shape.x1, el.shape.y1)[0],
+              );
+          });
+        return { unit: axis.id, position: axis.position, lines };
+      });
+      let grids = 0;
+      chart
+        .getViewOfComponentModel(model.getComponent("xAxis"))
+        .group.traverse((el: any) => {
+          if (
+            String(el.anid).startsWith("line_") &&
+            el.style.lineDash &&
+            !el.ignore &&
+            !el.invisible
+          )
+            grids++;
+        });
+      return { axes, grids };
+    });
+  let baseline: number[] | undefined;
+  for (const history of [false, true]) {
+    if (history)
+      await page.getByRole("button", { name: "数据记录", exact: true }).click();
+    for (const mode of ["clock", "elapsed", "clock"]) {
+      await page.getByLabel("曲线时间坐标", { exact: true }).selectOption(mode);
+      const state = await inspect();
+      expect(state.axes).toHaveLength(8);
+      expect(state.axes.every((axis: any) => axis.lines.length === 1)).toBe(
+        true,
+      );
+      const positions = state.axes.map((axis: any) => axis.lines[0]);
+      expect(new Set(positions).size).toBe(8);
+      if (baseline) expect(positions).toEqual(baseline);
+      else baseline = positions;
+      expect(state.grids).toBeGreaterThan(1);
+    }
+  }
+  await mkdir("artifacts/chart-detail-settings", { recursive: true });
+  await page
+    .locator(".review-card")
+    .screenshot({ path: "artifacts/chart-detail-settings/history-axes.png" });
+});
+
+test("empty charts hide time ticks and hover pointers in both time modes and both pages", async ({
+  page,
+}) => {
+  await fixture(page, { count: 0, connected: false });
+  for (const history of [false, true]) {
+    if (history)
+      await page.getByRole("button", { name: "数据记录", exact: true }).click();
+    for (const mode of ["clock", "elapsed"]) {
+      await page.getByLabel("曲线时间坐标", { exact: true }).selectOption(mode);
+      const state = await chartState(page);
+      await page.mouse.move(
+        state.left + (state.grid.left + state.width - state.grid.right) / 2,
+        state.top + 90,
+      );
+      await page.waitForTimeout(1100);
+      const drawn = await page.evaluate(async () => {
+        const url = performance
+          .getEntriesByType("resource")
+          .map((entry) => entry.name)
+          .find((url) => url.includes("/echarts_core.js"))!;
+        const { getInstanceByDom } = await import(url);
+        const chart = getInstanceByDom(document.querySelector(".trend-chart"));
+        const elements = chart
+          .getZr()
+          .storage.getDisplayList(true)
+          .filter((el: any) => !el.ignore && !el.invisible);
+        return {
+          text: elements
+            .filter((el: any) => el.type === "tspan")
+            .map((el: any) => String(el.style.text)),
+          verticalDashes: elements.filter((el: any) => {
+            if (el.type !== "line" || !el.style.lineDash?.length) return false;
+            const rect = el.getBoundingRect().clone();
+            rect.applyTransform(el.getComputedTransform());
+            return rect.width < 2 && rect.height > 20;
+          }).length,
+        };
+      });
+      expect(
+        drawn.text.some((text: string) => /\d{2}:\d{2}:\d{2}/.test(text)),
+      ).toBe(false);
+      expect(drawn.verticalDashes).toBe(0);
+      await expect(page.locator(".curve-tooltip")).toBeHidden();
+    }
+  }
+  await mkdir("artifacts/chart-detail-settings", { recursive: true });
+  await page
+    .locator(".review-card")
+    .screenshot({ path: "artifacts/chart-detail-settings/empty-elapsed.png" });
+});
+
 test("unrecorded real time stays empty across pause, export and historical import", async ({
   page,
 }) => {
@@ -671,7 +807,7 @@ for (const mode of ["clock", "elapsed"]) {
     );
     await expect(
       page.getByRole("table", { name: "采样明细" }).locator("tbody tr"),
-    ).toHaveCount(rows.length);
+    ).toHaveCount(Math.min(10, rows.length));
     await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
     const csv = await page.evaluate(
       () =>
@@ -698,12 +834,18 @@ test("stationary mouse keeps the tooltip visible across incoming samples and hid
     .locator(".trend-chart")
     .getByText("电压 (V)", { exact: true });
   await expect(tip).toBeVisible();
+  await expect(
+    page.locator(".curve-tooltip").getByText("电流 (A)", { exact: true }),
+  ).toHaveCount(1);
   for (let i = 1; i <= 3; i++) {
     await page.evaluate(() => (window as any).samplingFixture.tick());
     await expect
       .poll(async () => (await chartState(page)).series[0].data.length)
       .toBe(121 + i);
     await expect(tip).toBeVisible();
+    await expect(
+      page.locator(".curve-tooltip").getByText("电流 (A)", { exact: true }),
+    ).toHaveCount(1);
   }
   await page.mouse.move(10, 10);
   await expect(tip).toBeHidden();
@@ -907,6 +1049,8 @@ test("export and screenshot stay on the left, with reset at the lower right on b
       .getByRole("button", { name: "重置缩放", exact: true })
       .boundingBox();
     expect(image!.x).toBeGreaterThan(exported!.x + exported!.width);
+    expect(image!.height).toBe(exported!.height);
+    expect(reset!.height).toBe(exported!.height);
     expect(image!.x - exported!.x - exported!.width).toBeLessThanOrEqual(9);
     expect(reset!.x).toBeGreaterThan(image!.x + image!.width + 30);
     expect(
@@ -944,6 +1088,8 @@ test("export and screenshot stay on the left, with reset at the lower right on b
     expect(mobileImage!.y + mobileImage!.height / 2).toBe(
       mobileExport!.y + mobileExport!.height / 2,
     );
+    expect(mobileImage!.height).toBe(mobileExport!.height);
+    expect(resetBox!.height).toBe(mobileExport!.height);
     expect(
       mobileImage!.x - mobileExport!.x - mobileExport!.width,
     ).toBeLessThanOrEqual(9);

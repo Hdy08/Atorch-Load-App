@@ -4,7 +4,19 @@ use atorch_protocol::{Command, DeviceSettings};
 pub fn requires_settings(kind: &str) -> bool {
     matches!(
         kind,
-        "target" | "cutoffVoltage" | "overCurrent" | "overPower" | "limitHours" | "limitMinutes"
+        "target"
+            | "cutoffVoltage"
+            | "overCurrent"
+            | "overPower"
+            | "limitHours"
+            | "limitMinutes"
+            | "fullVoltage"
+            | "cutoffCurrent"
+            | "ntcLimit"
+            | "mosLimit"
+            | "brightness"
+            | "standbyBrightness"
+            | "standbySeconds"
     )
 }
 
@@ -63,6 +75,13 @@ pub fn validate(command: &Command, settings: &DeviceSettings) -> Result<(), Stri
             400.0,
             1,
         ),
+        "fullVoltage" => ("充电上限电压", 0.0, 100.0, 2),
+        "cutoffCurrent" => ("充电截止电流", 0.0, 20.0, 2),
+        "ntcLimit" => ("探头温度上限", 0.0, 100.0, 0),
+        "mosLimit" => ("MOS 温度上限", 0.0, 100.0, 0),
+        "brightness" => ("工作亮度", 0.0, 9.0, 0),
+        "standbyBrightness" => ("待机亮度", 0.0, 9.0, 0),
+        "standbySeconds" => ("待机延时", 10.0, 60.0, 0),
         "limitHours" | "limitMinutes" => {
             let value = command.value;
             let max = if command.kind == "limitHours" {

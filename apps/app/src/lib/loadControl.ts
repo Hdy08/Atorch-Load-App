@@ -1,8 +1,5 @@
 import type { DeviceSettings } from "./types";
 
-export type LoadParameterKind =
-  "target" | "cutoffVoltage" | "overCurrent" | "overPower";
-
 export type LoadParameterRange = {
   label: string;
   unit: string;
@@ -11,6 +8,72 @@ export type LoadParameterRange = {
   step: number;
   digits: number;
 };
+
+const deviceParameterRanges = {
+  fullVoltage: {
+    label: "充电上限电压",
+    unit: "V",
+    min: 0,
+    max: 100,
+    step: 0.1,
+    digits: 2,
+  },
+  cutoffCurrent: {
+    label: "充电截止电流",
+    unit: "A",
+    min: 0,
+    max: 20,
+    step: 0.1,
+    digits: 2,
+  },
+  ntcLimit: {
+    label: "探头温度上限",
+    unit: "°C",
+    min: 0,
+    max: 100,
+    step: 1,
+    digits: 0,
+  },
+  mosLimit: {
+    label: "MOS 温度上限",
+    unit: "°C",
+    min: 0,
+    max: 100,
+    step: 1,
+    digits: 0,
+  },
+  brightness: {
+    label: "工作亮度",
+    unit: "",
+    min: 0,
+    max: 9,
+    step: 1,
+    digits: 0,
+  },
+  standbyBrightness: {
+    label: "待机亮度",
+    unit: "",
+    min: 0,
+    max: 9,
+    step: 1,
+    digits: 0,
+  },
+  standbySeconds: {
+    label: "待机延时",
+    unit: "秒",
+    min: 10,
+    max: 60,
+    step: 1,
+    digits: 0,
+  },
+} satisfies Record<string, LoadParameterRange>;
+
+export type LoadParameterKind =
+  | "target"
+  | "cutoffVoltage"
+  | "overCurrent"
+  | "overPower"
+  | keyof typeof deviceParameterRanges;
 
 const rounded = (value: number, digits: number) =>
   Number(value.toFixed(digits));
@@ -90,6 +153,8 @@ export function loadParameterRange(
         step: 1,
         digits: 1,
       };
+    default:
+      return deviceParameterRanges[kind];
   }
 }
 

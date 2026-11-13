@@ -159,8 +159,6 @@ export function FirmwarePanel({
             <dl className="firmware-facts">
               <dt>封装系列</dt>
               <dd>{firmware.family}</dd>
-              <dt>文件名型号</dt>
-              <dd>{firmware.filenameModel ?? "未识别"}（仅从文件名提取）</dd>
               <dt>分块</dt>
               <dd>
                 {firmware.blocks} × 最多 58 字节；尾块 {firmware.lastBlockBytes}{" "}

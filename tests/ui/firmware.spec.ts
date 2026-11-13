@@ -292,6 +292,8 @@ test("firmware inspection and rehearsal are explicit and never send device comma
   await expect(run).toBeDisabled();
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(page.getByText(/文件名型号与当前设备一致/)).toBeVisible();
+  await expect(page.getByText("文件名型号", { exact: true })).toHaveCount(0);
+  await expect(page.getByText(/仅从文件名提取/)).toHaveCount(0);
   await expect(run).toBeEnabled();
   expect(
     await page.evaluate(() =>
@@ -335,7 +337,9 @@ test("invalid or oversized images clear prior state and cannot rehearse", async 
 }) => {
   await fixture(page, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
-  await expect(page.getByText(/不是已识别的 AC632N 固件封装/)).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").getByText(/不是已识别的 AC632N 固件封装/),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "离线预演升级握手", exact: true }),
   ).toBeDisabled();
@@ -344,7 +348,9 @@ test("invalid or oversized images clear prior state and cannot rehearse", async 
     mimeType: "application/octet-stream",
     buffer: Buffer.alloc(58 * 65535 + 1),
   });
-  await expect(page.getByText(/固件大小必须/)).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").getByText(/固件大小必须/),
+  ).toBeVisible();
   const inspect = await page.evaluate(() =>
     (window as any).firmwareCalls.filter(
       (c: any) => c.command === "inspect_firmware",

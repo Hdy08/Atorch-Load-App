@@ -296,6 +296,65 @@ test("BLE discovery connects to the selected device and hides unconfirmed values
   }
 });
 
+for (const desktop of [false, true]) {
+  test(`BLE remote stays in live view with four keys on one row (${desktop ? "desktop" : "mobile"})`, async ({
+    page,
+  }) => {
+    await fixture(page, { desktop });
+    await page.getByRole("button", { name: "连接", exact: true }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(page.locator(".ble-controls")).toHaveCount(1);
+    await expect(
+      page.getByText(/这些操作写入设备。设备仅回传|按键作用与设备面板一致/),
+    ).toHaveCount(0);
+    for (const width of desktop ? [1440] : [330, 360, 393]) {
+      await page.setViewportSize({ width, height: 960 });
+      const keys = page.locator(".ble-keys > .fui-Button");
+      await expect(keys).toHaveText(["设置 SET", "减 −", "加 +", "确认 OK…"]);
+      const boxes = await keys.evaluateAll((buttons) =>
+        buttons.map((button) => {
+          const box = button.getBoundingClientRect();
+          return {
+            y: box.y,
+            x: box.x,
+            width: box.width,
+            height: box.height,
+            content: button.scrollWidth,
+            client: button.clientWidth,
+          };
+        }),
+      );
+      expect(new Set(boxes.map((box) => box.y)).size).toBe(1);
+      expect(new Set(boxes.map((box) => box.height)).size).toBe(1);
+      expect(
+        boxes.every((box) => box.content <= box.client + 1),
+        JSON.stringify(boxes),
+      ).toBe(true);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(width);
+    }
+    await mkdir("artifacts/chart-detail-settings", { recursive: true });
+    await page.locator(".control-card").screenshot({
+      path: `artifacts/chart-detail-settings/ble-remote-${desktop ? "desktop" : "mobile"}.png`,
+    });
+    await page.getByRole("button", { name: "设备设置", exact: true }).click();
+    await expect(page.locator(".ble-controls")).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: "蓝牙面板遥控", exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "实时监控", exact: true }).click();
+    await expect(page.locator(".ble-controls")).toHaveCount(1);
+    expect(
+      await page.evaluate(() =>
+        (window as any).bluetoothCalls.filter((call: string) =>
+          call.startsWith("ble:"),
+        ),
+      ),
+    ).toEqual([]);
+  });
+}
+
 test("BLE keys send once, OK requires confirmation and clear requires acknowledging data loss", async ({
   page,
 }) => {

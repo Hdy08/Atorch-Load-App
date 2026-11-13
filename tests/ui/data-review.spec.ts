@@ -5,6 +5,25 @@ async function openCurveSettings(page: Page) {
   await page.getByRole("tab", { name: "曲线", exact: true }).click();
 }
 
+async function selectTimeRange(page: Page, first: number, last: number) {
+  await page.evaluate(
+    async ({ first, last }) => {
+      const url = performance
+        .getEntriesByType("resource")
+        .map((entry) => entry.name)
+        .find((url) => url.includes("/echarts_core.js"))!;
+      const { getInstanceByDom } = await import(url);
+      const base = new Date(2026, 10, 12, 10).getTime();
+      getInstanceByDom(document.querySelector(".trend-chart")).dispatchAction({
+        type: "dataZoom",
+        startValue: base + first * 1000,
+        endValue: base + last * 1000,
+      });
+    },
+    { first, last },
+  );
+}
+
 async function fixture(page: Page, count = 4) {
   await page.addInitScript(
     ({ count }) => {
@@ -215,6 +234,11 @@ test("reference library opens every sample and exposes selectable external files
   await expect(
     page.getByText("8,001 / 8,001 个采样点", { exact: false }),
   ).toBeVisible();
+  await expect(page.getByText("第 1 / 801 页")).toBeVisible();
+  await expect(
+    page.getByRole("table", { name: "采样明细" }).locator("tbody tr"),
+  ).toHaveCount(10);
+  await page.getByLabel("每页条数", { exact: true }).selectOption("100");
   await expect(page.getByText("第 1 / 81 页")).toBeVisible();
   await expect(
     page.getByRole("table", { name: "采样明细" }).locator("tbody tr"),
@@ -236,12 +260,93 @@ test("reference library opens every sample and exposes selectable external files
   }
 });
 
-test("time range drives chart, statistics, details and exported rows together", async ({
+test("sample details remember page size and allow bounded page jumps beside the selector", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("atorch-review-page-size", "7"),
+  );
+  await fixture(page, 127);
+  const size = page.getByLabel("每页条数", { exact: true });
+  const jump = page.getByLabel("跳转页码", { exact: true });
+  const detail = page
+    .getByRole("table", { name: "采样明细" })
+    .locator("tbody tr");
+  await expect(size).toHaveValue("10");
+  await expect(size.locator("option")).toHaveText([
+    "每页 10 条",
+    "每页 20 条",
+    "每页 50 条",
+    "每页 100 条",
+  ]);
+  await expect(detail).toHaveCount(10);
+  await expect(page.getByText("第 1 / 13 页")).toBeVisible();
+  await expect(page.getByText(/条 · 每页 .*条 · 最新在前/)).toHaveCount(0);
+  await jump.fill("3");
+  await jump.press("Enter");
+  await expect(page.getByText("第 3 / 13 页")).toBeVisible();
+  await expect(detail.first().getByRole("cell").nth(1)).toHaveText("1070");
+  await jump.fill("999");
+  await jump.press("Tab");
+  await expect(jump).toHaveValue("13");
+  await expect(detail).toHaveCount(7);
+  await jump.fill("1.5");
+  await jump.press("Enter");
+  await expect(jump).toHaveValue("13");
+  await jump.fill("0");
+  await jump.press("Enter");
+  await expect(jump).toHaveValue("1");
+  for (const value of [20, 50, 100]) {
+    await size.selectOption(String(value));
+    await expect(detail).toHaveCount(value);
+    await expect(jump).toHaveValue("1");
+  }
+  await size.selectOption("20");
+  await page.getByRole("tab", { name: "历史记录", exact: true }).click();
+  await expect(size).toHaveValue("20");
+  await expect(
+    page.getByText(
+      /打开磁盘上的完整 CSV|正在记录的文件请先停止后打开|单个文件支持载入至 50 MB/,
+    ),
+  ).toHaveCount(0);
+});
+
+test("valid sample detail page size persists across reloads and fits narrow screens", async ({
+  page,
+}) => {
+  await fixture(page, 127);
+  const size = page.getByLabel("每页条数", { exact: true });
+  await size.selectOption("50");
+  await page.reload();
+  await page.getByRole("button", { name: "数据记录", exact: true }).click();
+  await expect(size).toHaveValue("50");
+  await expect(
+    page.getByRole("table", { name: "采样明细" }).locator("tbody tr"),
+  ).toHaveCount(50);
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 1050 });
+    const selectorBox = await size.locator("..").boundingBox();
+    const jumpBox = await page
+      .getByLabel("跳转页码", { exact: true })
+      .locator("..")
+      .boundingBox();
+    expect(jumpBox!.x).toBeGreaterThan(selectorBox!.x + selectorBox!.width);
+    expect(jumpBox!.y).toBe(selectorBox!.y);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+  }
+});
+
+test("chart range drives statistics, details and exported rows without date inputs", async ({
   page,
 }) => {
   await fixture(page);
-  await page.getByLabel("回看开始时间").fill("2026-11-12T10:00:01");
-  await page.getByLabel("回看结束时间").fill("2026-11-12T10:00:02");
+  await expect(page.locator('input[type="datetime-local"]')).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "全部时间", exact: true }),
+  ).toHaveCount(0);
+  await selectTimeRange(page, 1, 2);
   await expect(
     page.getByText("2 / 4 个采样点", { exact: false }),
   ).toBeVisible();
@@ -269,12 +374,7 @@ test("time range drives chart, statistics, details and exported rows together", 
   await expect(
     page.getByRole("checkbox", { name: "电量 (Wh)", exact: true }),
   ).toBeVisible();
-  await page.getByLabel("回看开始时间").fill("2026-11-12T10:00:03");
-  await expect(page.getByText(/时间范围无效/)).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "导出 CSV", exact: true }),
-  ).toBeDisabled();
-  await page.getByRole("button", { name: "全部时间", exact: true }).click();
+  await page.getByRole("button", { name: "重置缩放", exact: true }).click();
   await expect(
     page.getByText("4 / 4 个采样点", { exact: false }),
   ).toBeVisible();
@@ -293,7 +393,7 @@ test("cumulative channels have no average and calculated totals retain their ori
   await expect(energy.getByRole("cell").last()).toHaveText("—");
   await expect(capacity.getByRole("cell").last()).toHaveText("—");
   await expect(capacity.getByRole("cell").first()).toHaveText("容量 / mAh");
-  await page.getByLabel("回看开始时间").fill("2026-11-12T10:00:02");
+  await selectTimeRange(page, 2, 3);
   await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
   const saved = await page.evaluate(
     () =>

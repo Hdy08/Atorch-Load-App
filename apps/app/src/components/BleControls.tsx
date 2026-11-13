@@ -69,9 +69,6 @@ export function BleControls({
         </Badge>
         <span>请同时查看 BW150 屏幕</span>
       </div>
-      <p className="muted">
-        按键作用与设备面板一致，取决于当前页面。加减可能改变目标值；确认键可能启停负载或提交当前选项。
-      </p>
       <div className="ble-keys">
         <Button disabled={disabled} onClick={() => void send("keySet")}>
           设置 SET
@@ -113,9 +110,6 @@ export function BleControls({
           </Button>
         ))}
       </div>
-      <p className="muted">
-        这些操作写入设备。设备仅回传监测数据，未回传模式、目标值或按键执行结果；收到数据不代表操作已执行。
-      </p>
       <Dialog
         open={confirmation !== null}
         onOpenChange={(_, data) => {

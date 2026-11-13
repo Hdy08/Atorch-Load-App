@@ -87,11 +87,15 @@ export function TrendChart({
     () => chartTimeline(samples, elapsedMode, origin),
     [samples, elapsedMode, origin],
   );
+  const hasSamples = samples.length > 0;
+  const canShowPointer = useRef(false);
+  canShowPointer.current = hasSamples && selected.length > 0;
   const showPointer = useCallback(() => {
     const instance = chart.current;
     const position = pointer.current;
     if (
       instance &&
+      canShowPointer.current &&
       position &&
       instance.containPixel({ gridIndex: 0 }, [position.x, position.y])
     )
@@ -354,6 +358,7 @@ export function TrendChart({
           bottom: 55,
         },
         tooltip: {
+          show: hasSamples && selected.length > 0,
           className: "curve-tooltip",
           trigger: "axis",
           confine: true,
@@ -373,6 +378,7 @@ export function TrendChart({
           extraCssText: `box-shadow: ${theme.shadow16};`,
         },
         axisPointer: {
+          show: hasSamples && selected.length > 0 ? "auto" : false,
           lineStyle: { color: theme.colorNeutralStrokeAccessible },
           label: {
             color: theme.colorNeutralForegroundOnBrand,
@@ -384,6 +390,7 @@ export function TrendChart({
           min: elapsedMode ? (elapsed?.fromZero ? 0 : "dataMin") : undefined,
           max: elapsedMode ? Math.max(elapsed?.current ?? 0, 1) : undefined,
           axisPointer: {
+            show: hasSamples && selected.length > 0 ? "auto" : false,
             label: {
               formatter: ({ value }: { value: number }) =>
                 elapsedMode
@@ -394,12 +401,16 @@ export function TrendChart({
           axisLine: { show: false },
           axisTick: { show: false },
           axisLabel: {
+            show: hasSamples,
             color,
             hideOverlap: true,
             formatter: (v: number) =>
               elapsedMode ? formatElapsedTime(v) : formatClockTime(v),
           },
-          splitLine: { show: false },
+          splitLine: {
+            show: hasSamples,
+            lineStyle: { color: theme.colorNeutralStroke2, type: "dashed" },
+          },
         },
         yAxis: axes.map((axis, index) => ({
           id: axis.unit,
@@ -415,6 +426,7 @@ export function TrendChart({
           show: true,
           axisLine: {
             show: true,
+            onZero: false,
             lineStyle: { color: theme.colorNeutralStroke2 },
           },
           axisTick: { show: false },
@@ -506,10 +518,12 @@ export function TrendChart({
       },
       { notMerge: true },
     );
+    if (!hasSamples) chart.current?.dispatchAction({ type: "hideTip" });
     syncSelectedRange();
     showPointer();
   }, [
     samples,
+    hasSamples,
     selected,
     theme,
     bounds,
@@ -547,7 +561,6 @@ export function TrendChart({
           {exportAction?.(visibleSamples)}
           {onImage && (
             <Button
-              size="small"
               icon={<Camera20Regular />}
               disabled={imageBusy || samples.length === 0}
               onClick={() => {
@@ -576,7 +589,6 @@ export function TrendChart({
         </div>
         <Button
           className="chart-reset-zoom"
-          size="small"
           icon={<ArrowReset20Regular />}
           disabled={!selectedRange && !Object.keys(yRanges).length}
           onClick={() => {

@@ -33,10 +33,17 @@ impl Transport for FakeUsb {
                 self.pending.push_back(t);
             }
             0x21 if self.readback => self.settings[4..8].copy_from_slice(&report[4..8]),
+            0x22 if self.readback => self.settings[50] = report[7],
+            0x23 if self.readback => self.settings[51] = report[7],
+            0x24 if self.readback => self.settings[52] = report[7],
             0x26 if self.readback => self.settings[8..12].copy_from_slice(&report[4..8]),
             0x29 if self.readback => self.settings[20..24].copy_from_slice(&report[4..8]),
+            0x2a if self.readback => self.settings[24..28].copy_from_slice(&report[4..8]),
+            0x2b if self.readback => self.settings[28..32].copy_from_slice(&report[4..8]),
             0x2c if self.readback => self.settings[32..36].copy_from_slice(&report[4..8]),
             0x2d if self.readback => self.settings[36..40].copy_from_slice(&report[4..8]),
+            0x2e if self.readback => self.settings[40..44].copy_from_slice(&report[4..8]),
+            0x2f if self.readback => self.settings[44..48].copy_from_slice(&report[4..8]),
             0x31 if self.readback => match report[7] {
                 1 => self.settings[53] = report[4],
                 2 => self.settings[54] = report[4],
@@ -511,6 +518,60 @@ fn load_controls_enforce_fresh_mode_bounds_and_manual_precision_before_writing()
                 .filter(|r| r[3] == 0x21)
                 .count(),
             1
+        );
+    }
+}
+
+#[test]
+fn device_settings_limits_reject_invalid_values_before_usb_and_confirm_boundaries() {
+    for (kind, min, max, increment, opcode) in [
+        ("fullVoltage", 0.0, 100.0, 0.01, 0x2a),
+        ("cutoffCurrent", 0.0, 20.0, 0.01, 0x2b),
+        ("ntcLimit", 0.0, 100.0, 1.0, 0x2e),
+        ("mosLimit", 0.0, 100.0, 1.0, 0x2f),
+        ("brightness", 0.0, 9.0, 1.0, 0x22),
+        ("standbyBrightness", 0.0, 9.0, 1.0, 0x23),
+        ("standbySeconds", 10.0, 60.0, 1.0, 0x24),
+    ] {
+        let (usb, writes, _) = fake(true);
+        let manager = connect(usb);
+        for value in [min - increment, max + increment, min + increment / 10.0] {
+            assert!(
+                manager
+                    .command(Command {
+                        kind: kind.into(),
+                        value,
+                        ..Default::default()
+                    })
+                    .is_err(),
+                "{kind} accepted {value}"
+            );
+        }
+        assert!(!writes.lock().unwrap().iter().any(|r| r[3] == opcode));
+        for value in [min, max] {
+            manager
+                .command(Command {
+                    kind: kind.into(),
+                    value,
+                    ..Default::default()
+                })
+                .unwrap();
+            assert!(Command {
+                kind: kind.into(),
+                value,
+                ..Default::default()
+            }
+            .matches(&Report::Settings(manager.snapshot().settings.unwrap())));
+        }
+        manager.disconnect();
+        assert_eq!(
+            writes
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|r| r[3] == opcode)
+                .count(),
+            2
         );
     }
 }

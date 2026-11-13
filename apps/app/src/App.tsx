@@ -905,13 +905,6 @@ export function App() {
                       </Button>
                     )}
                   />
-                  {snapshot.recording && (
-                    <span className="muted" role="status">
-                      {snapshot.recordingPaused
-                        ? "本机记录已暂停"
-                        : "正在自动保存本机记录"}
-                    </span>
-                  )}
                 </Card>
                 <div className="monitor-grid">
                   <Card className="control-card">
@@ -1306,11 +1299,6 @@ export function App() {
                         )}
                       </div>
                     )}
-                    <p className="muted">
-                      仅登记手动导入、导出的
-                      CSV，不复制文件。删除记录保留原文件。单个文件支持载入至 50
-                      MB。
-                    </p>
                   </Card>
                 )}
                 <DataReview
@@ -1373,19 +1361,6 @@ export function App() {
                 id="device-settings-parameters"
                 aria-labelledby="device-settings-tab-parameters"
               >
-                {bluetooth && (
-                  <Card>
-                    <BleControls
-                      key={snapshot.connectedAt}
-                      connected={snapshot.connected}
-                      busy={busy}
-                      onTask={run}
-                      onNotice={(text) =>
-                        setMessage({ text, error: false, intent: "info" })
-                      }
-                    />
-                  </Card>
-                )}
                 <div className="settings-grid">
                   <Card>
                     <div className="section-head">
@@ -1394,37 +1369,23 @@ export function App() {
                     </div>
                     {(
                       [
-                        ["cutoffVoltage", "截止电压", "V"],
-                        ["fullVoltage", "充电上限电压", "V"],
-                        ["cutoffCurrent", "充电截止电流", "A"],
-                        ["overCurrent", "过流保护", "A"],
-                        ["overPower", "过功率保护", "W"],
-                        ["ntcLimit", "探头温度上限", "°C"],
-                        ["mosLimit", "MOS 温度上限", "°C"],
+                        "cutoffVoltage",
+                        "fullVoltage",
+                        "cutoffCurrent",
+                        "overCurrent",
+                        "overPower",
+                        "ntcLimit",
+                        "mosLimit",
                       ] as const
-                    ).map(([key, label, unit]) =>
-                      key === "cutoffVoltage" ||
-                      key === "overCurrent" ||
-                      key === "overPower" ? (
-                        <LoadParameter
-                          key={key}
-                          range={loadParameterRange(key, loadSettings)}
-                          value={settings?.[key]}
-                          disabled={!snapshot.connected || busy || !settings}
-                          onApply={(value) => applyLoadParameter(key, value)}
-                        />
-                      ) : (
-                        <Parameter
-                          key={key}
-                          label={label}
-                          value={settings?.[key]}
-                          unit={unit}
-                          disabled={!snapshot.connected || busy || !settings}
-                          min={0}
-                          onApply={(n) => api.command(key, n)}
-                        />
-                      ),
-                    )}
+                    ).map((key) => (
+                      <LoadParameter
+                        key={key}
+                        range={loadParameterRange(key, loadSettings)}
+                        value={settings?.[key]}
+                        disabled={!snapshot.connected || busy || !settings}
+                        onApply={(value) => applyLoadParameter(key, value)}
+                      />
+                    ))}
                   </Card>
                   <Card>
                     <div className="section-head">
@@ -1433,20 +1394,17 @@ export function App() {
                     </div>
                     {(
                       [
-                        ["brightness", "工作亮度", 10],
-                        ["standbyBrightness", "待机亮度", 10],
-                        ["standbySeconds", "待机延时 / 秒", 255],
+                        "brightness",
+                        "standbyBrightness",
+                        "standbySeconds",
                       ] as const
-                    ).map(([key, label, max]) => (
-                      <Parameter
+                    ).map((key) => (
+                      <LoadParameter
                         key={key}
-                        label={label}
+                        range={loadParameterRange(key, loadSettings)}
                         value={settings?.[key]}
                         disabled={!snapshot.connected || busy || !settings}
-                        min={0}
-                        max={max}
-                        step={1}
-                        onApply={(n) => api.command(key, n)}
+                        onApply={(value) => applyLoadParameter(key, value)}
                       />
                     ))}
                     <LoadTimeLimit
@@ -1459,10 +1417,7 @@ export function App() {
                 </div>
                 <Card>
                   <div className="section-head">
-                    <div>
-                      <h2>校准与维护</h2>
-                      <span>校准前请准备参考仪表；修改将写入设备。</span>
-                    </div>
+                    <h2>校准与维护</h2>
                   </div>
                   <div className="calibration-grid">
                     {(
