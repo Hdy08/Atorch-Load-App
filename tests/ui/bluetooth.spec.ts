@@ -176,6 +176,11 @@ for (const desktop of [true, false]) {
       .click();
     const dialog = page.getByRole("dialog");
     await expect(
+      dialog.getByText(
+        /选择已通过 USB 连接|选择附近的 BW150 蓝牙设备|扫描 BW150_BLE，约需 6 秒/,
+      ),
+    ).toHaveCount(0);
+    await expect(
       dialog.getByRole("button", { name: "重新扫描", exact: true }),
     ).toBeEnabled();
     // Measure after Fluent's entrance scale animation reaches its final size.

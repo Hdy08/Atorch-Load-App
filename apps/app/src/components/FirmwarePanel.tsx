@@ -169,13 +169,11 @@ export function FirmwarePanel({
               <dt>SHA-256</dt>
               <dd className="mono">{firmware.sha256}</dd>
             </dl>
-            {snapshot.device && (
+            {snapshot.device && !(modelMatches && hardware) && (
               <MessageBar intent={modelMatches ? "info" : "warning"}>
                 <MessageBarBody>
                   {modelMatches
-                    ? hardware
-                      ? "文件名型号与当前设备一致；此文件的 SHA-256 与已完成真实传输核准的 BW150 V1.1.0 原厂文件相同。"
-                      : "文件名型号与当前设备一致；封装头不包含已核准的型号标识，仍需人工核对固件来源与版本。"
+                    ? "文件名型号与当前设备一致；封装头不包含已核准的型号标识，仍需人工核对固件来源与版本。"
                     : "文件名型号与当前设备不匹配或无法识别，请勿用于实机升级。离线预演可检查传输协议。"}
                 </MessageBarBody>
               </MessageBar>
@@ -200,12 +198,11 @@ export function FirmwarePanel({
             </details>
           </>
         )}
-        <MessageBar intent={hardware ? "info" : "warning"}>
-          <MessageBarBody>
-            {firmware?.limitation ??
-              "Windows / Android 可使用已核准的 BW150 V1.1.0 原厂文件进行 USB 升级和 IAP 恢复。手机升级时请保持应用前台，重新枚举后允许 USB 访问。"}
-          </MessageBarBody>
-        </MessageBar>
+        {firmware && !hardware && (
+          <MessageBar intent="warning">
+            <MessageBarBody>{firmware.limitation}</MessageBarBody>
+          </MessageBar>
+        )}
         <Button
           appearance="primary"
           disabled={!firmware || busy}
@@ -364,20 +361,6 @@ export function FirmwarePanel({
             )}
           </div>
         )}
-        <div className="control-divider" />
-        <h3>已恢复的升级流程</h3>
-        <ol>
-          <li>AA：块数、余数与 CRC16 握手</li>
-          <li>BB：设备就绪</li>
-          <li>CC / DD：58 字节分块与序号应答</li>
-          <li>EE：传输结束，等待设备烧写</li>
-          <li>FF：设备确认完成；11：失败</li>
-        </ol>
-        <p>
-          传输中止只会停止后续分块，设备可能留在
-          IAP。重新扫描并选择同一文件即可重新开始；传输完成后须收到 FF
-          并通过正常应用回读，才显示升级完成。
-        </p>
       </Card>
       <Dialog
         open={confirm}

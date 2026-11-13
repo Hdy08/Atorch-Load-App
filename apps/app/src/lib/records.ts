@@ -2,12 +2,19 @@ import type { Telemetry } from "./types";
 
 const valid = (value: number | null | undefined): value is number =>
   value != null && Number.isFinite(value);
+const completed = new WeakMap<Telemetry[], Telemetry[]>();
 
 /** Fill absent counters before filtering so a selected range retains its totals. */
 export function completeRecordCounters(rows: Telemetry[]): Telemetry[] {
+  const cached = completed.get(rows);
+  if (cached) return cached;
+  if (rows.every((row) => valid(row.energy) && valid(row.capacity))) {
+    completed.set(rows, rows);
+    return rows;
+  }
   let energy = 0;
   let capacity = 0;
-  return rows.map((row, index) => {
+  const result = rows.map((row, index) => {
     const previous = rows[index - 1];
     const interval = previous
       ? valid(row.elapsedMs) && valid(previous.elapsedMs)
@@ -38,4 +45,7 @@ export function completeRecordCounters(rows: Telemetry[]): Telemetry[] {
       ...(capacityMissing ? { capacityCalculated: true } : {}),
     };
   });
+  completed.set(rows, result);
+  completed.set(result, result);
+  return result;
 }

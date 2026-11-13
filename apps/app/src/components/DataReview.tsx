@@ -84,7 +84,7 @@ export function DataReview({
       (Object.keys(measurements) as MeasurementKey[]).filter((key) =>
         rows.length === 0
           ? ["voltage", "current", "power"].includes(key)
-          : rows.some((row) => row[key] != null),
+          : summarize(rows, key).count > 0,
       ),
     [rows],
   );

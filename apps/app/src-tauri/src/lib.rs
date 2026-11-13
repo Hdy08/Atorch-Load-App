@@ -11,6 +11,23 @@ use tauri::{Manager, State};
 type Devices = Arc<DeviceManager>;
 type RecordLibrary = Arc<Mutex<Library>>;
 
+#[tauri::command]
+async fn set_chart_fullscreen(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    {
+        tauri::async_runtime::spawn_blocking(move || {
+            tauri_plugin_atorch_usb::mobile::set_chart_fullscreen(&app, enabled)
+        })
+        .await
+        .map_err(|e| e.to_string())?
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = (app, enabled);
+        Ok(())
+    }
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CsvDocument {
@@ -646,6 +663,7 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            set_chart_fullscreen,
             discover_devices,
             get_bluetooth_status,
             discover_bluetooth,

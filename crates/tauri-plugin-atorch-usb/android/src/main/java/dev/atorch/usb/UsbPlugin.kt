@@ -15,6 +15,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import android.util.Base64
+import android.webkit.WebView
 import androidx.activity.result.ActivityResult
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -38,9 +39,11 @@ import java.io.ByteArrayOutputStream
 private data class DocumentSave(val name: String, val type: String, val data: ByteArray)
 @InvokeArg class RootUsbArgs { var enabled: Boolean = false }
 @InvokeArg class FirmwareSessionArgs { var enabled: Boolean = false; var success: Boolean = false }
+@InvokeArg class ChartFullscreenArgs { var enabled: Boolean = false }
 
 @TauriPlugin
 class UsbPlugin(private val activity: Activity) : Plugin(activity) {
+    private val chartFullscreen = ChartFullscreen(activity as AppCompatActivity)
     private val manager = activity.getSystemService(Context.USB_SERVICE) as UsbManager
     private val io = Executors.newSingleThreadExecutor()
     private val files = Executors.newSingleThreadExecutor()
@@ -105,6 +108,18 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
         io.execute {
             try { invoke.resolve(operation()) }
             catch (e: Exception) { invoke.reject(e.message ?: "USB 操作失败") }
+        }
+    }
+
+    override fun load(webView: WebView) { chartFullscreen.load(webView) }
+
+    override fun onResume(activity: AppCompatActivity) { chartFullscreen.resume() }
+
+    @Command fun setChartFullscreen(invoke: Invoke) {
+        val args = invoke.parseArgs(ChartFullscreenArgs::class.java)
+        activity.runOnUiThread {
+            try { chartFullscreen.setEnabled(args.enabled); invoke.resolve(JSObject()) }
+            catch (e: Exception) { invoke.reject(e.message ?: "无法切换全屏") }
         }
     }
 
@@ -376,6 +391,7 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     override fun onDestroy(activity: AppCompatActivity) {
+        chartFullscreen.destroy()
         pendingOpen?.second?.reject("应用已关闭"); pendingOpen = null
         pendingSave?.second?.reject("应用已关闭"); pendingSave = null
         pendingPick?.reject("应用已关闭"); pendingPick = null

@@ -13,6 +13,7 @@ export const measurements = {
   fanSpeed: { name: "风扇", unit: "RPM" },
 } as const;
 export type MeasurementKey = keyof typeof measurements;
+export const defaultCurveWidth = 1;
 export const measurementKeys = Object.keys(measurements) as MeasurementKey[];
 export function readChartSelection(): MeasurementKey[] {
   try {
@@ -53,12 +54,9 @@ export function chartAxisRange(
     return { min: custom.min, max: custom.max };
   let low = 0;
   let high = 0;
-  for (const row of rows) {
-    const value = row[key];
-    if (value == null || !Number.isFinite(value)) continue;
-    low = Math.min(low, value);
-    high = Math.max(high, value);
-  }
+  const observed = summarize(rows, key);
+  low = Math.min(0, observed.min ?? 0);
+  high = Math.max(0, observed.max ?? 0);
   if (key === "current") {
     const magnitude = Math.max(Math.abs(low), high);
     // Keep zero exactly halfway up, including an all-zero / empty trace.
@@ -95,14 +93,9 @@ export function groupChartAxes(
     const lows: number[] = [];
     const highs: number[] = [];
     for (const [keyIndex, key] of group.keys.entries()) {
-      let low = Infinity;
-      let high = -Infinity;
-      for (const row of rows) {
-        const value = row[key];
-        if (value == null || !Number.isFinite(value)) continue;
-        low = Math.min(low, value);
-        high = Math.max(high, value);
-      }
+      const stats = summarize(rows, key);
+      const low = stats.min ?? Infinity;
+      const high = stats.max ?? -Infinity;
       observedMin = Math.min(observedMin, low);
       observedMax = Math.max(observedMax, high);
       lows.push(limits[keyIndex].min ?? (Number.isFinite(low) ? low : 0));
@@ -315,7 +308,31 @@ export function filterSamples(
   );
 }
 
-export function summarize(rows: Telemetry[], key: MeasurementKey) {
+export type SampleSummary = {
+  count: number;
+  min: number | null;
+  max: number | null;
+  average: number | null;
+};
+export type SampleSummaries = Partial<Record<MeasurementKey, SampleSummary>>;
+const summaries = new WeakMap<Telemetry[], SampleSummaries>();
+
+export function cacheSummaries(rows: Telemetry[], prepared: SampleSummaries) {
+  summaries.set(rows, prepared);
+}
+
+export function summarizeMeasurements(rows: Telemetry[]): SampleSummaries {
+  for (const key of measurementKeys) summarize(rows, key);
+  return summaries.get(rows)!;
+}
+
+export function summarize(
+  rows: Telemetry[],
+  key: MeasurementKey,
+): SampleSummary {
+  let cache = summaries.get(rows);
+  if (!cache) summaries.set(rows, (cache = {}));
+  if (cache[key]) return cache[key]!;
   const cumulative = key === "energy" || key === "capacity";
   let count = 0,
     sum = 0,
@@ -329,10 +346,10 @@ export function summarize(rows: Telemetry[], key: MeasurementKey) {
     min = Math.min(min, value);
     max = Math.max(max, value);
   }
-  return {
+  return (cache[key] = {
     count,
     min: count ? min : null,
     max: count ? max : null,
     average: count && !cumulative ? sum / count : null,
-  };
+  });
 }

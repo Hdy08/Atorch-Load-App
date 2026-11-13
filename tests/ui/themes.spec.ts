@@ -101,6 +101,56 @@ const rgb = (hex: string) => {
   return `rgb(${value >> 16}, ${(value >> 8) & 255}, ${value & 255})`;
 };
 
+test("sidebar switches directly to its narrow width and device management matches navigation", async ({
+  page,
+}) => {
+  await fixture(page, true);
+  for (const width of [
+    1440, 1201, 1200, 1100, 901, 900, 850, 651, 1201, 1200,
+  ]) {
+    await page.setViewportSize({ width, height: 1050 });
+    await expect(page.locator(".sidebar")).toHaveCSS(
+      "width",
+      width > 1200 ? "228px" : "72px",
+    );
+    const manager = page.getByRole("button", { name: "管理设备", exact: true });
+    const navigation = page.getByRole("button", {
+      name: "数据记录",
+      exact: true,
+    });
+    const properties = [
+      "min-height",
+      "font-size",
+      "font-weight",
+      "line-height",
+      "border-radius",
+      "background-color",
+      "color",
+      "justify-content",
+    ];
+    const styles = (element: Element, properties: string[]) =>
+      Object.fromEntries(
+        properties.map((property) => [
+          property,
+          getComputedStyle(element).getPropertyValue(property),
+        ]),
+      );
+    expect(await manager.evaluate(styles, properties)).toEqual(
+      await navigation.evaluate(styles, properties),
+    );
+    const left = await manager.boundingBox(),
+      top = await navigation.boundingBox();
+    expect(left!.x).toBe(top!.x);
+    expect(left!.width).toBe(top!.width);
+    if (width <= 1200) {
+      await expect(page.locator(".device-manager-label")).toBeHidden();
+      await expect(
+        page.locator(".device-manager-button .nav-item-icon"),
+      ).toBeVisible();
+    } else await expect(page.locator(".device-manager-label")).toBeVisible();
+  }
+});
+
 async function chartStyle(page: Page) {
   return page.evaluate(async () => {
     const url = performance
@@ -689,10 +739,15 @@ test("live and history share bounds, styles, fill opacity and chart height after
   expect((await axesAndLabels(page)).series.map((s) => s.areaOpacity)).toEqual([
     0, 0,
   ]);
+  expect((await axesAndLabels(page)).series.map((s) => s.width)).toEqual([
+    1, 1,
+  ]);
   await page.getByRole("button", { name: "应用设置", exact: true }).click();
   await page.getByRole("tab", { name: "曲线", exact: true }).click();
   await expect(page.getByLabel("曲线设置范围", { exact: true })).toHaveCount(0);
   const opacityInputs = page.locator('input[aria-label$="阴影不透明度"]');
+  for (const input of await page.locator('input[aria-label$="线宽"]').all())
+    await expect(input).toHaveValue("1");
   await expect(opacityInputs).toHaveCount(10);
   for (const input of await opacityInputs.all())
     await expect(input).toHaveValue("0");
@@ -713,7 +768,14 @@ test("live and history share bounds, styles, fill opacity and chart height after
   await page.getByLabel("电压阴影不透明度", { exact: true }).fill("25");
   await page.getByLabel("电流阴影不透明度", { exact: true }).fill("60");
   await page.getByRole("button", { name: "应用更改", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("已保存");
+  const savedToast = page.locator(".fui-Toast");
+  await expect(savedToast).toContainText("已保存");
+  await expect(page.locator('.curve-settings [role="status"]')).toHaveCount(0);
+  await expect(page.locator(".fui-Toaster.app-notifications")).toHaveCSS(
+    "position",
+    "fixed",
+  );
+  await expect(savedToast).toHaveCount(0, { timeout: 4000 });
   const saved = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("atorch-chart-bounds")!),
   );
@@ -775,6 +837,9 @@ test("live and history share bounds, styles, fill opacity and chart height after
         (await axesAndLabels(page)).series.map((s) => s.areaOpacity),
       )
       .toEqual([0, 0]);
+    expect((await axesAndLabels(page)).series.map((s) => s.width)).toEqual([
+      1, 1,
+    ]);
   }
 });
 

@@ -1025,7 +1025,7 @@ test("an empty real-time gap has zero statistics and cannot export fabricated da
   await expect(row.getByRole("cell").nth(1)).toHaveText("4");
 });
 
-test("export and screenshot stay on the left, with reset at the lower right on both pages", async ({
+test("export and screenshot stay on the left, with reset and fullscreen at the lower right on both pages", async ({
   page,
 }) => {
   await fixture(page);
@@ -1036,8 +1036,8 @@ test("export and screenshot stay on the left, with reset at the lower right on b
     const names = await footer.getByRole("button").allTextContents();
     expect(names).toEqual(
       history
-        ? ["导出 CSV", "截图", "重置缩放"]
-        : ["暂停", "清空", "导出", "截图", "重置缩放"],
+        ? ["导出 CSV", "截图", "重置缩放", "全屏"]
+        : ["暂停", "清空", "导出", "截图", "重置缩放", "全屏"],
     );
     const exported = await footer
       .getByRole("button", { name: history ? "导出 CSV" : "导出", exact: true })
@@ -1079,6 +1079,9 @@ test("export and screenshot stay on the left, with reset at the lower right on b
     const resetBox = await footer
       .getByRole("button", { name: "重置缩放", exact: true })
       .boundingBox();
+    const fullBox = await footer
+      .getByRole("button", { name: "全屏", exact: true })
+      .boundingBox();
     const mobileExport = await footer
       .getByRole("button", { name: history ? "导出 CSV" : "导出", exact: true })
       .boundingBox();
@@ -1093,7 +1096,7 @@ test("export and screenshot stay on the left, with reset at the lower right on b
     expect(
       mobileImage!.x - mobileExport!.x - mobileExport!.width,
     ).toBeLessThanOrEqual(9);
-    expect(resetBox!.x + resetBox!.width).toBeCloseTo(
+    expect(fullBox!.x + fullBox!.width).toBeCloseTo(
       footerBox!.x + footerBox!.width,
       0,
     );

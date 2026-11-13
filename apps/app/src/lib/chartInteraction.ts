@@ -23,33 +23,16 @@ export function chartTimeline(
   elapsed: boolean,
   origin: number,
 ): { time: number; row?: Telemetry }[] {
-  const intervals = rows
-    .slice(1)
-    .map((row, i) => row.timestamp - rows[i].timestamp)
-    .filter((value) => value > 0)
-    .sort((a, b) => a - b);
-  const cadence = intervals[Math.floor((intervals.length - 1) / 2)];
+  const gaps = elapsed ? [] : clockGaps(rows);
+  let gap = 0;
   const result: { time: number; row?: Telemetry }[] = [];
   rows.forEach((row, index) => {
     const previous = rows[index - 1];
-    if (!elapsed && previous) {
-      const wallDelta = row.timestamp - previous.timestamp;
-      const elapsedDelta =
-        row.elapsedMs !== undefined && previous.elapsedMs !== undefined
-          ? row.elapsedMs - previous.elapsedMs
-          : undefined;
-      const newSegment =
-        row.segmentId !== undefined &&
-        previous.segmentId !== undefined &&
-        row.segmentId !== previous.segmentId;
-      const paused =
-        elapsedDelta !== undefined && wallDelta - elapsedDelta > 50;
-      const missing =
-        (row.segmentId === undefined || previous.segmentId === undefined) &&
-        cadence !== undefined &&
-        wallDelta > cadence * 1.5;
-      if (wallDelta > 0 && (newSegment || paused || missing))
-        result.push({ time: previous.timestamp + wallDelta / 2 });
+    if (gaps[gap] === index) {
+      result.push({
+        time: previous.timestamp + (row.timestamp - previous.timestamp) / 2,
+      });
+      gap++;
     }
     result.push({
       time: elapsed ? sampleElapsedMs(row, origin) : row.timestamp,
@@ -57,6 +40,47 @@ export function chartTimeline(
     });
   });
   return result;
+}
+
+const gapsCache = new WeakMap<Telemetry[], number[]>();
+
+export function clockGaps(rows: Telemetry[]): number[] {
+  const cached = gapsCache.get(rows);
+  if (cached) return cached;
+  const intervals: number[] = [];
+  let uniform = true;
+  for (let i = 1; i < rows.length; i++) {
+    const delta = rows[i].timestamp - rows[i - 1].timestamp;
+    if (delta > 0) {
+      if (intervals.length && delta !== intervals[0]) uniform = false;
+      intervals.push(delta);
+    }
+  }
+  // Uniform device exports need no O(n log n) median sort.
+  const cadence = uniform
+    ? intervals[0]
+    : intervals.sort((a, b) => a - b)[Math.floor((intervals.length - 1) / 2)];
+  const gaps: number[] = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i],
+      previous = rows[i - 1];
+    const delta = row.timestamp - previous.timestamp;
+    const paused =
+      row.elapsedMs !== undefined &&
+      previous.elapsedMs !== undefined &&
+      delta - (row.elapsedMs - previous.elapsedMs) > 50;
+    const segment =
+      row.segmentId !== undefined &&
+      previous.segmentId !== undefined &&
+      row.segmentId !== previous.segmentId;
+    const missing =
+      (row.segmentId === undefined || previous.segmentId === undefined) &&
+      cadence !== undefined &&
+      delta > cadence * 1.5;
+    if (delta > 0 && (paused || segment || missing)) gaps.push(i);
+  }
+  gapsCache.set(rows, gaps);
+  return gaps;
 }
 
 export function zoomAxisRange(

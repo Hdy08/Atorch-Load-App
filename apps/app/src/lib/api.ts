@@ -17,6 +17,8 @@ import type {
 import { emptySnapshot } from "./types";
 export const native = isTauri();
 export const api = {
+  chartFullscreen: (enabled: boolean) =>
+    invoke<void>("set_chart_fullscreen", { enabled }),
   discover: () =>
     native ? invoke<DeviceInfo[]>("discover_devices") : Promise.resolve([]),
   usbDiagnostics: () =>

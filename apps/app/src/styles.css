@@ -53,7 +53,7 @@ html {
   flex-direction: column;
   align-items: flex-start;
   gap: var(--spacingVerticalS);
-  padding: var(--spacingVerticalL) var(--spacingHorizontalS);
+  padding: var(--spacingVerticalL) 0;
   color: var(--colorNeutralForeground3);
   font-size: var(--fontSizeBase300);
   line-height: var(--lineHeightBase300);
@@ -214,10 +214,43 @@ h2 {
   min-height: 255px;
 }
 .chart-scroll {
+  display: block;
+  position: relative;
   min-width: 0;
   width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+}
+.chart-scroll.chart-fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--colorNeutralBackground1);
+}
+.chart-fullscreen::backdrop {
+  background: var(--colorNeutralBackground1);
+}
+.chart-scroll.chart-fullscreen-rotated {
+  inset: 0 auto auto 100vw;
+  width: 100dvh;
+  height: 100vw;
+  transform: rotate(90deg);
+  transform-origin: top left;
+}
+.chart-fullscreen-exit {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 1;
 }
 .trend-chart {
   width: 100%;
@@ -504,7 +537,10 @@ h2 {
   gap: 8px;
   padding-top: 6px;
 }
-.chart-image-actions .chart-reset-zoom {
+.chart-view-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
 }
 .chart-export-actions {
@@ -539,10 +575,6 @@ h2 {
   align-items: center;
   justify-content: flex-end;
   gap: var(--spacingHorizontalS);
-}
-.curve-settings-actions > [role="status"] {
-  margin-right: auto;
-  color: var(--colorStatusSuccessForeground1);
 }
 .axis-swatches {
   grid-column: 1 / -1;
@@ -866,12 +898,21 @@ h2 {
 }
 @media (max-width: 1200px) {
   .sidebar {
-    width: 190px;
-    padding: 26px 12px 14px;
+    width: 72px;
+    padding: 24px 10px;
+  }
+  .nav-item-label {
+    display: none;
+  }
+  .sidebar .nav-item {
+    justify-content: center;
+  }
+  .nav-item .nav-item-icon {
+    margin-inline: 0;
   }
   .main-shell {
-    width: calc(100% - 190px);
-    margin-left: 190px;
+    width: calc(100% - 72px);
+    margin-left: 72px;
   }
   main {
     padding: 26px 24px 10px;
@@ -891,23 +932,6 @@ h2 {
   }
 }
 @media (max-width: 900px) {
-  .sidebar {
-    width: 72px;
-    padding: 24px 10px;
-  }
-  .nav-item-label {
-    display: none;
-  }
-  .sidebar .nav-item {
-    justify-content: center;
-  }
-  .nav-item .nav-item-icon {
-    margin-inline: 0;
-  }
-  .main-shell {
-    width: calc(100% - 72px);
-    margin-left: 72px;
-  }
   .settings-grid {
     gap: 16px;
   }
@@ -1219,7 +1243,7 @@ h2 {
   white-space: nowrap;
   flex-shrink: 0;
 }
-@media (min-width: 651px) and (max-width: 900px) {
+@media (min-width: 651px) and (max-width: 1200px) {
   .sidebar-device {
     padding: var(--spacingVerticalL) 0;
   }

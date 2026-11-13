@@ -64,7 +64,7 @@ async function fixture(
                 bootEntryHex: "55 05 09 02 00 00 00 EE FF",
                 hardwareWriteAvailable: hardware,
                 limitation: hardware
-                  ? "Windows BW150 V1.1.0 已核准"
+                  ? "已核准 BW150 V1.1.0 原厂文件；Windows / Android 可通过 USB 升级或从 IAP V1.0.2 重新传输，需核对接口及描述符。"
                   : "此文件仅支持离线预演",
               };
             }
@@ -132,6 +132,11 @@ test("real update requires confirmation and locks other device actions while act
 }) => {
   await fixture(page, false, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
+  await expect(
+    page.getByText(
+      /已核准 BW150 V1.1.0 原厂文件|文件名型号与当前设备一致|已恢复的升级流程/,
+    ),
+  ).toHaveCount(0);
   const start = page.getByRole("button", {
     name: "升级 BW150 固件…",
     exact: true,
@@ -291,7 +296,11 @@ test("firmware inspection and rehearsal are explicit and never send device comma
   });
   await expect(run).toBeDisabled();
   await page.getByTestId("firmware-input").setInputFiles(file());
-  await expect(page.getByText(/文件名型号与当前设备一致/)).toBeVisible();
+  await expect(page.locator(".firmware-facts")).toContainText("SHA-256");
+  await expect(page.getByText(/封装头不包含已核准的型号标识/)).toBeVisible();
+  await expect(
+    page.getByText(/已恢复的升级流程|已核准 BW150 V1.1.0 原厂文件/),
+  ).toHaveCount(0);
   await expect(page.getByText("文件名型号", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/仅从文件名提取/)).toHaveCount(0);
   await expect(run).toBeEnabled();

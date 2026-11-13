@@ -7,18 +7,26 @@ import {
   type ReactNode,
 } from "react";
 import { Button, type Theme } from "@fluentui/react-components";
-import { ArrowReset20Regular, Camera20Regular } from "@fluentui/react-icons";
+import {
+  ArrowReset20Regular,
+  Camera20Regular,
+  FullScreenMaximize20Regular,
+  FullScreenMinimize20Regular,
+} from "@fluentui/react-icons";
+import { useChartFullscreen } from "./useChartFullscreen";
 import { init, use, type ECharts } from "echarts/core";
 import { LineChart } from "echarts/charts";
 import {
   GridComponent,
   TooltipComponent,
   DataZoomComponent,
+  DatasetComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import type { Telemetry } from "../lib/types";
 import { measurementColor } from "../lib/theme";
 import { formatElapsedTime, formatClockTime } from "../lib/chartTime";
+import { chartDimensions, packedChartData } from "../lib/chartData";
 import {
   chartTimeline,
   samplesInChartRange,
@@ -33,6 +41,7 @@ import {
   groupChartAxes,
   resolveChartTicks,
   measurements,
+  defaultCurveWidth,
   type ChartBounds,
   type MeasurementKey,
 } from "../lib/analysis";
@@ -41,6 +50,7 @@ use([
   GridComponent,
   TooltipComponent,
   DataZoomComponent,
+  DatasetComponent,
   CanvasRenderer,
 ]);
 
@@ -71,6 +81,10 @@ export function TrendChart({
   elapsed?: { origin: number; current: number; fromZero: boolean };
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const { viewport, fullscreen, rotate, chartHeight, enter, exit } =
+    useChartFullscreen();
+  const gridTop = fullscreen ? 48 : 16;
+  const gridBottom = fullscreen ? 30 : 55;
   const chart = useRef<ECharts | null>(null);
   const zoom = useRef<(ChartTimeRange & { followEnd: boolean }) | undefined>(
     undefined,
@@ -79,14 +93,41 @@ export function TrendChart({
   const wheel = useRef<(event: WheelEvent) => void>(() => {});
   const interacting = useRef(false);
   const [interactionRevision, setInteractionRevision] = useState(0);
+  const queuedUpdate = useRef(false);
+  const queuedResize = useRef(false);
   const [yRanges, setYRanges] = useState<Record<string, ChartTimeRange>>({});
   const [selectedRange, setSelectedRange] = useState<ChartTimeRange>();
   const elapsedMode = elapsed !== undefined;
   const origin = elapsed?.origin ?? 0;
+  const packed = useMemo(() => packedChartData(samples), [samples]);
   const timeline = useMemo(
-    () => chartTimeline(samples, elapsedMode, origin),
-    [samples, elapsedMode, origin],
+    () => (packed ? [] : chartTimeline(samples, elapsedMode, origin)),
+    [samples, packed, elapsedMode, origin],
   );
+  const seriesData = useMemo(
+    () =>
+      packed
+        ? undefined
+        : Object.fromEntries(
+            selected.map((key) => [
+              key,
+              timeline.map(({ time, row }) => [time, row?.[key] ?? null]),
+            ]),
+          ),
+    [packed, selected, timeline],
+  );
+  const domain = useMemo(() => {
+    let startValue = Infinity,
+      endValue = -Infinity;
+    for (const row of samples) {
+      const value = elapsedMode
+        ? (row.elapsedMs ?? row.timestamp - origin)
+        : row.timestamp;
+      startValue = Math.min(startValue, value);
+      endValue = Math.max(endValue, value);
+    }
+    return { startValue, endValue };
+  }, [samples, elapsedMode, origin]);
   const hasSamples = samples.length > 0;
   const canShowPointer = useRef(false);
   canShowPointer.current = hasSamples && selected.length > 0;
@@ -102,10 +143,30 @@ export function TrendChart({
       instance.dispatchAction({ type: "showTip", ...position });
   }, []);
   const syncSelectedRange = useCallback(() => {
-    const options = chart.current?.getOption() as {
-      dataZoom?: ({ start: number; end: number } & ChartTimeRange)[];
-    };
-    const range = options?.dataZoom?.[0];
+    // getOption() deep-copies every raw point. Read only the zoom component.
+    const model = (
+      chart.current as unknown as {
+        getModel(): {
+          getComponent(name: string): {
+            getPercentRange(): number[];
+            getValueRange(axis: "x", index: number): number[];
+          };
+        };
+      } | null
+    )
+      ?.getModel()
+      .getComponent("dataZoom");
+    const percent = model?.getPercentRange();
+    const values = model?.getValueRange("x", 0);
+    const range =
+      percent && values
+        ? {
+            start: percent[0],
+            end: percent[1],
+            startValue: values[0],
+            endValue: values[1],
+          }
+        : undefined;
     const next =
       range &&
       (range.start > 0 || range.end < 100) &&
@@ -148,7 +209,7 @@ export function TrendChart({
   useEffect(() => {
     localStorage.setItem("atorch-chart-height", String(height));
   }, [height]);
-  const gridCount = chartGridCount(height);
+  const gridCount = chartGridCount(fullscreen ? chartHeight : height);
   const axes = useMemo(
     () =>
       groupChartAxes(selected, samples, bounds).map((axis) =>
@@ -167,7 +228,11 @@ export function TrendChart({
       ),
     [selected, samples, bounds, gridCount, yRanges],
   );
-  useEffect(() => setYRanges({}), [bounds]);
+  useEffect(
+    () =>
+      setYRanges((previous) => (Object.keys(previous).length ? {} : previous)),
+    [bounds],
+  );
   const layout = useMemo(() => {
     const context = document.createElement("canvas").getContext("2d")!;
     context.font = `${theme.fontSizeBase200} ${theme.fontFamilyMonospace}`;
@@ -218,12 +283,16 @@ export function TrendChart({
     const instance = chart.current;
     if (!instance || !ref.current || !event.deltaY) return;
     const rect = ref.current.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) * instance.getWidth()) / rect.width;
-    const y = ((event.clientY - rect.top) * instance.getHeight()) / rect.height;
+    const x = rotate
+      ? ((event.clientY - rect.top) * instance.getWidth()) / rect.height
+      : ((event.clientX - rect.left) * instance.getWidth()) / rect.width;
+    const y = rotate
+      ? ((rect.right - event.clientX) * instance.getHeight()) / rect.width
+      : ((event.clientY - rect.top) * instance.getHeight()) / rect.height;
     const right = instance.getWidth() - layout.right;
-    const bottom = instance.getHeight() - 55;
+    const bottom = instance.getHeight() - gridBottom;
     const axisIndex =
-      y >= 16 && y <= bottom
+      y >= gridTop && y <= bottom
         ? axes.findIndex((axis, index) => {
             const axisX =
               axis.position === "left"
@@ -238,7 +307,7 @@ export function TrendChart({
       x >= layout.left &&
       x <= right &&
       y > bottom &&
-      y < instance.getHeight() - 24;
+      y < instance.getHeight() - (fullscreen ? 0 : 24);
     if (axisIndex < 0 && !onTimeAxis) return;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -246,29 +315,26 @@ export function TrendChart({
       const axis = axes[axisIndex];
       const next = zoomAxisRange(
         { startValue: axis.min, endValue: axis.max },
-        1 - (y - 16) / (bottom - 16),
+        1 - (y - gridTop) / (bottom - gridTop),
         event.deltaY,
         gridCount * (axis.max >= 10 ? 1 : 0.1),
       );
       setYRanges((ranges) => ({ ...ranges, [axis.unit]: next }));
     } else if (samples.length > 1) {
-      const domain = timeline.reduce(
-        (range, point) => ({
-          startValue: Math.min(range.startValue, point.time),
-          endValue: Math.max(range.endValue, point.time),
-        }),
-        { startValue: Infinity, endValue: -Infinity },
-      );
+      const timeDomain = { ...domain };
       if (elapsedMode) {
-        if (elapsed?.fromZero) domain.startValue = 0;
-        domain.endValue = Math.max(elapsed?.current ?? 0, domain.endValue);
+        if (elapsed?.fromZero) timeDomain.startValue = 0;
+        timeDomain.endValue = Math.max(
+          elapsed?.current ?? 0,
+          timeDomain.endValue,
+        );
       }
       const next = zoomAxisRange(
-        selectedRange ?? domain,
+        selectedRange ?? timeDomain,
         (x - layout.left) / (right - layout.left),
         event.deltaY,
         1,
-        domain,
+        timeDomain,
       );
       instance.dispatchAction({ type: "dataZoom", ...next });
     }
@@ -300,8 +366,11 @@ export function TrendChart({
       cancelAnimationFrame(releaseFrame);
       releaseFrame = requestAnimationFrame(() => {
         interacting.current = false;
-        chart.current?.resize();
-        setInteractionRevision((value) => value + 1);
+        if (queuedResize.current) {
+          queuedResize.current = false;
+          chart.current?.resize();
+        }
+        if (queuedUpdate.current) setInteractionRevision((value) => value + 1);
       });
     };
     element.addEventListener("pointerdown", startInteraction, true);
@@ -313,7 +382,10 @@ export function TrendChart({
       passive: false,
     });
     const resize = new ResizeObserver(() => {
-      if (interacting.current) return;
+      if (interacting.current) {
+        queuedResize.current = true;
+        return;
+      }
       chart.current?.resize();
       showPointer();
     });
@@ -331,7 +403,11 @@ export function TrendChart({
     };
   }, [syncSelectedRange, showPointer]);
   useEffect(() => {
-    if (interacting.current) return;
+    if (interacting.current) {
+      queuedUpdate.current = true;
+      return;
+    }
+    queuedUpdate.current = false;
     const color = theme.colorNeutralForeground3;
     const zoomRange = zoom.current
       ? {
@@ -346,6 +422,15 @@ export function TrendChart({
       {
         backgroundColor: "transparent",
         animation: false,
+        dataset: packed
+          ? {
+              dimensions: chartDimensions.map((name) => ({
+                name,
+                type: "float",
+              })),
+              source: elapsedMode ? packed.elapsed : packed.clock,
+            }
+          : undefined,
         textStyle: {
           fontFamily: theme.fontFamilyBase,
           fontSize: Number.parseFloat(theme.fontSizeBase200),
@@ -354,8 +439,8 @@ export function TrendChart({
         grid: {
           left: layout.left,
           right: layout.right,
-          top: 16,
-          bottom: 55,
+          top: gridTop,
+          bottom: gridBottom,
         },
         tooltip: {
           show: hasSamples && selected.length > 0,
@@ -457,6 +542,7 @@ export function TrendChart({
           { type: "inside", xAxisIndex: 0, filterMode: "none", ...zoomRange },
           {
             type: "slider",
+            show: !fullscreen,
             xAxisIndex: 0,
             filterMode: "none",
             height: 14,
@@ -500,7 +586,7 @@ export function TrendChart({
           // downsampling drops different rows and splits an axis tooltip.
           connectNulls: false,
           lineStyle: {
-            width: bounds?.[key]?.width ?? 2,
+            width: bounds?.[key]?.width ?? defaultCurveWidth,
             color: bounds?.[key]?.color ?? measurementColor(theme, key),
           },
           itemStyle: {
@@ -513,7 +599,16 @@ export function TrendChart({
                   opacity: bounds![key]!.areaOpacity,
                 }
               : undefined,
-          data: timeline.map(({ time, row }) => [time, row?.[key] ?? null]),
+          ...(packed
+            ? {
+                datasetIndex: 0,
+                encode: {
+                  x: elapsedMode ? "elapsed" : "clock",
+                  y: key,
+                  tooltip: [key],
+                },
+              }
+            : { data: seriesData![key] }),
         })),
       },
       { notMerge: true },
@@ -534,25 +629,48 @@ export function TrendChart({
     elapsedMode,
     elapsed?.current,
     elapsed?.fromZero,
-    timeline,
+    packed,
+    seriesData,
     showPointer,
     interactionRevision,
+    fullscreen,
+    gridTop,
+    gridBottom,
   ]);
   return (
     <div className="chart-wrap">
-      <div
-        className="chart-scroll"
-        role="region"
-        aria-label="曲线图表"
+      <dialog
+        open
+        ref={viewport}
+        className={`chart-scroll${fullscreen ? " chart-fullscreen" : ""}${rotate ? " chart-fullscreen-rotated" : ""}`}
+        role={fullscreen ? "dialog" : "region"}
+        aria-modal={fullscreen || undefined}
+        aria-label={fullscreen ? "全屏曲线" : "曲线图表"}
         tabIndex={0}
+        onCancel={(event) => {
+          event.preventDefault();
+          exit();
+        }}
       >
         <div
           ref={ref}
           className="trend-chart"
-          style={{ minWidth: layout.minWidth, height }}
+          style={{
+            minWidth: fullscreen ? 0 : layout.minWidth,
+            height: fullscreen ? "100%" : height,
+          }}
           aria-label="实时采样曲线"
         />
-      </div>
+        {fullscreen && (
+          <Button
+            className="chart-fullscreen-exit"
+            icon={<FullScreenMinimize20Regular />}
+            onClick={exit}
+          >
+            退出全屏
+          </Button>
+        )}
+      </dialog>
       <div className="chart-image-actions">
         {typeof footerActions === "function"
           ? footerActions(visibleSamples)
@@ -587,23 +705,28 @@ export function TrendChart({
             </Button>
           )}
         </div>
-        <Button
-          className="chart-reset-zoom"
-          icon={<ArrowReset20Regular />}
-          disabled={!selectedRange && !Object.keys(yRanges).length}
-          onClick={() => {
-            zoom.current = undefined;
-            setYRanges({});
-            chart.current?.dispatchAction({
-              type: "dataZoom",
-              start: 0,
-              end: 100,
-            });
-            setSelectedRange(undefined);
-          }}
-        >
-          重置缩放
-        </Button>
+        <div className="chart-view-actions">
+          <Button
+            className="chart-reset-zoom"
+            icon={<ArrowReset20Regular />}
+            disabled={!selectedRange && !Object.keys(yRanges).length}
+            onClick={() => {
+              zoom.current = undefined;
+              setYRanges({});
+              chart.current?.dispatchAction({
+                type: "dataZoom",
+                start: 0,
+                end: 100,
+              });
+              setSelectedRange(undefined);
+            }}
+          >
+            重置缩放
+          </Button>
+          <Button icon={<FullScreenMaximize20Regular />} onClick={enter}>
+            全屏
+          </Button>
+        </div>
       </div>
       <div
         className={`chart-resize-handle${resizing ? " resizing" : ""}`}

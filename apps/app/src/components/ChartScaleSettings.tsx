@@ -14,6 +14,7 @@ import {
 import { chartPalette, measurementColor } from "../lib/theme";
 import {
   measurements,
+  defaultCurveWidth,
   type ChartBounds,
   type MeasurementKey,
 } from "../lib/analysis";
@@ -38,7 +39,7 @@ function makeDraft(
         min: bounds[key]?.min?.toString() ?? "",
         max: bounds[key]?.max?.toString() ?? "",
         color: bounds[key]?.color ?? measurementColor(theme, key),
-        width: String(bounds[key]?.width ?? 2),
+        width: String(bounds[key]?.width ?? defaultCurveWidth),
         opacity: String(
           Number(((bounds[key]?.areaOpacity ?? 0) * 100).toFixed(2)),
         ),
@@ -107,16 +108,13 @@ export function ChartScaleSettings({
 }) {
   const [draft, setDraft] = useState(() => makeDraft(selected, bounds, theme));
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
   const update = (key: MeasurementKey, change: Partial<CurveDraft>) => {
-    setSaved(false);
     setDraft((old) => ({ ...old, [key]: { ...old[key]!, ...change } }));
   };
   const save = (next: ChartBounds) => {
     onChange(next);
     setDraft(makeDraft(selected, next, theme));
     setError("");
-    setSaved(true);
     onClose?.();
   };
 
@@ -169,7 +167,7 @@ export function ChartScaleSettings({
             min === undefined &&
             max === undefined &&
             !customColor &&
-            width === 2 &&
+            width === defaultCurveWidth &&
             opacity === 0
           ) {
             delete next[key];
@@ -178,7 +176,7 @@ export function ChartScaleSettings({
               min,
               max,
               ...(customColor ? { color } : {}),
-              ...(width !== 2 ? { width } : {}),
+              ...(width !== defaultCurveWidth ? { width } : {}),
               ...(opacity !== 0 ? { areaOpacity: opacity / 100 } : {}),
             };
           }
@@ -224,7 +222,7 @@ export function ChartScaleSettings({
                   min={0.5}
                   max={3}
                   step={0.5}
-                  value={draft[key]?.width ?? "2"}
+                  value={draft[key]?.width ?? String(defaultCurveWidth)}
                   onChange={(_, data) => update(key, { width: data.value })}
                 />
               </Field>
@@ -270,7 +268,6 @@ export function ChartScaleSettings({
         </MessageBar>
       )}
       <div className="curve-settings-actions">
-        <span role="status">{saved ? "已保存" : ""}</span>
         {onClose && (
           <Button type="button" onClick={onClose}>
             取消

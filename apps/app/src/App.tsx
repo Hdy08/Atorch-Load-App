@@ -46,7 +46,8 @@ import {
 } from "@fluentui/react-icons";
 import { api, native } from "./lib/api";
 import { measurementColor } from "./lib/theme";
-import { download, exportCsv, parseCsvBase64, readCsv } from "./lib/csv";
+import { download, exportCsv } from "./lib/csv";
+import { importCsv } from "./lib/csvImport";
 import { Notifications } from "./components/Notifications";
 import {
   measurementKeys,
@@ -225,6 +226,7 @@ export function App() {
   );
   const [imported, setImported] = useState<Telemetry[]>([]);
   const [importName, setImportName] = useState("");
+  const [importId, setImportId] = useState("");
   const [historyTab, setHistoryTab] = useState("current");
   const [historySource, setHistorySource] = useState<"import" | "recordings">(
     "recordings",
@@ -669,23 +671,24 @@ export function App() {
                         : "未连接"}
             </span>
             <Button
-              appearance={snapshot.connected ? "subtle" : "primary"}
-              className="device-manager-button"
+              appearance="subtle"
+              className="nav-item device-manager-button"
               disabled={busy}
               aria-label={snapshot.connected ? "管理设备" : "连接设备"}
               aria-describedby="device-connection-status"
-              icon={
-                snapshot.connected ? (
+              icon={{
+                className: "nav-item-icon",
+                children: snapshot.connected ? (
                   <PlugConnected20Regular />
                 ) : (
                   <PlugDisconnected20Regular />
-                )
-              }
+                ),
+              }}
               onClick={() => {
                 setDeviceDialog(true);
               }}
             >
-              <span className="device-manager-label">
+              <span className="device-manager-label nav-item-label">
                 {snapshot.connected ? "管理设备" : "连接设备"}
               </span>
             </Button>
@@ -1155,10 +1158,15 @@ export function App() {
                         void run(async () => {
                           const document = await api.openCsv();
                           if (!document) return;
-                          const rows = parseCsvBase64(document.dataBase64);
-                          await api.registerRecording(document.path);
+                          const rows = await importCsv({
+                            base64: document.dataBase64,
+                          });
+                          const entry = await api.registerRecording(
+                            document.path,
+                          );
                           setImported(rows);
                           setImportName(document.name);
+                          setImportId(entry?.id ?? document.path);
                           setImportRevision((n) => n + 1);
                           setArchiveRevision((n) => n + 1);
                           setHistorySource("import");
@@ -1183,9 +1191,10 @@ export function App() {
                     const file = e.target.files?.[0];
                     if (!file) return;
                     await run(async () => {
-                      const rows = await readCsv(file);
+                      const rows = await importCsv({ file });
                       setImported(rows);
                       setImportName(file.name);
+                      setImportId("");
                       setImportRevision((n) => n + 1);
                       setHistorySource("import");
                       setHistoryTab("history");
@@ -1209,6 +1218,24 @@ export function App() {
                             void run(async () => {
                               const ids = [...selectedRecords];
                               await api.deleteRecordings(ids);
+                              const clearImport = ids.includes(importId);
+                              const clearArchive = ids.includes(archiveId);
+                              if (clearImport) {
+                                setImported([]);
+                                setImportName("");
+                                setImportId("");
+                              }
+                              if (clearArchive) {
+                                setArchiveRows([]);
+                                setArchiveName("");
+                                setArchiveId("");
+                              }
+                              if (
+                                historySource === "import"
+                                  ? clearImport
+                                  : clearArchive
+                              )
+                                setImportRevision((n) => n + 1);
                               setSelectedRecords([]);
                               setRecordings((files) =>
                                 files.filter((file) => !ids.includes(file.id)),
@@ -1275,9 +1302,9 @@ export function App() {
                                   const document = await api.readRecording(
                                     file.id,
                                   );
-                                  const rows = parseCsvBase64(
-                                    document.dataBase64,
-                                  );
+                                  const rows = await importCsv({
+                                    base64: document.dataBase64,
+                                  });
                                   setArchiveRows(rows);
                                   setArchiveName(file.name);
                                   setArchiveId(file.id);
@@ -1306,7 +1333,7 @@ export function App() {
                   onSelectionChange={setSelected}
                   timeMode={chartTimeMode}
                   onTimeModeChange={setChartTimeMode}
-                  key={`${historyTab}:${historySource}:${importRevision}:${archiveName}`}
+                  key={`${historyTab}:${historySource}:${importRevision}`}
                   rows={activeRows}
                   title={
                     historyTab === "current"
@@ -1571,7 +1598,10 @@ export function App() {
                       selected={measurementKeys}
                       bounds={chartBounds}
                       theme={theme}
-                      onChange={setChartBounds}
+                      onChange={(next) => {
+                        setChartBounds(next);
+                        setMessage({ text: "已保存", error: false });
+                      }}
                     />
                   </section>
                 )}
@@ -1689,11 +1719,6 @@ export function App() {
           <DialogBody>
             <DialogTitle>连接设备</DialogTitle>
             <DialogContent>
-              <p className="dialog-intro">
-                {connectionType === "bluetooth"
-                  ? "选择附近的 BW150 蓝牙设备。若正在使用电能表或其他蓝牙应用，请先断开其连接。"
-                  : "选择已通过 USB 连接的 ATORCH 电子负载。"}
-              </p>
               {deviceError && (
                 <MessageBar intent="error">
                   <MessageBarBody>{deviceError}</MessageBarBody>
@@ -1736,17 +1761,19 @@ export function App() {
                   </Tab>
                 </TabList>
               )}
-              {connectionType === "bluetooth" && bluetoothState && (
-                <p className="dialog-intro">
-                  {!bluetoothState.supported
-                    ? "此设备不支持 BLE"
-                    : bluetoothState.enabled === false
-                      ? "系统蓝牙已关闭，请在系统设置中开启。"
-                      : !bluetoothState.permission
-                        ? "请在系统弹窗允许附近设备访问。"
-                        : "扫描 BW150_BLE，约需 6 秒；支持监测、记录与面板遥控。"}
-                </p>
-              )}
+              {connectionType === "bluetooth" &&
+                bluetoothState &&
+                (!bluetoothState.supported ||
+                  bluetoothState.enabled === false ||
+                  !bluetoothState.permission) && (
+                  <p className="dialog-intro">
+                    {!bluetoothState.supported
+                      ? "此设备不支持 BLE"
+                      : bluetoothState.enabled === false
+                        ? "系统蓝牙已关闭，请在系统设置中开启。"
+                        : "请在系统弹窗允许附近设备访问。"}
+                  </p>
+                )}
               {connectionType === "usb" && rootUsb && (
                 <div className="root-usb-control">
                   <Switch

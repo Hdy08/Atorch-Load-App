@@ -82,7 +82,12 @@ export function parseCsv(text: string): Telemetry[] {
   };
   if (fields.voltage < 0 || fields.current < 0)
     throw new Error("CSV 缺少电压或电流列");
+  const entries = Object.entries(fields);
+  const elapsedColumn = col(/^ELAPSED_MS$/);
+  const segmentColumn = col(/^SEGMENT_ID$/);
+  const temperatureColumn = col(/DEVICE_TEMP/);
   const rows: Telemetry[] = [];
+  let ordered = true;
   for (let i = headerIndex + 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     const cells = csvCells(lines[i]);
@@ -93,21 +98,19 @@ export function parseCsv(text: string): Telemetry[] {
     if (!Number.isFinite(timestamp)) throw new Error(`第 ${i + 1} 行时间无效`);
     const row: Record<string, number | null> = { timestamp };
     if (elapsedMs !== undefined) row.elapsedMs = elapsedMs;
-    const elapsedColumn = col(/^ELAPSED_MS$/);
     if (!relative && elapsedColumn >= 0 && cells[elapsedColumn]?.trim()) {
       const value = Number(cells[elapsedColumn]);
       if (!Number.isFinite(value) || value < 0)
         throw new Error(`第 ${i + 1} 行采样时长无效`);
       row.elapsedMs = value;
     }
-    const segmentColumn = col(/^SEGMENT_ID$/);
     if (segmentColumn >= 0 && cells[segmentColumn]?.trim()) {
       const value = Number(cells[segmentColumn]);
       if (!Number.isSafeInteger(value) || value < 0)
         throw new Error(`第 ${i + 1} 行记录分段无效`);
       row.segmentId = value;
     }
-    for (const [field, index] of Object.entries(fields)) {
+    for (const [field, index] of entries) {
       const required = field === "voltage" || field === "current";
       const value =
         index < 0 || !cells[index]?.trim() ? null : Number(cells[index]);
@@ -119,7 +122,6 @@ export function parseCsv(text: string): Telemetry[] {
         throw new Error(`第 ${i + 1} 行 ${field} 数据无效`);
       row[field] = value;
     }
-    const temperatureColumn = col(/DEVICE_TEMP/);
     if (temperatureColumn >= 0 && cells[temperatureColumn]?.trim()) {
       const value = Number(cells[temperatureColumn]);
       if (!Number.isFinite(value))
@@ -128,15 +130,18 @@ export function parseCsv(text: string): Telemetry[] {
       // an explicit MOS reading when both columns are present.
       row.mosTemperature ??= value;
     }
-    rows.push({
-      ...row,
-      power: row.power ?? Number(row.voltage) * Number(row.current),
-      running: null,
-      status: 0,
-    } as unknown as Telemetry);
+    if (rows.length && timestamp < rows[rows.length - 1].timestamp)
+      ordered = false;
+    const sample = row as unknown as Telemetry;
+    sample.power ??= Number(row.voltage) * Number(row.current);
+    sample.running = null;
+    sample.status = 0;
+    rows.push(sample);
   }
   if (rows.length === 0) throw new Error("CSV 没有有效采样数据");
-  return completeRecordCounters(rows.sort((a, b) => a.timestamp - b.timestamp));
+  return completeRecordCounters(
+    ordered ? rows : rows.sort((a, b) => a.timestamp - b.timestamp),
+  );
 }
 
 export function exportCsv(rows: Telemetry[]): string {

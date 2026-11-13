@@ -113,13 +113,18 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
         const chart = getInstanceByDom(document.querySelector(".trend-chart"));
         if (applyZoom)
           chart.dispatchAction({ type: "dataZoom", start: 20, end: 40 });
-        const option = chart.getOption();
-        const voltage = option.series.find(
-          (series: any) => series.id === "voltage",
-        );
-        const current = option.series.find(
-          (series: any) => series.id === "current",
-        );
+        const model = chart.getModel();
+        const data = (key: string) =>
+          model
+            .getSeries()
+            .find((series: any) => series.id === key)
+            .getData();
+        const at = (key: string, axis: string, index: number) => {
+          const series = data(key);
+          return series.get(series.mapDimension(axis), index);
+        };
+        const lastIndex = data("voltage").count() - 1;
+        const range = model.getComponent("dataZoom").getValueRange("x", 0);
         return {
           processed: chart
             .getModel()
@@ -132,21 +137,17 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
                 (_, i) => series.getData().getRawIndex(i) === i,
               ).every(Boolean),
             })),
-          type: option.xAxis[0].type,
-          points: voltage.data.length,
-          first: voltage.data[0][0],
-          last: voltage.data.at(-1)[0],
-          voltage: voltage.data.at(-1)[1],
-          current: current.data.at(-1)[1],
-          energy: option.series
-            .find((s: any) => s.id === "energy")
-            ?.data.at(-1)[1],
-          capacity: option.series
-            .find((s: any) => s.id === "capacity")
-            ?.data.at(-1)[1],
+          type: model.getComponent("xAxis").get("type"),
+          points: lastIndex + 1,
+          first: at("voltage", "x", 0),
+          last: at("voltage", "x", lastIndex),
+          voltage: at("voltage", "y", lastIndex),
+          current: at("current", "y", lastIndex),
+          energy: at("energy", "y", lastIndex),
+          capacity: at("capacity", "y", lastIndex),
           range: {
-            start: option.dataZoom[0].startValue,
-            end: option.dataZoom[0].endValue,
+            start: range[0],
+            end: range[1],
           },
         };
       },

@@ -158,6 +158,12 @@ test("manual imports persist references, deduplicate paths, and delete only sele
   await expect(page.locator(".recording-entry")).toContainText(
     "D:/measurements/充电.csv",
   );
+  await expect(
+    page.getByText("0 / 0 个采样点", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "导出 CSV", exact: true }),
+  ).toBeDisabled();
   const state = await page.evaluate(() => ({
     disks: (window as any).libraryFixture.disks,
     library: JSON.parse(localStorage.getItem("fixture-library")!),
@@ -174,6 +180,73 @@ test("manual imports persist references, deduplicate paths, and delete only sele
   await page.getByRole("button", { name: "数据记录", exact: true }).click();
   await page.getByRole("tab", { name: "历史记录", exact: true }).click();
   await expect(page.locator(".recording-entry")).toHaveCount(1);
+});
+
+test("deleting an imported record clears its chart immediately while other records and current samples remain", async ({
+  page,
+}) => {
+  await fixture(page);
+  const importButton = page.getByRole("button", {
+    name: "导入 CSV",
+    exact: true,
+  });
+  await importButton.click();
+  await expect(page.locator(".recording-entry")).toHaveCount(1);
+  await page.evaluate(() => {
+    (window as any).libraryFixture.nextPath = "D:/other/充电.csv";
+  });
+  await importButton.click();
+  await expect(page.locator(".recording-entry")).toHaveCount(2);
+  const remove = page.getByRole("button", { name: "删除记录", exact: true });
+  await page
+    .locator(".recording-entry")
+    .filter({ hasText: "D:/measurements/充电.csv" })
+    .getByRole("checkbox")
+    .check();
+  await remove.click();
+  await expect(page.locator(".recording-entry")).toHaveCount(1);
+  await expect(
+    page.getByText("3 / 3 个采样点", { exact: false }),
+  ).toBeVisible();
+  await page.locator(".recording-entry").getByRole("checkbox").check();
+  await remove.click();
+  await expect(page.locator(".recording-entry")).toHaveCount(0);
+  await expect(
+    page.getByText("0 / 0 个采样点", { exact: false }),
+  ).toBeVisible();
+  await expect(page.locator(".curve-tooltip")).toBeHidden();
+  await expect(
+    page.getByRole("table", { name: "采样明细" }).locator("tbody tr"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "导出 CSV", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "截图", exact: true }),
+  ).toBeDisabled();
+  const counts = await page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType("resource")
+      .map((e) => e.name)
+      .find((url) => url.includes("/echarts_core.js"))!;
+    const { getInstanceByDom } = await import(url);
+    return getInstanceByDom(document.querySelector(".trend-chart"))
+      .getModel()
+      .getSeries()
+      .map((s: any) => s.getData().count());
+  });
+  expect(counts).toEqual([0, 0]);
+  expect(
+    Object.keys(
+      await page.evaluate(() => (window as any).libraryFixture.disks),
+    ),
+  ).toEqual(
+    expect.arrayContaining(["D:/measurements/充电.csv", "D:/other/充电.csv"]),
+  );
+  await page.getByRole("tab", { name: "当前记录", exact: true }).click();
+  await expect(
+    page.getByText("3 / 3 个采样点", { exact: false }),
+  ).toBeVisible();
 });
 
 test("cancelled or invalid imports do not register files and failures float for three seconds", async ({
