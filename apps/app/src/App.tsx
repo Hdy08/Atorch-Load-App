@@ -62,6 +62,8 @@ import { MeasurementSelector } from "./components/MeasurementSelector";
 import { SpecialTests } from "./components/SpecialTests";
 import { FirmwarePanel } from "./components/FirmwarePanel";
 import { BleControls } from "./components/BleControls";
+import { LoadParameter, LoadTimeLimit } from "./components/LoadParameter";
+import { loadParameterRange, timeLimitWrites } from "./lib/loadControl";
 import {
   emptySnapshot,
   modes,
@@ -262,6 +264,13 @@ export function App() {
   const busy =
     taskBusy || !!snapshot.firmware?.active || autoPhase === "connecting";
   const settings = snapshot.settings;
+  const loadSettings = settings ?? {
+    mode: 0,
+    target: 0,
+    cutoffVoltage: 0,
+    overCurrent: 20,
+    overPower: 400,
+  };
   const rootUsb = usbDiagnostics?.rootUsb;
   const t = snapshot.telemetry;
   const bluetooth = snapshot.device?.transport === "bluetooth";
@@ -312,6 +321,35 @@ export function App() {
       await api.command(kind, value, expectedMode, expectedPrompt);
       setSnapshot(await api.snapshot());
     }, "设备已确认设置");
+  const applyLoadParameter = async (kind: string, value: number) => {
+    setBusy(true);
+    try {
+      await api.command(kind, value, settings?.mode);
+      setSnapshot(await api.snapshot());
+    } finally {
+      setBusy(false);
+    }
+  };
+  const applyTimeLimit = async (hours: number, minutes: number) => {
+    if (!settings) throw new Error("请先读取设备参数");
+    setBusy(true);
+    try {
+      for (const write of timeLimitWrites(settings, hours, minutes))
+        await api.command(write.kind, write.value, settings.mode);
+      const next = await api.snapshot();
+      setSnapshot(next);
+      if (
+        next.settings?.limitHours !== hours ||
+        next.settings?.limitMinutes !== minutes
+      )
+        throw new Error("运行时限回读不一致，请核对设备参数后重试");
+    } catch (error) {
+      setSnapshot(await api.snapshot());
+      throw error;
+    } finally {
+      setBusy(false);
+    }
+  };
   const connectionTask = async (task: () => Promise<void>) => {
     setBusy(true);
     setConnectionError(null);
@@ -925,55 +963,95 @@ export function App() {
                             切换
                           </Button>
                         </div>
-                        {(targetMode || !settings) && (
-                          <Parameter
-                            key={`target-${settings?.mode}`}
-                            label={`目标${mode[0] === "CV" ? "电压" : mode[0] === "CR" ? "电阻" : mode[0] === "CP" ? "功率" : "电流"}`}
-                            value={settings?.target ?? undefined}
-                            unit={mode[3]}
-                            disabled={
-                              !snapshot.connected ||
-                              busy ||
-                              !settings ||
-                              !targetMode
-                            }
-                            min={0}
-                            onApply={(n) =>
-                              api.command("target", n, settings?.mode)
-                            }
-                          />
+                        {basicMode || !settings ? (
+                          <div
+                            className="load-parameters"
+                            key={`${snapshot.connectedAt}-${settings?.mode}`}
+                          >
+                            {(
+                              [
+                                "target",
+                                "cutoffVoltage",
+                                "overCurrent",
+                                "overPower",
+                              ] as const
+                            ).map((kind) => (
+                              <LoadParameter
+                                key={kind}
+                                range={loadParameterRange(kind, loadSettings)}
+                                value={settings?.[kind] ?? undefined}
+                                disabled={
+                                  !snapshot.connected || busy || !settings
+                                }
+                                onApply={(value) =>
+                                  applyLoadParameter(kind, value)
+                                }
+                              />
+                            ))}
+                            <LoadTimeLimit
+                              hours={settings?.limitHours}
+                              minutes={settings?.limitMinutes}
+                              disabled={
+                                !snapshot.connected || busy || !settings
+                              }
+                              onApply={applyTimeLimit}
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            {targetMode && (
+                              <Parameter
+                                key={`target-${settings?.mode}`}
+                                label={`目标${mode[0] === "CV" ? "电压" : mode[0] === "CR" ? "电阻" : mode[0] === "CP" ? "功率" : "电流"}`}
+                                value={settings?.target ?? undefined}
+                                unit={mode[3]}
+                                disabled={
+                                  !snapshot.connected ||
+                                  busy ||
+                                  !settings ||
+                                  !targetMode
+                                }
+                                min={0}
+                                onApply={(n) =>
+                                  api.command("target", n, settings?.mode)
+                                }
+                              />
+                            )}
+                            {settings && !targetMode && (
+                              <p className="muted">
+                                此模式使用专用测试参数，请在设备面板设置；普通电流目标值不适用。
+                              </p>
+                            )}
+                            <Parameter
+                              label="截止电压"
+                              value={settings?.cutoffVoltage}
+                              unit="V"
+                              fractionDigits={2}
+                              disabled={
+                                !snapshot.connected || busy || !settings
+                              }
+                              min={0}
+                              onApply={(n) => api.command("cutoffVoltage", n)}
+                            />
+                            <div className="control-divider" />
+                            <div className="control-detail">
+                              <span>过流保护</span>
+                              <strong>{fmt(settings?.overCurrent, 2)} A</strong>
+                            </div>
+                            <div className="control-detail">
+                              <span>过功率保护</span>
+                              <strong>{fmt(settings?.overPower, 1)} W</strong>
+                            </div>
+                            <div className="control-detail">
+                              <span>运行时限</span>
+                              <strong>
+                                {settings
+                                  ? `${settings.limitHours} 小时 ${settings.limitMinutes} 分钟`
+                                  : "—"}
+                              </strong>
+                            </div>
+                          </>
                         )}
-                        {settings && !targetMode && (
-                          <p className="muted">
-                            此模式使用专用测试参数，请在设备面板设置；普通电流目标值不适用。
-                          </p>
-                        )}
-                        <Parameter
-                          label="截止电压"
-                          value={settings?.cutoffVoltage}
-                          unit="V"
-                          fractionDigits={2}
-                          disabled={!snapshot.connected || busy || !settings}
-                          min={0}
-                          onApply={(n) => api.command("cutoffVoltage", n)}
-                        />
-                        <div className="control-divider" />
-                        <div className="control-detail">
-                          <span>过流保护</span>
-                          <strong>{fmt(settings?.overCurrent, 2)} A</strong>
-                        </div>
-                        <div className="control-detail">
-                          <span>过功率保护</span>
-                          <strong>{fmt(settings?.overPower, 1)} W</strong>
-                        </div>
-                        <div className="control-detail">
-                          <span>运行时限</span>
-                          <strong>
-                            {settings
-                              ? `${settings.limitHours} 小时 ${settings.limitMinutes} 分钟`
-                              : "—"}
-                          </strong>
-                        </div>
                         <Button
                           size="large"
                           appearance="primary"
@@ -1014,12 +1092,12 @@ export function App() {
                                     ? "启动专用测试"
                                     : "请在设备面板启动测试"}
                         </Button>
-                        <span className="control-note">
-                          <ShieldCheckmark20Regular />
-                          {settings && !basicMode
-                            ? "阶段控制与停止记录见下方专用测试区域"
-                            : "运行状态以设备返回为准"}
-                        </span>
+                        {settings && !basicMode && (
+                          <span className="control-note">
+                            <ShieldCheckmark20Regular />
+                            阶段控制与停止记录见下方专用测试区域
+                          </span>
+                        )}
                       </>
                     )}
                   </Card>
@@ -1260,18 +1338,29 @@ export function App() {
                         ["ntcLimit", "探头温度上限", "°C"],
                         ["mosLimit", "MOS 温度上限", "°C"],
                       ] as const
-                    ).map(([key, label, unit]) => (
-                      <Parameter
-                        key={key}
-                        label={label}
-                        value={settings?.[key]}
-                        unit={unit}
-                        fractionDigits={key === "cutoffVoltage" ? 2 : undefined}
-                        disabled={!snapshot.connected || busy || !settings}
-                        min={0}
-                        onApply={(n) => api.command(key, n)}
-                      />
-                    ))}
+                    ).map(([key, label, unit]) =>
+                      key === "cutoffVoltage" ||
+                      key === "overCurrent" ||
+                      key === "overPower" ? (
+                        <LoadParameter
+                          key={key}
+                          range={loadParameterRange(key, loadSettings)}
+                          value={settings?.[key]}
+                          disabled={!snapshot.connected || busy || !settings}
+                          onApply={(value) => applyLoadParameter(key, value)}
+                        />
+                      ) : (
+                        <Parameter
+                          key={key}
+                          label={label}
+                          value={settings?.[key]}
+                          unit={unit}
+                          disabled={!snapshot.connected || busy || !settings}
+                          min={0}
+                          onApply={(n) => api.command(key, n)}
+                        />
+                      ),
+                    )}
                   </Card>
                   <Card>
                     <div className="section-head">
@@ -1283,8 +1372,6 @@ export function App() {
                         ["brightness", "工作亮度", 10],
                         ["standbyBrightness", "待机亮度", 10],
                         ["standbySeconds", "待机延时 / 秒", 255],
-                        ["limitHours", "运行时限 / 小时", 255],
-                        ["limitMinutes", "运行时限 / 分钟", 59],
                       ] as const
                     ).map(([key, label, max]) => (
                       <Parameter
@@ -1298,6 +1385,12 @@ export function App() {
                         onApply={(n) => api.command(key, n)}
                       />
                     ))}
+                    <LoadTimeLimit
+                      hours={settings?.limitHours}
+                      minutes={settings?.limitMinutes}
+                      disabled={!snapshot.connected || busy || !settings}
+                      onApply={applyTimeLimit}
+                    />
                   </Card>
                 </div>
                 <Card>

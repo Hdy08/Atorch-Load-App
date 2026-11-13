@@ -94,7 +94,7 @@ test("mode changes wait for confirmation, refresh target units and never start t
   ).toBeHidden();
   await expect(
     page.getByRole("spinbutton", { name: "目标电压", exact: true }),
-  ).toHaveValue("5");
+  ).toHaveValue("5.00");
   await expect(page.locator(".mode-code")).toHaveText("CV");
   await page.getByRole("button", { name: "启动负载", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("恒压模式");

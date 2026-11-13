@@ -8,6 +8,7 @@ struct FakeUsb {
     writes: Arc<Mutex<Vec<Vec<u8>>>>,
     removed: Arc<AtomicBool>,
     readback: bool,
+    acknowledge_parameters: bool,
     running: bool,
     panel_running: Option<Arc<AtomicBool>>,
     status: u8,
@@ -34,6 +35,19 @@ impl Transport for FakeUsb {
             0x21 if self.readback => self.settings[4..8].copy_from_slice(&report[4..8]),
             0x26 if self.readback => self.settings[8..12].copy_from_slice(&report[4..8]),
             0x29 if self.readback => self.settings[20..24].copy_from_slice(&report[4..8]),
+            0x2c if self.readback => self.settings[32..36].copy_from_slice(&report[4..8]),
+            0x2d if self.readback => self.settings[36..40].copy_from_slice(&report[4..8]),
+            0x31 if self.readback => match report[7] {
+                1 => self.settings[53] = report[4],
+                2 => self.settings[54] = report[4],
+                _ => {}
+            },
+            0x21..=0x31 if self.acknowledge_parameters => {
+                let mut ack = [0; 64];
+                ack[..5].copy_from_slice(&[0xaa, 5, 1, 4, 1]);
+                ack[8..10].copy_from_slice(&[0xee, 0xff]);
+                self.pending.push_back(ack);
+            }
             0x25 if self.readback => self.running = report[4] == 1,
             0x35 => {
                 let mut ack = [0; 64];
@@ -77,6 +91,9 @@ fn fake(readback: bool) -> (Box<FakeUsb>, CapturedWrites, Arc<AtomicBool>) {
     let mut settings = [0; 64];
     settings[..4].copy_from_slice(&[0xaa, 5, 1, 3]);
     settings[4..8].copy_from_slice(&3.3f32.to_be_bytes());
+    settings[32..36].copy_from_slice(&20f32.to_be_bytes());
+    settings[36..40].copy_from_slice(&400f32.to_be_bytes());
+    settings[53] = 2;
     settings[62..].copy_from_slice(&[0xee, 0xff]);
     (
         Box::new(FakeUsb {
@@ -85,6 +102,7 @@ fn fake(readback: bool) -> (Box<FakeUsb>, CapturedWrites, Arc<AtomicBool>) {
             writes: Arc::clone(&writes),
             removed: Arc::clone(&removed),
             readback,
+            acknowledge_parameters: false,
             running: false,
             panel_running: None,
             status: 0,
@@ -445,6 +463,217 @@ fn cutoff_and_temperature_writes_confirm_distinct_fields_without_changing_the_ot
             1
         );
     }
+}
+
+#[test]
+fn load_controls_enforce_fresh_mode_bounds_and_manual_precision_before_writing() {
+    for (mode, target, valid, invalid) in [
+        (0, 1.234, 1.237, vec![20.001, 1.2371, -0.001]),
+        (1, 5.67, 6.78, vec![2.54, 100.01, 6.789]),
+        (2, 12.34, 0.01, vec![0.0, 9999.991, 0.001]),
+        (3, 10.1, 10.2, vec![250.2, 10.21, -0.1]),
+    ] {
+        let (mut usb, writes, _) = fake(true);
+        usb.settings[48] = mode;
+        usb.settings[4..8].copy_from_slice(&(target as f32).to_be_bytes());
+        usb.settings[20..24].copy_from_slice(&2.55f32.to_be_bytes());
+        usb.settings[36..40].copy_from_slice(&250.1f32.to_be_bytes());
+        let manager = connect(usb);
+        for value in invalid {
+            assert!(
+                manager
+                    .command(Command {
+                        kind: "target".into(),
+                        value,
+                        expected_mode: Some(mode),
+                        ..Default::default()
+                    })
+                    .is_err(),
+                "mode {mode} accepted {value}"
+            );
+        }
+        assert!(!writes.lock().unwrap().iter().any(|r| r[3] == 0x21));
+        manager
+            .command(Command {
+                kind: "target".into(),
+                value: valid,
+                expected_mode: Some(mode),
+                ..Default::default()
+            })
+            .unwrap();
+        assert!((manager.snapshot().settings.unwrap().target.unwrap() - valid).abs() < 0.00001);
+        manager.disconnect();
+        assert_eq!(
+            writes
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|r| r[3] == 0x21)
+                .count(),
+            1
+        );
+    }
+}
+
+#[test]
+fn panel_changed_protection_is_rechecked_before_a_target_write() {
+    let (mut usb, writes, _) = fake(true);
+    usb.settings[32..36].copy_from_slice(&2f32.to_be_bytes());
+    let manager = connect(usb);
+    manager
+        .state
+        .lock()
+        .unwrap()
+        .settings
+        .as_mut()
+        .unwrap()
+        .over_current = 20.0;
+    assert!(manager
+        .command(Command {
+            kind: "target".into(),
+            value: 3.0,
+            expected_mode: Some(0),
+            ..Default::default()
+        })
+        .unwrap_err()
+        .contains("范围"));
+    assert_eq!(manager.snapshot().settings.unwrap().over_current, 2.0);
+    assert!(!writes.lock().unwrap().iter().any(|r| r[3] == 0x21));
+    manager.disconnect();
+}
+
+#[test]
+fn parameter_ack_without_matching_readback_does_not_report_success_or_retry() {
+    let (mut usb, writes, _) = fake(false);
+    usb.acknowledge_parameters = true;
+    let manager = connect(usb);
+    assert!(manager
+        .command(Command {
+            kind: "target".into(),
+            value: 7.25,
+            ..Default::default()
+        })
+        .unwrap_err()
+        .contains("确认"));
+    assert!((manager.snapshot().settings.unwrap().target.unwrap() - 3.3).abs() < 0.00001);
+    manager.disconnect();
+    assert_eq!(
+        writes
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|r| r[3] == 0x21)
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn protection_and_cutoff_limits_preserve_active_target_relationships() {
+    for (mode, target, kind, invalid, valid, opcode) in [
+        (
+            0,
+            5.123,
+            "overCurrent",
+            vec![5.122, 20.001, 10.1234],
+            5.123,
+            0x2c,
+        ),
+        (
+            3,
+            100.1,
+            "overPower",
+            vec![100.0, 400.1, 200.01],
+            100.1,
+            0x2d,
+        ),
+        (
+            1,
+            5.67,
+            "cutoffVoltage",
+            vec![5.68, 100.01, 2.551],
+            2.55,
+            0x29,
+        ),
+    ] {
+        let (mut usb, writes, _) = fake(true);
+        usb.settings[48] = mode;
+        usb.settings[4..8].copy_from_slice(&(target as f32).to_be_bytes());
+        let manager = connect(usb);
+        for value in invalid {
+            assert!(manager
+                .command(Command {
+                    kind: kind.into(),
+                    value,
+                    ..Default::default()
+                })
+                .is_err());
+        }
+        assert!(!writes.lock().unwrap().iter().any(|r| r[3] == opcode));
+        manager
+            .command(Command {
+                kind: kind.into(),
+                value: valid,
+                ..Default::default()
+            })
+            .unwrap();
+        manager.disconnect();
+        assert_eq!(
+            writes
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|r| r[3] == opcode)
+                .count(),
+            1
+        );
+    }
+}
+
+#[test]
+fn duration_writes_validate_combined_minutes_and_use_existing_two_part_protocol() {
+    let (usb, writes, _) = fake(true);
+    let manager = connect(usb);
+    for (kind, value) in [
+        ("limitHours", 0.0),
+        ("limitHours", 100.0),
+        ("limitHours", 1.5),
+        ("limitMinutes", 60.0),
+        ("limitMinutes", 1.5),
+    ] {
+        assert!(manager
+            .command(Command {
+                kind: kind.into(),
+                value,
+                ..Default::default()
+            })
+            .is_err());
+    }
+    assert!(!writes.lock().unwrap().iter().any(|r| r[3] == 0x31));
+    for (kind, value, h, m) in [
+        ("limitMinutes", 1.0, 2, 1),
+        ("limitHours", 0.0, 0, 1),
+        ("limitHours", 99.0, 99, 1),
+        ("limitMinutes", 59.0, 99, 59),
+    ] {
+        manager
+            .command(Command {
+                kind: kind.into(),
+                value,
+                ..Default::default()
+            })
+            .unwrap();
+        let settings = manager.snapshot().settings.unwrap();
+        assert_eq!((settings.limit_hours, settings.limit_minutes), (h, m));
+    }
+    manager.disconnect();
+    let frames = writes.lock().unwrap();
+    let payloads: Vec<_> = frames
+        .iter()
+        .filter(|r| r[3] == 0x31)
+        .map(|r| (r[4], r[7]))
+        .collect();
+    assert_eq!(payloads, vec![(1, 2), (0, 1), (99, 1), (59, 2)]);
 }
 
 fn cyclic_usb(readback: bool) -> (Box<FakeUsb>, CapturedWrites) {

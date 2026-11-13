@@ -145,7 +145,7 @@ for (const width of [390, 1440]) {
     ).toHaveValue("2.75");
     expect(await page.evaluate(() => (window as any).parameterCalls)).toEqual([
       { kind: "temperatureCalibration", value: 1.125 },
-      { kind: "cutoffVoltage", value: 2.75 },
+      { kind: "cutoffVoltage", value: 2.75, expectedMode: 0 },
     ]);
   });
 }

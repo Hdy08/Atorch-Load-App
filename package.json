@@ -6,7 +6,7 @@
     "apps/app"
   ],
   "scripts": {
-    "test": "node --test scripts/csv.test.mjs scripts/analysis.test.mjs scripts/records.test.mjs scripts/auto-connect.test.mjs scripts/chart-interaction.test.mjs",
+    "test": "node --test scripts/csv.test.mjs scripts/analysis.test.mjs scripts/records.test.mjs scripts/auto-connect.test.mjs scripts/chart-interaction.test.mjs scripts/load-control.test.mjs",
     "test:ui": "playwright test",
     "format": "prettier --write apps/app/src scripts apps/app/*.json apps/app/*.ts",
     "dev": "npm run dev --workspace @atorch/app",

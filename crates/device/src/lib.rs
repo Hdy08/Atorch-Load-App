@@ -1,5 +1,6 @@
 //! Serialized device I/O and recording, independent of Tauri and the frontend.
 pub mod firmware;
+mod load_control;
 mod recorder;
 pub mod recordings;
 pub mod sampling;
@@ -612,6 +613,7 @@ fn run(
                     }
                     if command.kind == "mode"
                         || command.kind == "stage"
+                        || load_control::requires_settings(&command.kind)
                         || command.expected_mode.is_some()
                         || (command.kind == "running" && command.value == 1.0)
                     {
@@ -667,6 +669,10 @@ fn run(
                                 &command, settings, telemetry,
                             )?;
                         }
+                        if load_control::requires_settings(&command.kind) {
+                            let settings = s.settings.as_ref().ok_or("请先读取设备参数")?;
+                            load_control::validate(&command, settings)?;
+                        }
                         if command.kind == "running" && command.value == 1.0 {
                             let settings = s.settings.as_ref().ok_or("请先读取设备模式")?;
                             if settings.mode > 8 {
@@ -711,7 +717,10 @@ fn run(
                         }
                         if let Some(report) = accept(&buffer[..n], state, samples, &mut recorder)? {
                             last_valid = Instant::now();
-                            if command.matches(&report) {
+                            if command.matches(&report)
+                                && (!load_control::requires_settings(&command.kind)
+                                    || matches!(report, Report::Settings(_)))
+                            {
                                 return Ok(());
                             }
                             if let Report::Ack { status, .. } = report {
