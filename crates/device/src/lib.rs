@@ -1,6 +1,7 @@
 //! Serialized device I/O and recording, independent of Tauri and the frontend.
 pub mod firmware;
 mod load_control;
+pub mod record_library;
 mod recorder;
 pub mod recordings;
 pub mod sampling;

@@ -124,7 +124,7 @@ npm run desktop:build          # Windows NSIS 安装包
 
 Windows 输出：`target/release/atorch-app.exe` 和 `target/release/bundle/nsis/Atorch Load_0.1.0_x64-setup.exe`。应用资源打入可执行文件，运行不依赖 Vite 开发服务器。安装包未做代码签名；首次安装所需 WebView2 由 Tauri 引导检查。
 
-自动记录及旧版、兼容验证接口创建的记录保留在应用数据目录的 `recordings/`。实时、回看、专用结果 CSV 和曲线 PNG 导出通过系统保存窗口选择位置及文件名，完成后显示返回的保存路径。
+自动记录仍保留在应用数据目录的 `recordings/`，不自动加入记录库。记录库只登记手动导入、导出的 CSV 文件引用，索引位于应用配置目录的 `record-library.json`，不复制文件；勾选后删除只移除记录，保留原 CSV。实时、回看、专用结果 CSV 和曲线 PNG 导出通过系统保存窗口选择位置及文件名，完成后用 3 秒悬浮通知显示保存路径。
 
 ## Android
 

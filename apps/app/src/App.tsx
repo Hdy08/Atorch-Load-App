@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogBody,
@@ -45,7 +46,8 @@ import {
 } from "@fluentui/react-icons";
 import { api, native } from "./lib/api";
 import { measurementColor } from "./lib/theme";
-import { download, exportCsv, parseCsv, readCsv } from "./lib/csv";
+import { download, exportCsv, parseCsvBase64, readCsv } from "./lib/csv";
+import { Notifications } from "./components/Notifications";
 import {
   measurementKeys,
   readChartSelection,
@@ -213,6 +215,7 @@ export function App() {
   const [message, setMessage] = useState<{
     text: string;
     error: boolean;
+    intent?: "info";
   } | null>(null);
   const [selected, setSelected] = useState<SeriesKey[]>(readChartSelection);
   const [range, setRange] = useState("all");
@@ -227,6 +230,8 @@ export function App() {
     "recordings",
   );
   const [recordings, setRecordings] = useState<RecordingInfo[]>([]);
+  const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
+  const [archiveId, setArchiveId] = useState("");
   const [archiveRows, setArchiveRows] = useState<Telemetry[]>([]);
   const [archiveName, setArchiveName] = useState("");
   const [archiveLoading, setArchiveLoading] = useState(false);
@@ -531,7 +536,12 @@ export function App() {
     api
       .recordings()
       .then((files) => {
-        if (alive) setRecordings(files);
+        if (alive) {
+          setRecordings(files);
+          setSelectedRecords((ids) =>
+            ids.filter((id) => files.some((file) => file.id === id)),
+          );
+        }
       })
       .catch((e) => {
         if (alive) setArchiveError(String(e));
@@ -542,7 +552,7 @@ export function App() {
     return () => {
       alive = false;
     };
-  }, [page, historyTab, snapshot.recording, archiveRevision]);
+  }, [page, historyTab, archiveRevision]);
   const recordSamples = useMemo(
     () => completeRecordCounters(samples),
     [samples],
@@ -597,13 +607,17 @@ export function App() {
     if (native)
       void run(async () => {
         const path = await api.saveCsv(name, content);
-        if (path) setMessage({ text: `已导出：${path}`, error: false });
+        if (path) {
+          setMessage({ text: `已导出：${path}`, error: false });
+          setArchiveRevision((n) => n + 1);
+        }
       });
     else download(name, content);
   };
 
   return (
     <FluentProvider theme={theme} className="theme-root">
+      <Notifications message={message} />
       <div className="app">
         <aside className="sidebar">
           <nav>
@@ -701,20 +715,6 @@ export function App() {
                   界面预览模式。USB 设备连接与控制请使用 Windows 或 Android
                   应用；这里可以导入历史 CSV 数据。
                 </MessageBarBody>
-              </MessageBar>
-            )}
-            {message && (
-              <MessageBar intent={message.error ? "error" : "success"}>
-                <MessageBarBody>{message.text}</MessageBarBody>
-                <MessageBarActions>
-                  <Button
-                    appearance="transparent"
-                    size="small"
-                    onClick={() => setMessage(null)}
-                  >
-                    关闭
-                  </Button>
-                </MessageBarActions>
               </MessageBar>
             )}
             {snapshot.recordingError && (
@@ -921,6 +921,9 @@ export function App() {
                         connected={snapshot.connected}
                         busy={busy}
                         onTask={run}
+                        onNotice={(text) =>
+                          setMessage({ text, error: false, intent: "info" })
+                        }
                       />
                     ) : (
                       <>
@@ -1150,7 +1153,29 @@ export function App() {
                   <div className="toolbar-buttons">
                     <Button
                       icon={<FolderOpen20Regular />}
-                      onClick={() => fileRef.current?.click()}
+                      disabled={busy}
+                      onClick={() => {
+                        if (!native) {
+                          fileRef.current?.click();
+                          return;
+                        }
+                        void run(async () => {
+                          const document = await api.openCsv();
+                          if (!document) return;
+                          const rows = parseCsvBase64(document.dataBase64);
+                          await api.registerRecording(document.path);
+                          setImported(rows);
+                          setImportName(document.name);
+                          setImportRevision((n) => n + 1);
+                          setArchiveRevision((n) => n + 1);
+                          setHistorySource("import");
+                          setHistoryTab("history");
+                          setMessage({
+                            text: `已导入：${document.name}`,
+                            error: false,
+                          });
+                        });
+                      }}
                     >
                       导入 CSV
                     </Button>
@@ -1180,15 +1205,39 @@ export function App() {
                     <div className="section-head">
                       <div>
                         <h2>本机记录库</h2>
-                        <span>打开磁盘上的完整 CSV，应用重启后仍可回看。</span>
                       </div>
-                      <Button
-                        icon={<ArrowSync20Regular />}
-                        disabled={archiveLoading || busy}
-                        onClick={() => setArchiveRevision((n) => n + 1)}
-                      >
-                        刷新记录
-                      </Button>
+                      <div className="toolbar-buttons">
+                        <Button
+                          icon={<Delete20Regular />}
+                          disabled={
+                            archiveLoading || busy || !selectedRecords.length
+                          }
+                          onClick={() =>
+                            void run(async () => {
+                              const ids = [...selectedRecords];
+                              await api.deleteRecordings(ids);
+                              setSelectedRecords([]);
+                              setRecordings((files) =>
+                                files.filter((file) => !ids.includes(file.id)),
+                              );
+                              setArchiveRevision((n) => n + 1);
+                              setMessage({
+                                text: `已删除 ${ids.length} 条记录`,
+                                error: false,
+                              });
+                            })
+                          }
+                        >
+                          删除记录
+                        </Button>
+                        <Button
+                          icon={<ArrowSync20Regular />}
+                          disabled={archiveLoading || busy}
+                          onClick={() => setArchiveRevision((n) => n + 1)}
+                        >
+                          刷新记录
+                        </Button>
+                      </div>
                     </div>
                     {archiveError && (
                       <MessageBar intent="error">
@@ -1200,40 +1249,51 @@ export function App() {
                     ) : (
                       <div className="recording-list">
                         {recordings.map((file) => (
-                          <div className="recording-entry" key={file.name}>
+                          <div className="recording-entry" key={file.id}>
+                            <Checkbox
+                              aria-label={`选择记录 ${file.name}`}
+                              checked={selectedRecords.includes(file.id)}
+                              disabled={busy}
+                              onChange={(_, data) =>
+                                setSelectedRecords((ids) =>
+                                  data.checked
+                                    ? [...new Set([...ids, file.id])]
+                                    : ids.filter((id) => id !== file.id),
+                                )
+                              }
+                            />
                             <DocumentTable20Regular />
-                            <div>
+                            <div className="recording-info">
                               <strong>{file.name}</strong>
+                              <span className="recording-path">
+                                {file.path}
+                              </span>
                               <span>
                                 {(file.bytes / 1024).toFixed(1)} KB ·{" "}
-                                {new Date(file.modifiedAt).toLocaleString()}
+                                {file.modifiedAt
+                                  ? new Date(file.modifiedAt).toLocaleString()
+                                  : ""}
                               </span>
                             </div>
-                            {file.active && (
-                              <Badge color="danger" appearance="tint">
-                                {snapshot.recordingPaused
-                                  ? "记录已暂停"
-                                  : "记录中"}
-                              </Badge>
-                            )}
                             <Button
-                              disabled={busy || file.active}
+                              disabled={busy}
                               onClick={() =>
                                 void run(async () => {
-                                  const content = await api.readRecording(
-                                    file.name,
+                                  const document = await api.readRecording(
+                                    file.id,
                                   );
-                                  const rows = parseCsv(content);
+                                  const rows = parseCsvBase64(
+                                    document.dataBase64,
+                                  );
                                   setArchiveRows(rows);
                                   setArchiveName(file.name);
+                                  setArchiveId(file.id);
                                   setHistorySource("recordings");
                                   setImportRevision((n) => n + 1);
                                 })
                               }
                             >
-                              {archiveName === file.name
-                                ? "重新载入"
-                                : "打开记录"}
+                              {archiveId === file.id ? "重新载入" : "打开记录"}
                             </Button>
                           </div>
                         ))}
@@ -1247,8 +1307,9 @@ export function App() {
                       </div>
                     )}
                     <p className="muted">
-                      正在记录的文件请先停止后打开，或在“当前记录”查看实时数据。单个文件支持载入至
-                      50 MB。
+                      仅登记手动导入、导出的
+                      CSV，不复制文件。删除记录保留原文件。单个文件支持载入至 50
+                      MB。
                     </p>
                   </Card>
                 )}
@@ -1319,6 +1380,9 @@ export function App() {
                       connected={snapshot.connected}
                       busy={busy}
                       onTask={run}
+                      onNotice={(text) =>
+                        setMessage({ text, error: false, intent: "info" })
+                      }
                     />
                   </Card>
                 )}

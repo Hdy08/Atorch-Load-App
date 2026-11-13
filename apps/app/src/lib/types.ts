@@ -92,10 +92,18 @@ export interface LogEntry {
   message: string;
 }
 export interface RecordingInfo {
+  id: string;
+  path: string;
   name: string;
   bytes: number;
   modifiedAt: number;
-  active: boolean;
+}
+export interface CsvDocument {
+  path: string;
+  name: string;
+  bytes: number;
+  modifiedAt: number;
+  dataBase64: string;
 }
 export interface Snapshot {
   connected: boolean;

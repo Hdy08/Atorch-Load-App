@@ -354,10 +354,18 @@ export function TrendChart({
           bottom: 55,
         },
         tooltip: {
+          className: "curve-tooltip",
           trigger: "axis",
           confine: true,
           transitionDuration: 0,
           hideDelay: 0,
+          valueFormatter: (value: unknown) =>
+            typeof value === "number"
+              ? value.toLocaleString("en-US", {
+                  maximumFractionDigits: 4,
+                  useGrouping: false,
+                })
+              : "—",
           backgroundColor: theme.colorNeutralBackground1,
           borderColor: theme.colorNeutralStroke1,
           borderRadius: Number.parseFloat(theme.borderRadiusMedium),
@@ -476,7 +484,8 @@ export function TrendChart({
             (axis) => axis.unit === seriesInfo[key].unit,
           ),
           showSymbol: false,
-          sampling: "lttb",
+          // Every series must retain the same original timestamps. Independent
+          // downsampling drops different rows and splits an axis tooltip.
           connectNulls: false,
           lineStyle: {
             width: bounds?.[key]?.width ?? 2,

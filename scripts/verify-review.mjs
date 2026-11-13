@@ -105,10 +105,11 @@ try {
     );
     const files = await invoke("list_recordings");
     const selected = files
-      .filter((f) => !f.active && f.bytes <= 50_000_000)
+      .filter((f) => f.bytes <= 50_000_000)
       .sort((a, b) => b.bytes - a.bytes)[0];
     assert(selected, "No completed recording available for this check");
-    const content = await invoke("read_recording", { name: selected.name });
+    const document = await invoke("read_recording", { id: selected.id });
+    const content = Buffer.from(document.dataBase64, "base64").toString("utf8");
     const count = content.trim().split(/\r?\n/).length - 1;
     const click = (text) =>
       evaluate(

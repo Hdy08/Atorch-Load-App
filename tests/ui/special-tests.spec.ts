@@ -190,7 +190,9 @@ test("changed prompt fails without optimistic dismissal and remains reviewable",
     .getByRole("button", { name: "继续上一轮放电", exact: true })
     .click();
   await page.getByRole("button", { name: "确认阶段操作", exact: true }).click();
-  await expect(page.getByText(/设备阶段提示已变化/)).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").getByText(/设备阶段提示已变化/),
+  ).toBeVisible();
   await expect(page.getByTestId("stage-prompt")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "继续上一轮放电", exact: true }),

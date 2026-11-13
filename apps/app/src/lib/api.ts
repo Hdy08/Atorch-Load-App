@@ -7,6 +7,7 @@ import type {
   RootUsbState,
   Snapshot,
   RecordingInfo,
+  CsvDocument,
   Telemetry,
   UsbDiagnostics,
   PromptContext,
@@ -64,5 +65,10 @@ export const api = {
     invoke<string | null>("save_png", { name, dataUrl }),
   recordings: () =>
     native ? invoke<RecordingInfo[]>("list_recordings") : Promise.resolve([]),
-  readRecording: (name: string) => invoke<string>("read_recording", { name }),
+  openCsv: () => invoke<CsvDocument | null>("open_csv"),
+  registerRecording: (path: string) =>
+    invoke<RecordingInfo>("register_recording", { path }),
+  readRecording: (id: string) => invoke<CsvDocument>("read_recording", { id }),
+  deleteRecordings: (ids: string[]) =>
+    invoke<void>("delete_recordings", { ids }),
 };

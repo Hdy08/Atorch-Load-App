@@ -173,9 +173,17 @@ export function exportCsv(rows: Telemetry[]): string {
 
 export async function readCsv(file: File): Promise<Telemetry[]> {
   const bytes = await file.arrayBuffer();
+  return parseCsvBytes(new Uint8Array(bytes));
+}
+
+export function parseCsvBytes(bytes: Uint8Array): Telemetry[] {
   let text = new TextDecoder("utf-8").decode(bytes);
   if (text.includes("\uFFFD")) text = new TextDecoder("gb18030").decode(bytes);
   return parseCsv(text);
+}
+
+export function parseCsvBase64(encoded: string): Telemetry[] {
+  return parseCsvBytes(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0)));
 }
 
 export function download(name: string, content: string) {

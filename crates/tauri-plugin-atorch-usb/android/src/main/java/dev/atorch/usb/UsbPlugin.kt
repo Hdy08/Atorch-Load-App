@@ -11,6 +11,9 @@ import android.hardware.usb.*
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.net.Uri
+import android.provider.DocumentsContract
+import android.provider.OpenableColumns
 import android.util.Base64
 import androidx.activity.result.ActivityResult
 import androidx.activity.OnBackPressedCallback
@@ -25,6 +28,7 @@ import app.tauri.plugin.JSArray
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.util.concurrent.Executors
+import java.io.ByteArrayOutputStream
 
 @InvokeArg class OpenArgs { lateinit var path: String }
 @InvokeArg class WriteArgs { var data: List<Int> = emptyList() }
@@ -45,6 +49,7 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
     private val permissionAction = "${activity.packageName}.USB_PERMISSION"
     private var pendingOpen: Pair<UsbDevice, Invoke>? = null
     private var pendingSave: Pair<DocumentSave, Invoke>? = null
+    private var pendingPick: Invoke? = null
     // Accessed only on the I/O executor.
     private var channel: InterruptChannel? = null
     private var devicePath: String? = null
@@ -274,11 +279,14 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
         } catch (e: Exception) { invoke.reject(e.message ?: "无法保存图片") }
     }
     private fun saveDocument(invoke: Invoke, document: DocumentSave) {
-        if (pendingSave != null) { invoke.reject("请先完成当前保存操作"); return }
+        if (pendingSave != null || pendingPick != null) { invoke.reject("请先完成当前文件选择"); return }
         pendingSave = document to invoke
-        startActivityForResult(invoke, Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE); type = document.type; putExtra(Intent.EXTRA_TITLE, document.name)
-        }, "documentSaved")
+        try {
+            startActivityForResult(invoke, Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE); type = document.type; putExtra(Intent.EXTRA_TITLE, document.name)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            }, "documentSaved")
+        } catch (e: Exception) { pendingSave = null; invoke.reject(e.message ?: "无法打开保存窗口") }
     }
     @ActivityCallback fun documentSaved(invoke: Invoke, result: ActivityResult) {
         val pending = pendingSave ?: return
@@ -289,14 +297,88 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
             try {
                 val stream = activity.contentResolver.openOutputStream(uri, "wt") ?: error("无法写入所选文件")
                 stream.use { it.write(pending.first.data) }
+                if (pending.first.type == "text/csv") persistPermission(uri, result.data?.flags ?: 0)
                 pending.second.resolve(JSObject().put("uri", uri.toString()))
             } catch (e: Exception) { pending.second.reject(e.message ?: "文件保存失败") }
+        }
+    }
+
+    private fun persistPermission(uri: Uri, flags: Int) {
+        val granted = flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        check(granted and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0) { "文件提供程序未授予读取权限" }
+        activity.contentResolver.takePersistableUriPermission(uri, granted)
+    }
+
+    private fun readDocumentData(uri: Uri): JSObject {
+        check(uri.scheme == "content") { "请选择系统文件窗口中的 CSV" }
+        val resolver = activity.contentResolver
+        var name = "record.csv"
+        var modifiedAt = 0L
+        resolver.query(uri, null, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex >= 0 && !cursor.isNull(nameIndex)) name = cursor.getString(nameIndex)
+                val modifiedIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                if (modifiedIndex >= 0 && !cursor.isNull(modifiedIndex)) modifiedAt = cursor.getLong(modifiedIndex)
+                val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                check(sizeIndex < 0 || cursor.isNull(sizeIndex) || cursor.getLong(sizeIndex) <= 50_000_000L) { "此 CSV 超过 50 MB，请分段导入" }
+            }
+        }
+        check(name.endsWith(".csv", ignoreCase = true)) { "请选择 CSV 文件" }
+        val bytes = ByteArrayOutputStream().use { output ->
+            val input = resolver.openInputStream(uri) ?: error("无法读取所选 CSV")
+            input.use {
+                val buffer = ByteArray(32 * 1024)
+                while (true) {
+                    val count = it.read(buffer)
+                    if (count < 0) break
+                    check(output.size().toLong() + count <= 50_000_000L) { "此 CSV 超过 50 MB" }
+                    output.write(buffer, 0, count)
+                }
+            }
+            output.toByteArray()
+        }
+        return JSObject().put("path", uri.toString()).put("name", name)
+            .put("bytes", bytes.size).put("modifiedAt", modifiedAt)
+            .put("dataBase64", Base64.encodeToString(bytes, Base64.NO_WRAP))
+    }
+
+    @Command fun openCsv(invoke: Invoke) {
+        if (pendingSave != null || pendingPick != null) { invoke.reject("请先完成当前文件选择"); return }
+        pendingPick = invoke
+        try {
+            startActivityForResult(invoke, Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE); type = "*/*"
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            }, "documentOpened")
+        } catch (e: Exception) { pendingPick = null; invoke.reject(e.message ?: "无法打开文件窗口") }
+    }
+
+    @ActivityCallback fun documentOpened(invoke: Invoke, result: ActivityResult) {
+        val pending = pendingPick ?: return
+        pendingPick = null
+        val uri = result.data?.data
+        if (result.resultCode != Activity.RESULT_OK || uri == null) { pending.resolve(JSObject()); return }
+        files.execute {
+            try {
+                persistPermission(uri, result.data?.flags ?: 0)
+                pending.resolve(JSObject().put("document", readDocumentData(uri)))
+            } catch (e: Exception) { pending.reject(e.message ?: "CSV 导入失败") }
+        }
+    }
+
+    @Command fun readDocument(invoke: Invoke) {
+        val args = invoke.parseArgs(OpenArgs::class.java)
+        files.execute {
+            try { invoke.resolve(readDocumentData(Uri.parse(args.path))) }
+            catch (e: Exception) { invoke.reject(e.message ?: "CSV 读取失败，请重新导入") }
         }
     }
 
     override fun onDestroy(activity: AppCompatActivity) {
         pendingOpen?.second?.reject("应用已关闭"); pendingOpen = null
         pendingSave?.second?.reject("应用已关闭"); pendingSave = null
+        pendingPick?.reject("应用已关闭"); pendingPick = null
         activity.unregisterReceiver(permissionReceiver); activity.unregisterReceiver(detachReceiver)
         io.execute { firmwareSession = false; runCatching { releaseDevice() } }; io.shutdown()
         files.shutdown()

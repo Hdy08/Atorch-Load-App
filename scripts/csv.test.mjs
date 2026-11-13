@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { exportCsv, parseCsv, csvCells } from "../apps/app/src/lib/csv.ts";
 
 test("vendor bilingual CSV with metadata and signed values", () => {
@@ -135,6 +136,87 @@ test("relative CSV requires a valid origin and rejects invalid durations", () =>
         ),
       /时间无效/,
     );
+});
+
+test("dense charge CSV preserves every complete row including duplicate times and original precision", () => {
+  const points = Array.from({ length: 20_001 }, (_, i) => {
+    const ms = Math.floor(i / 2) * 100;
+    const hours = Math.floor(ms / 3_600_000)
+      .toString()
+      .padStart(2, "0");
+    const minutes = (Math.floor(ms / 60_000) % 60).toString().padStart(2, "0");
+    const seconds = (Math.floor(ms / 1000) % 60).toString().padStart(2, "0");
+    return `="${hours}:${minutes}:${seconds}.${(ms % 1000).toString().padStart(3, "0")}",${9 + i / 10000},${-i / 10000},${i / 10000},`;
+  });
+  const csv =
+    "DateTime,2026-10-02 17:25:37\nTime(D.hh:mm:ss.ms),Voltage(V),Current(A),Power(W),\n" +
+    points.join("\n");
+  const rows = parseCsv(csv);
+  assert.equal(rows.length, points.length);
+  for (const [i, row] of rows.entries()) {
+    assert.equal(row.elapsedMs, Math.floor(i / 2) * 100);
+    assert.equal(row.voltage, 9 + i / 10000);
+    assert.equal(row.current, i === 0 ? 0 : -i / 10000);
+    assert.equal(row.power, i / 10000);
+    assert.notEqual(row.energy, null);
+    assert.notEqual(row.capacity, null);
+  }
+  const exported = exportCsv(rows).trim().split(/\r?\n/);
+  assert.equal(exported.length, rows.length + 1);
+  // Export keeps internal precision, including the smallest integrated values.
+  const roundTrip = parseCsv(exportCsv(rows));
+  for (const [i, row] of roundTrip.entries()) {
+    assert.equal(row.energy, rows[i].energy);
+    assert.equal(row.capacity, rows[i].capacity);
+  }
+});
+
+test("all supplied charge CSV rows match their declared SUM and exact source timing", async (t) => {
+  const directory = process.env.ATORCH_CSV_DIRECTORY;
+  if (!directory) {
+    t.skip("Set ATORCH_CSV_DIRECTORY for read-only user CSV verification");
+    return;
+  }
+  const entries = await readdir(directory, {
+    recursive: true,
+    withFileTypes: true,
+  });
+  for (const entry of entries.filter(
+    (e) => e.isFile() && e.name.endsWith(".csv"),
+  )) {
+    const path = join(entry.parentPath, entry.name);
+    const bytes = await readFile(path);
+    let text = new TextDecoder().decode(bytes);
+    if (text.includes("\uFFFD"))
+      text = new TextDecoder("gb18030").decode(bytes);
+    const expected = Number(/^SUM,(\d+)/m.exec(text)?.[1]);
+    const rows = parseCsv(text);
+    assert.equal(rows.length, expected, path);
+    const sourceRows = text.trim().split(/\r?\n/).slice(6);
+    for (const [i, row] of rows.entries()) {
+      const cells = csvCells(sourceRows[i]);
+      assert.equal(
+        row.voltage,
+        Number(cells[1]),
+        `${entry.name} row ${i} voltage`,
+      );
+      assert.equal(
+        row.current,
+        Number(cells[2]),
+        `${entry.name} row ${i} current`,
+      );
+      assert.equal(row.power, Number(cells[3]), `${entry.name} row ${i} power`);
+      const match = /(\d+):(\d+):(\d+)\.(\d+)/.exec(cells[0]);
+      const ms =
+        ((Number(match[1]) * 60 + Number(match[2])) * 60 + Number(match[3])) *
+          1000 +
+        Number(match[4]);
+      assert.equal(row.elapsedMs, ms, `${entry.name} row ${i} time`);
+    }
+    t.diagnostic(
+      `${entry.name}: ${rows.length} complete samples, ${rows.at(-1).elapsedMs} ms`,
+    );
+  }
 });
 
 test("reads all locally supplied vendor CSV files", async (t) => {

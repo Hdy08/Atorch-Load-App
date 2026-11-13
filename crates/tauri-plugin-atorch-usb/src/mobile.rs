@@ -143,6 +143,37 @@ pub fn save_csv<R: Runtime>(
         .map_err(|e| e.to_string())
 }
 
+pub fn open_csv<R: Runtime, T: serde::de::DeserializeOwned>(
+    app: &AppHandle<R>,
+) -> Result<Option<T>, String> {
+    let result: serde_json::Value = app
+        .state::<Usb<R>>()
+        .0
+        .run_mobile_plugin("openCsv", ())
+        .map_err(|e| e.to_string())?;
+    let document = result
+        .get("document")
+        .cloned()
+        .unwrap_or(serde_json::Value::Null);
+    if document.is_null() {
+        Ok(None)
+    } else {
+        serde_json::from_value(document)
+            .map(Some)
+            .map_err(|e| e.to_string())
+    }
+}
+
+pub fn read_document<R: Runtime, T: serde::de::DeserializeOwned>(
+    app: &AppHandle<R>,
+    path: &str,
+) -> Result<T, String> {
+    app.state::<Usb<R>>()
+        .0
+        .run_mobile_plugin("readDocument", json!({ "path": path }))
+        .map_err(|e| e.to_string())
+}
+
 pub fn save_png<R: Runtime>(
     app: &AppHandle<R>,
     name: &str,

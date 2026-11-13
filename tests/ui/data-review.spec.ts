@@ -60,19 +60,26 @@ async function fixture(page: Page, count = 4) {
             if (command === "list_recordings")
               return [
                 {
-                  name: "BW150_active.csv",
+                  id: "fixture/imported.csv",
+                  path: "fixture/imported.csv",
+                  name: "BW150_imported.csv",
                   bytes: 1000,
                   modifiedAt: base,
-                  active: true,
                 },
                 {
+                  id: "fixture/complete.csv",
+                  path: "fixture/complete.csv",
                   name: "BW150_complete.csv",
                   bytes: archive.length,
                   modifiedAt: base,
-                  active: false,
                 },
               ];
-            if (command === "read_recording") return archive;
+            if (command === "read_recording")
+              return {
+                name: "BW150_complete.csv",
+                path: "fixture/complete.csv",
+                dataBase64: btoa(archive),
+              };
             if (command === "save_csv") return "fixture/selected.csv";
             if (command === "save_png") return "fixture/chart.png";
             throw new Error(`Unexpected review test command: ${command}`);
@@ -176,7 +183,7 @@ test("selected curves and axis order persist across pages, files and reloads", a
   }
 });
 
-test("local archive opens all saved samples and keeps active files closed", async ({
+test("reference library opens every sample and exposes selectable external files", async ({
   page,
 }) => {
   await fixture(page);
@@ -193,10 +200,13 @@ test("local archive opens all saved samples and keeps active files closed", asyn
   await expect(
     page.getByRole("heading", { name: "本机记录库", exact: true }),
   ).toBeVisible();
-  const active = page
+  const imported = page
     .locator(".recording-entry")
-    .filter({ hasText: "BW150_active.csv" });
-  await expect(active.getByRole("button", { name: "打开记录" })).toBeDisabled();
+    .filter({ hasText: "BW150_imported.csv" });
+  await expect(
+    imported.getByRole("button", { name: "打开记录" }),
+  ).toBeEnabled();
+  await expect(imported.getByRole("checkbox")).not.toBeChecked();
   await page
     .locator(".recording-entry")
     .filter({ hasText: "BW150_complete.csv" })
@@ -279,7 +289,7 @@ test("cumulative channels have no average and calculated totals retain their ori
   const stats = page.getByRole("table", { name: "采样统计" });
   const energy = stats.getByRole("row").filter({ hasText: "电量 / Wh" });
   const capacity = stats.getByRole("row").filter({ hasText: "容量 / mAh" });
-  await expect(energy.getByRole("cell").first()).toHaveText("电量 / Wh · 计算");
+  await expect(energy.getByRole("cell").first()).toHaveText("电量 / Wh (计算)");
   await expect(energy.getByRole("cell").last()).toHaveText("—");
   await expect(capacity.getByRole("cell").last()).toHaveText("—");
   await expect(capacity.getByRole("cell").first()).toHaveText("容量 / mAh");

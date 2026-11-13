@@ -520,7 +520,9 @@ test("PNG excludes the range bar, keeps zoom, and cancellation is silent", async
     (window as any).samplingFixture.failSave = true;
   });
   await page.getByRole("button", { name: "导出", exact: true }).click();
-  await expect(page.getByText(/文件保存失败：磁盘只读/)).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").getByText(/文件保存失败：磁盘只读/),
+  ).toBeVisible();
 });
 
 async function chartState(page: Page) {

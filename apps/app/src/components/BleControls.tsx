@@ -9,12 +9,10 @@ import {
   DialogContent,
   DialogSurface,
   DialogTitle,
-  MessageBar,
-  MessageBarBody,
 } from "@fluentui/react-components";
 import { Bluetooth20Regular } from "@fluentui/react-icons";
 import { api } from "../lib/api";
-import type { BleAction, BleCommandResult } from "../lib/types";
+import type { BleAction } from "../lib/types";
 
 const clears = [
   [
@@ -39,10 +37,12 @@ export function BleControls({
   connected,
   busy,
   onTask,
+  onNotice,
 }: {
   connected: boolean;
   busy: boolean;
   onTask: (task: () => Promise<unknown>) => Promise<void>;
+  onNotice: (text: string) => void;
 }) {
   const [confirmation, setConfirmation] = useState<{
     action: BleAction;
@@ -51,12 +51,11 @@ export function BleControls({
     clears: boolean;
   } | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
-  const [result, setResult] = useState<BleCommandResult | null>(null);
   const disabled = !connected || busy;
   const send = (action: BleAction) =>
     onTask(async () => {
-      setResult(null);
-      setResult(await api.bleCommand(action));
+      const result = await api.bleCommand(action);
+      onNotice(result.message);
     });
   return (
     <div className="ble-controls">
@@ -117,11 +116,6 @@ export function BleControls({
       <p className="muted">
         这些操作写入设备。设备仅回传监测数据，未回传模式、目标值或按键执行结果；收到数据不代表操作已执行。
       </p>
-      {result && (
-        <MessageBar intent="info">
-          <MessageBarBody>{result.message}</MessageBarBody>
-        </MessageBar>
-      )}
       <Dialog
         open={confirmation !== null}
         onOpenChange={(_, data) => {

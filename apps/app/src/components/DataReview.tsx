@@ -215,12 +215,7 @@ export function DataReview({
       </Card>
       <Card className="table-card">
         <div className="section-head">
-          <div>
-            <h2>采样统计</h2>
-            <span>
-              电量、容量不计算均值；标注“计算”的累计值由功率、电流按采样间隔积分得到。
-            </span>
-          </div>
+          <h2>采样统计</h2>
         </div>
         <div className="table-scroll">
           <Table className="sample-table" aria-label="采样统计">
@@ -244,7 +239,7 @@ export function DataReview({
                         exportRows.some((row) => row.energyCalculated)) ||
                         (key === "capacity" &&
                           exportRows.some((row) => row.capacityCalculated))) &&
-                        " · 计算"}
+                        " (计算)"}
                     </TableCell>
                     <TableCell>{stats[key]?.count ?? 0}</TableCell>
                     <TableCell>{format(stats[key]?.min)}</TableCell>

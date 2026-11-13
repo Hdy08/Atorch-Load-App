@@ -302,7 +302,9 @@ test("BLE keys send once, OK requires confirmation and clear requires acknowledg
   await fixture(page);
   await page.getByRole("button", { name: "连接", exact: true }).click();
   await page.getByRole("button", { name: "加 +", exact: true }).click();
-  await expect(page.getByText(/按键已发送；设备未提供执行确认/)).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").getByText(/按键已发送；设备未提供执行确认/),
+  ).toBeVisible();
   await page.getByRole("button", { name: "确认 OK…", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("可能启动或停止负载");

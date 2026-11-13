@@ -599,7 +599,7 @@ h2 {
   height: 24px;
   color: var(--colorNeutralForeground3);
 }
-.recording-entry > div {
+.recording-entry > .recording-info {
   min-width: 0;
   flex: 1 1 170px;
   display: flex;
@@ -850,6 +850,12 @@ h2 {
   color: var(--colorNeutralForeground3);
 }
 .fui-MessageBarBody {
+  overflow-wrap: anywhere;
+}
+.app-notifications {
+  max-width: calc(100vw - 32px);
+}
+.app-notifications .fui-ToastTitle {
   overflow-wrap: anywhere;
 }
 @media (min-width: 1650px) {

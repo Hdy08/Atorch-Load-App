@@ -1,10 +1,56 @@
+use atorch_device::record_library::{Library, RecordingInfo};
 use atorch_device::{DeviceInfo, DeviceManager, Sample, Snapshot};
 use atorch_protocol::Command;
 use base64::Engine;
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 use tauri::{Manager, State};
 
 type Devices = Arc<DeviceManager>;
+type RecordLibrary = Arc<Mutex<Library>>;
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CsvDocument {
+    path: String,
+    name: String,
+    bytes: u64,
+    modified_at: u64,
+    data_base64: String,
+}
+
+impl CsvDocument {
+    fn info(&self) -> RecordingInfo {
+        RecordingInfo {
+            id: self.path.clone(),
+            path: self.path.clone(),
+            name: self.name.clone(),
+            bytes: self.bytes,
+            modified_at: self.modified_at,
+        }
+    }
+}
+
+fn read_csv_document(app: &tauri::AppHandle, path: &str) -> Result<CsvDocument, String> {
+    #[cfg(target_os = "android")]
+    {
+        tauri_plugin_atorch_usb::mobile::read_document(app, path)
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = app;
+        let (info, bytes) = atorch_device::record_library::read_file(std::path::Path::new(path))?;
+        Ok(CsvDocument {
+            path: info.path,
+            name: info.name,
+            bytes: info.bytes,
+            modified_at: info.modified_at,
+            data_base64: base64::engine::general_purpose::STANDARD.encode(bytes),
+        })
+    }
+}
 
 #[tauri::command]
 async fn get_bluetooth_status(
@@ -359,9 +405,14 @@ fn cancel_firmware(manager: State<'_, Devices>) -> Result<(), String> {
     manager.cancel_firmware()
 }
 #[tauri::command]
-async fn export_csv(app: tauri::AppHandle, manager: State<'_, Devices>) -> Result<String, String> {
+async fn export_csv(
+    app: tauri::AppHandle,
+    manager: State<'_, Devices>,
+    library: State<'_, RecordLibrary>,
+) -> Result<String, String> {
     let dir = record_dir(&app)?;
     let samples = manager.samples();
+    let library = library.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         if samples.is_empty() {
             return Err("暂无可导出的数据".into());
@@ -369,18 +420,29 @@ async fn export_csv(app: tauri::AppHandle, manager: State<'_, Devices>) -> Resul
         #[cfg(target_os = "android")]
         {
             let _ = dir;
-            return tauri_plugin_atorch_usb::mobile::save_csv(
+            let path = tauri_plugin_atorch_usb::mobile::save_csv(
                 &app,
                 &format!("Atorch_{}.csv", atorch_device::now_ms()),
                 &atorch_device::csv(&samples),
             )?
-            .ok_or_else(|| "已取消导出".into());
+            .ok_or("已取消导出")?;
+            let document = read_csv_document(&app, &path)?;
+            library
+                .lock()
+                .map_err(|e| e.to_string())?
+                .register(document.info())?;
+            Ok(path)
         }
         #[cfg(not(target_os = "android"))]
         {
             std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
             let path = dir.join(format!("BW150_export_{}.csv", atorch_device::now_ms()));
             std::fs::write(&path, atorch_device::csv(&samples)).map_err(|e| e.to_string())?;
+            let document = read_csv_document(&app, &path.to_string_lossy())?;
+            library
+                .lock()
+                .map_err(|e| e.to_string())?
+                .register(document.info())?;
             Ok(path.to_string_lossy().into())
         }
     })
@@ -391,50 +453,107 @@ async fn export_csv(app: tauri::AppHandle, manager: State<'_, Devices>) -> Resul
 #[tauri::command]
 async fn save_csv(
     app: tauri::AppHandle,
+    library: State<'_, RecordLibrary>,
     name: String,
     content: String,
 ) -> Result<Option<String>, String> {
     if !atorch_device::recordings::valid_filename(&name, ".csv") || content.len() > 50_000_000 {
         return Err("导出文件名或数据大小无效".into());
     }
+    let library = library.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         #[cfg(target_os = "android")]
-        {
-            tauri_plugin_atorch_usb::mobile::save_csv(&app, &name, &content)
-        }
+        let path = tauri_plugin_atorch_usb::mobile::save_csv(&app, &name, &content)?;
         #[cfg(not(target_os = "android"))]
-        {
-            save_document(&app, &name, "CSV 文件", "csv", content.as_bytes())
+        let path = save_document(&app, &name, "CSV 文件", "csv", content.as_bytes())?;
+        if let Some(path) = &path {
+            let document = read_csv_document(&app, path)?;
+            library
+                .lock()
+                .map_err(|e| e.to_string())?
+                .register(document.info())
+                .map_err(|e| format!("CSV 已保存至 {path}，但记录库登记失败：{e}"))?;
         }
+        Ok(path)
     })
     .await
     .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-async fn list_recordings(
-    app: tauri::AppHandle,
-    manager: State<'_, Devices>,
-) -> Result<Vec<atorch_device::recordings::RecordingInfo>, String> {
-    let dir = record_dir(&app)?;
-    let active = manager.snapshot().recording;
-    tauri::async_runtime::spawn_blocking(move || {
-        atorch_device::recordings::list(&dir, active.as_deref())
-    })
-    .await
-    .map_err(|e| e.to_string())?
+async fn list_recordings(library: State<'_, RecordLibrary>) -> Result<Vec<RecordingInfo>, String> {
+    let library = library.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || library.lock().map_err(|e| e.to_string())?.list())
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 async fn read_recording(
     app: tauri::AppHandle,
-    manager: State<'_, Devices>,
-    name: String,
-) -> Result<String, String> {
-    let dir = record_dir(&app)?;
-    let manager = manager.inner().clone();
+    library: State<'_, RecordLibrary>,
+    id: String,
+) -> Result<CsvDocument, String> {
+    let library = library.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        atorch_device::recordings::read(&dir, &name, manager.snapshot().recording.as_deref())
+        let entry = library.lock().map_err(|e| e.to_string())?.find(&id)?;
+        read_csv_document(&app, &entry.path)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn open_csv(app: tauri::AppHandle) -> Result<Option<CsvDocument>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        #[cfg(target_os = "android")]
+        {
+            tauri_plugin_atorch_usb::mobile::open_csv(&app)
+        }
+        #[cfg(not(target_os = "android"))]
+        {
+            let mut dialog = rfd::FileDialog::new()
+                .set_title("导入 CSV")
+                .add_filter("CSV 文件", &["csv"]);
+            if let Some(window) = app.get_webview_window("main") {
+                dialog = dialog.set_parent(&window);
+            }
+            dialog
+                .pick_file()
+                .map(|path| read_csv_document(&app, &path.to_string_lossy()))
+                .transpose()
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn register_recording(
+    app: tauri::AppHandle,
+    library: State<'_, RecordLibrary>,
+    path: String,
+) -> Result<RecordingInfo, String> {
+    let library = library.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let document = read_csv_document(&app, &path)?;
+        library
+            .lock()
+            .map_err(|e| e.to_string())?
+            .register(document.info())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn delete_recordings(
+    library: State<'_, RecordLibrary>,
+    ids: Vec<String>,
+) -> Result<(), String> {
+    let library = library.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        library.lock().map_err(|e| e.to_string())?.remove(&ids)
     })
     .await
     .map_err(|e| e.to_string())?
@@ -515,6 +634,8 @@ pub fn run() {
         .setup(|app| {
             let path = app.path().app_config_dir()?.join("sampling.json");
             app.manage(Arc::new(DeviceManager::with_sampling_preferences(path)));
+            let index = app.path().app_config_dir()?.join("record-library.json");
+            app.manage(Arc::new(Mutex::new(Library::new(index))));
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -549,7 +670,10 @@ pub fn run() {
             save_csv,
             save_png,
             list_recordings,
-            read_recording
+            read_recording,
+            open_csv,
+            register_recording,
+            delete_recordings
         ])
         .run(context)
         .expect("failed to run Atorch Load");
