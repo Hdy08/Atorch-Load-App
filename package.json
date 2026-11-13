@@ -1,0 +1,25 @@
+{
+  "name": "atorch-load-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/app"
+  ],
+  "scripts": {
+    "test": "node --test scripts/csv.test.mjs scripts/analysis.test.mjs scripts/records.test.mjs scripts/auto-connect.test.mjs scripts/chart-interaction.test.mjs",
+    "test:ui": "playwright test",
+    "format": "prettier --write apps/app/src scripts apps/app/*.json apps/app/*.ts",
+    "dev": "npm run dev --workspace @atorch/app",
+    "build": "npm run build --workspace @atorch/app",
+    "check": "npm run check --workspace @atorch/app",
+    "desktop": "node scripts/tauri.mjs dev",
+    "desktop:build": "node scripts/tauri.mjs build",
+    "android:init": "node scripts/tauri.mjs android init",
+    "android:dev": "node scripts/tauri.mjs android dev",
+    "android:build": "node scripts/tauri.mjs android build --apk"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "prettier": "^3.10.1"
+  }
+}

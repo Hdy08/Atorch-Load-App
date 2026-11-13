@@ -1,0 +1,10 @@
+[package]
+name = "atorch-protocol"
+version.workspace = true
+edition.workspace = true
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+sha2 = "0.10.9"
+[dev-dependencies]
+serde_json.workspace = true
