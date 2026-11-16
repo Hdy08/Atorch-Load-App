@@ -1,0 +1,1381 @@
+{
+  "status": "actual_hardware_round_completed_with_retained_observations",
+  "date": "2026-11-16",
+  "hardware_access": true,
+  "prior_acceptance": {
+    "candidate": "RT1H",
+    "hardware_report": "docs/firmware-runtime-peaks-hardware-20261116.md",
+    "complete_pairs": 665,
+    "scope": "Four-voltage CC 0.1 A, powered replug, cold start; 100-tick transient misses and initial USB timeouts retained. User stock CSV reproduces startup/stopping reading patterns; physical reverse current is not established."
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-RT1I-FAST-PEAKS-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "3a04a6ec8d2a7d8eb723fc31fbec7e099a1ff406a8714fd0009f052e1ad5b9ea",
+    "app_sha256": "28f3f0380709d978defe6731ced459ac426c426e873f944250b9ba451a07548f"
+  },
+  "source": {
+    "path": "Firmware&Software/BW150-6321-APP-1-1-0-UPP.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+  },
+  "generator_sha256": "9ba5b582f8f444f271136d9e19c329ff86fa072949b3dae54944f60f59a7b00a",
+  "verifier_sha256": "f8999f9a34eb4c0b9db8ca42b5c239c62b29db3ca0c0e4c0640bc6296d5382e6",
+  "layout": {
+    "entry": "0x1e97038",
+    "code_end": "0x1e975c4",
+    "new_instruction_bytes": 1420,
+    "new_instructions": 515,
+    "pc_high": "0x1e975e0",
+    "pc_interval_unchanged_from_hardware_exercised_RT1H": true,
+    "new_rate_and_identity_edits_hardware_pending": true,
+    "constant_data_begin": "0x1e975e0",
+    "extension_used": 2912,
+    "extension_reserved": 3200,
+    "task_stack_words": 288,
+    "task_stack_bytes": 1152,
+    "permanent_state_bytes": 64,
+    "state_offset": 1084,
+    "tail_bytes": 90
+  },
+  "function": {
+    "kind": "per_boot_sampled_minimum_and_maximum",
+    "sources": [
+      {
+        "name": "voltage_v",
+        "address": "0x41a4"
+      },
+      {
+        "name": "current_a",
+        "address": "0x41b0"
+      },
+      {
+        "name": "power_w",
+        "address": "0x41bc"
+      }
+    ],
+    "payload_fields": [
+      "voltage_min_v",
+      "voltage_max_v",
+      "current_min_a",
+      "current_max_a",
+      "power_min_w",
+      "power_max_w"
+    ],
+    "sampling_period_os_ticks": 10,
+    "prior_sampling_period_os_ticks": 100,
+    "minimum_tick_spacing_reduced_by_factor": 10,
+    "actual_hardware_sampling_rate_measured_this_build": false,
+    "first_sample_initializes_both_bounds": true,
+    "sample_count_wrap_does_not_reset_bounds": true,
+    "signed_zero_canonicalized": true,
+    "float_or_os_api_for_comparison": false,
+    "reset": "full reboot only; no reset/write USB command",
+    "temperature_fields_not_exported_by_I": true
+  },
+  "usb": {
+    "command": 84,
+    "token": "46490100",
+    "signature": "I",
+    "schema": 1,
+    "frame_bytes": 64,
+    "legacy_commands_03_through_51_original_dispatch": true,
+    "old_G_query_52_not_supported": true,
+    "old_H_query_53_not_supported": true,
+    "original_reply_buffer": [
+      48,
+      112
+    ],
+    "original_function_frame_bytes": 176,
+    "additional_usb_local_frame_bytes_modeled": 4,
+    "tcb_reads_or_new_apis": 0
+  },
+  "delta_from_frozen_RT1H": {
+    "parent_candidate_sha256": "2ca2db1107b9f3c6e431359eaf208a29df17cecaf974f97be6c6269d253fb142",
+    "instruction_edits": [
+      {
+        "kind": "period",
+        "address": "0x1e9712e",
+        "before": "4176",
+        "after": "a170"
+      },
+      {
+        "kind": "selector",
+        "address": "0x1e974c6",
+        "before": "01e57910",
+        "after": "11e57910"
+      },
+      {
+        "kind": "token",
+        "address": "0x1e974d2",
+        "before": "80e47110",
+        "after": "90e47110"
+      },
+      {
+        "kind": "reply_command",
+        "address": "0x1e974f4",
+        "before": "c0ffaa050153",
+        "after": "c0ffaa050154"
+      },
+      {
+        "kind": "reply_identity",
+        "address": "0x1e974fc",
+        "before": "c0ff48010100",
+        "after": "c0ff49010100"
+      }
+    ],
+    "constant_edits": [
+      {
+        "label": "results",
+        "address": "0x1e975e0",
+        "size": 1024
+      },
+      {
+        "label": "error_rom",
+        "address": "0x1e979e0",
+        "size": 6
+      },
+      {
+        "label": "error_none",
+        "address": "0x1e979e8",
+        "size": 7
+      },
+      {
+        "label": "error_mem",
+        "address": "0x1e979f0",
+        "size": 6
+      },
+      {
+        "label": "error_crc",
+        "address": "0x1e979f8",
+        "size": 6
+      },
+      {
+        "label": "error_num",
+        "address": "0x1e97a00",
+        "size": 6
+      },
+      {
+        "label": "error_wait",
+        "address": "0x1e97a08",
+        "size": 7
+      },
+      {
+        "label": "error_busy",
+        "address": "0x1e97a10",
+        "size": 6
+      }
+    ],
+    "labels_pc_stack_state_and_original_app_hooks_unchanged": true,
+    "app_changed_bytes": 269
+  },
+  "roundtrip": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical": true
+  },
+  "limitations": [
+    "Offline candidate. No new firmware transmission or device access in this build; RT1I is physically untested.",
+    "Retains RT1H owned 64-byte state, 0x120-word stack, numeric body, instruction addresses, labels and PC high. Only five instructions and About identities differ. The faster workload and revised queries still require hardware acceptance.",
+    "Selected instructions are dual-executed with pinned SLEIGH, explicit CALL/RETS and OS API fixtures. Full scheduler/IRQ/MMU/CSYNC ordering and physical stack margin are not emulated.",
+    "Extrema describe finite samples at least 10 OS ticks apart; actual rate depends on task scheduling and must be measured. Short transients can still be missed. Volatile per boot; no on-device Flash logging or peak reset command.",
+    "Selected-field salted XOR has cancelling collisions, including equal pairs; not cryptographic CRC or complete memory integrity. Sequence/loop/header fields are not all covered.",
+    "Only V/I/P sources are used by this feature. Original telemetry retains temperatures. Unit/sign/range comparisons need actual nonzero input; no calibrated accuracy, BLE, load/protection or all hardware acceptance is implied.",
+    "No control/protection/calibration/persistent settings writes or production firmware whitelist changes. Old RT1/RT1C failed, old RT2/RT3 remain on hold."
+  ],
+  "user_request": "进行下一步",
+  "artifact_directory": "artifacts/firmware-runtime-fast-peaks-20261116",
+  "canonical_test_guide": "docs/firmware-runtime-fast-peaks-20261116.md",
+  "emitted_model_execution": {
+    "finite_boundary_pairs": 144,
+    "finite_boundary_source_observations": 864,
+    "random_finite_updates": 256,
+    "initial_page_and_boundary_seeds": [
+      {
+        "seed": 0,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 1,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 2,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 3,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 4,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 5,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 6,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 7,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 8,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 9,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 10,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 11,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 12,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 13,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 14,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 15,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 16,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 17,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 18,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 19,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 20,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 21,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 22,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 23,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 24,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 25,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 26,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 27,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 28,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 29,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 30,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 31,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 32,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 33,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 34,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 35,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 36,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 37,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 38,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 39,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 40,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 41,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 42,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 43,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 44,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 45,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 46,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 47,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 48,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 49,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 50,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 51,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 52,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 53,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 54,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 55,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 56,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 57,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 58,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 59,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 60,
+        "task_base": "0x200000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 61,
+        "task_base": "0x210000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 62,
+        "task_base": "0x240000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      },
+      {
+        "seed": 63,
+        "task_base": "0x280000",
+        "first_delay_depth": 116,
+        "periodic_depth": 36
+      }
+    ],
+    "expected_sample_count": 52,
+    "periodic_calls_for_decimation": 513,
+    "synthetic_transient_phase_comparison": [
+      {
+        "start_tick_after_first_sample": 11,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 12,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 13,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 14,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 15,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 16,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 17,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 18,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 19,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      },
+      {
+        "start_tick_after_first_sample": 20,
+        "width_ticks": 12,
+        "RT1H_samples": 1,
+        "RT1I_samples": 7,
+        "RT1H_pulse_observed": false,
+        "RT1I_pulse_observed": true
+      }
+    ],
+    "subperiod_pulse_can_still_be_missed": true,
+    "nonfinite_source_cases_rejected": 9,
+    "invalid_token_cases": 1020,
+    "rom_byte_mismatch_cases": 268,
+    "host_self_test": {
+      "status": "host_only_passed",
+      "hardware_access": false,
+      "malformed_and_invalid_peak_controls": 106,
+      "non_read_commands_rejected": 253,
+      "error_payloads_hidden": 4,
+      "monotonic_peak_and_counter_controls": 3,
+      "emitted_firmware_fixtures": [
+        {
+          "case": "normal_first_extrema",
+          "status": 0,
+          "ready": true
+        },
+        {
+          "case": "scripted_5_12_15_20_v_signed_current",
+          "status": 0,
+          "ready": true
+        },
+        {
+          "case": "rom_mismatch",
+          "status": 1,
+          "ready": false
+        },
+        {
+          "case": "context_unavailable",
+          "status": 2,
+          "ready": false
+        },
+        {
+          "case": "state_mismatch",
+          "status": 3,
+          "ready": false
+        },
+        {
+          "case": "busy",
+          "status": 4,
+          "ready": false
+        },
+        {
+          "case": "unpublished",
+          "status": 0,
+          "ready": false
+        }
+      ]
+    }
+  },
+  "independent_analyzer_self_test": {
+    "rejection_controls": 273,
+    "device_access": false
+  },
+  "host_transport_simulation": {
+    "status": "offline_injected_transport_checks_passed",
+    "hardware_access": false,
+    "simulated_transport": true,
+    "actual_hid_module_imported": false,
+    "candidate_sha256": "3a04a6ec8d2a7d8eb723fc31fbec7e099a1ff406a8714fd0009f052e1ad5b9ea",
+    "host_sha256": "f8999f9a34eb4c0b9db8ca42b5c239c62b29db3ca0c0e4c0640bc6296d5382e6",
+    "cases": [
+      {
+        "case": "success",
+        "expected_failure": false,
+        "status": "peak_window_passed_manual_acceptance_pending",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 51,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": true
+      },
+      {
+        "case": "bounded_waits",
+        "expected_failure": false,
+        "status": "peak_window_passed_manual_acceptance_pending",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 50,
+        "missed_poll_slots": 1,
+        "independent_audit_passed": true
+      },
+      {
+        "case": "initial_retry",
+        "expected_failure": false,
+        "status": "peak_window_passed_manual_acceptance_pending",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 51,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": true
+      },
+      {
+        "case": "initial_exhausted",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 0,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "minimum_increased",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 1,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "maximum_decreased",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 1,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "counter_reset",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 1,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "wrong_schema",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 0,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "short_write",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 0,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "timeout",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 0,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "open_failure",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 0,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "settings_changed",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 51,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "busy_exhausted",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 0,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      },
+      {
+        "case": "slow_transport",
+        "expected_failure": false,
+        "status": "peak_window_passed_manual_acceptance_pending",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 17,
+        "missed_poll_slots": 34,
+        "independent_audit_passed": true
+      },
+      {
+        "case": "interrupted",
+        "expected_failure": true,
+        "status": "failed",
+        "only_read_commands": [
+          3,
+          5,
+          84
+        ],
+        "device_closed": true,
+        "logs_preserved": true,
+        "hardware_access": false,
+        "simulated_transport": true,
+        "cycles": 1,
+        "missed_poll_slots": 0,
+        "independent_audit_passed": false
+      }
+    ]
+  },
+  "protocol_rehearsal": {
+    "hardware_access": false,
+    "command": "cargo run --offline -p atorch-protocol --example firmware -- <candidate> <recovery>",
+    "exit_code": 0,
+    "each_image": {
+      "bytes": 643072,
+      "blocks": 11088,
+      "last_block_bytes": 26,
+      "offline": true,
+      "phase": "Complete",
+      "acknowledged_blocks": 11088
+    },
+    "log": "artifacts/firmware-runtime-fast-peaks-verification-20261116/protocol-rehearsal.txt"
+  },
+  "frozen_manifests": {
+    "artifacts/firmware-runtime-fast-peaks-20261116/manifest.json": {
+      "sha256": "95762486b0ac32ff07d1016bec8b38503ead70498d1a72043cf48a49801eddea",
+      "files": 7
+    },
+    "artifacts/firmware-runtime-fast-peaks-host-20261116/manifest.json": {
+      "sha256": "fd4da9623681bd5a4fc46aa84ff2d54fe64513e8dcc349913cfaa6e646de6485",
+      "files": 53
+    },
+    "artifacts/firmware-runtime-fast-peaks-verification-20261116/manifest.json": {
+      "sha256": "3d8ac73874a5db1f3c76403047d2d5812e59c9593c5814ad8b7bca4220fe45ef",
+      "files": 3
+    }
+  },
+  "integrity_record": {
+    "path": "docs/analysis/firmware-runtime-fast-peaks-20261116.integrity.json",
+    "sha256": "47eb0b96b6e53a79f67f25cdb13b20a7822868d3a63149a662ef903b99a8d454",
+    "manifests_verified": 27,
+    "covered_file_references_including_duplicates": 323,
+    "separate_self_verification_bundle_files": 3,
+    "verifier": "artifacts/firmware-runtime-fast-peaks-verification-20261116/verify-evidence.py"
+  },
+  "physical_acceptance": {
+    "status": "completed_under_stated_conditions_with_retained_observations",
+    "firmware_flashed_this_turn": false,
+    "device_read_this_turn": true,
+    "new_settings_or_control_writes_this_turn": false,
+    "planned_checks": [
+      "startup_display_keys_and_About_I_counter",
+      "observed_faster_sampling_rate",
+      "5_12_15_20V_CC_0.1A_three_start_stop_cycles_each",
+      "USB_high_rate_reading_and_integrity",
+      "powered_USB_physical_replug",
+      "complete_poweroff_5V_cold_initialization"
+    ],
+    "high_load_protection_BLE_and_accuracy_accepted": false,
+    "user_flash_readiness_quote": "I47 I87 就绪",
+    "user_manually_flashed_candidate": true,
+    "firmware_flashed_by_agent": false,
+    "actual_complete_pairs": 10800,
+    "all_capture_handles_closed": true,
+    "full_flash_readback_or_installed_hash_verified": false,
+    "observed_faster_sampling_rate": true,
+    "device_rate_hz_range": [
+      5.854394047567967,
+      5.891534054497961
+    ],
+    "complete_continuous_peak_capture_accepted": false
+  },
+  "current_device_state": {
+    "last_agent_verified_capture_end": {
+      "input_context_v": 5,
+      "running": false,
+      "target_a": 1,
+      "capture_finished_at": "2026-11-16T18:04:46.031945+08:00",
+      "all_capture_handles_closed": true
+    },
+    "subsequent_user_about_report": {
+      "quote": "I84 IBA",
+      "first_hex": "84",
+      "second_hex": "BA",
+      "modulo_256_gain": 54,
+      "context": "After cold-start USB capture, user instructed to keep load off, view About, exit, wait about 5 s then re-enter. Not synchronized with exact USB frames; no inferred exact observation duration."
+    },
+    "candidate_retained": "RT1I",
+    "all_capture_handles_closed": true,
+    "full_flash_readback_performed": false,
+    "new_original_restore_this_round": false
+  },
+  "retained_prior_observations": [
+    "Stock reference startup overshoot and stopping positive telemetry remain existing behavior; physical reverse current or unique dynamic root cause not established.",
+    "RT1H 100-tick transient misses remain in its frozen record. RT1I faster sampling shows improved observed I/P envelope coverage, but previous per-boot extrema can mask later misses; continuous peak capture not established.",
+    "Four initial 03 timeouts occurred in RT1I, all recovered on third same-handle request. Root cause unresolved.",
+    "Five busy diagnostic replies recovered by bounded retries. Thirteen voltage-step immediate envelope mismatches are preserved; later asynchronous coverage about 0.1 s is separate.",
+    "5 V and 20 V third stop waveforms occurred outside fixed capture windows; user completion reports and later off tails are retained without filling gaps.",
+    "Cold target resets from approximately 0.1 A to 1 A, all other setting reply bytes identical. User previously confirmed the same original behavior.",
+    "Old RT1/RT1C failed; old RT2/RT3 remain on hold. High-load/protection/BLE/calibrated accuracy and complete IRQ/stack coverage are untested by this round."
+  ],
+  "canonical_hardware_report": "docs/firmware-runtime-fast-peaks-hardware-20261116.md",
+  "hardware_progress": {
+    "status": "complete",
+    "active_window": null,
+    "completed_capture_directories": [
+      "artifacts/firmware-runtime-RT1I-hardware-20261116-baseline-01",
+      "artifacts/firmware-runtime-RT1I-hardware-20261116-5v-01",
+      "artifacts/firmware-runtime-RT1I-hardware-20261116-5v-tail-01",
+      "artifacts/firmware-runtime-RT1I-hardware-20261116-remaining-voltages-01",
+      "artifacts/firmware-runtime-RT1I-hardware-20261116-20v-01",
+      "artifacts/firmware-runtime-RT1I-hardware-20261116-20v-tail-01",
+      "artifacts/firmware-runtime-RT1I-hardware-20261116-powered-replug-01",
+      "artifacts/firmware-runtime-RT1I-hardware-20261116-cold-5v-01"
+    ],
+    "user_reports": {
+      "source": "Human replies in this same task; quotations preserved without generated message identifiers.",
+      "about": {
+        "quote": "I47 I87 就绪",
+        "context": "User instructed to flash RT1I and prepare 5 V CC 0.1 A off; not independently synchronized with USB."
+      },
+      "5v": {
+        "quote": "三轮完成，显示和按键正常",
+        "context": "5 V three manual CC 0.1 A start/stop cycles. Third stop not contained in 90 s raw window; subsequent off tail cannot fill gap."
+      },
+      "12v": {
+        "quote": "12 V 三轮完成，显示和按键正常",
+        "context": "12 V three manual CC 0.1 A start/stop cycles during remaining-voltage capture."
+      },
+      "15v": {
+        "quote": "15 V 三轮完成，显示和按键正常",
+        "context": "15 V three manual CC 0.1 A start/stop cycles during remaining-voltage capture."
+      },
+      "20v": {
+        "quote": "20 V 三轮完成，显示和按键正常",
+        "context": "20 V three manual CC 0.1 A start/stop cycles; capture coverage audited separately.",
+        "raw_record_scope": "Three starts and first two stops captured; third on interval truncated at window end. Later distinct 20 V off tail cannot fill gap."
+      },
+      "powered_replug": {
+        "quote": "已重连，屏幕始终亮着",
+        "context": "User instructed to keep independent power, 20 V input and load off; disconnect/reconnect USB data cable for about 3 s. Actual action duration not independently timed."
+      },
+      "cold_start": {
+        "quote": "已完全断电并以 5 V 重新上电，显示和按键正常",
+        "context": "User instructed to disconnect independent power, USB and measured input, confirm screen off, wait about 5 s, then reconnect only 5 V input, independent power and USB with load off. Physical poweroff duration not independently timed."
+      },
+      "cold_about": {
+        "quote": "I84 IBA",
+        "first_hex": "84",
+        "second_hex": "BA",
+        "modulo_256_gain": 54,
+        "context": "After cold-start USB capture, user instructed to keep load off, view About, exit, wait about 5 s then re-enter. Not synchronized with exact USB frames; no inferred exact observation duration."
+      },
+      "capture_end_state": {
+        "candidate": "RT1I",
+        "last_agent_verified_input_context_v": 5,
+        "last_agent_verified_running": false,
+        "user_about_report_after_capture": "I84 IBA",
+        "original_restore_this_round": false,
+        "retained_for_further_testing": true
+      }
+    },
+    "physical_replug": "completed_with_user_report_and_actual_readback",
+    "cold_start": "completed_with_user_report_and_actual_readback"
+  },
+  "build_time_status": "offline_passed_hardware_pending",
+  "build_time_hardware_access": false,
+  "hardware_evidence": {
+    "directory": "artifacts/firmware-runtime-RT1I-validation-20261116",
+    "manifest_sha256": "cf51ad7d2af541008f4e6ab49776b0892a7b514e6dbf1cf2ec24734b615d5991",
+    "manifest_covered_files": 46,
+    "analysis_sha256": "3c85e5c7d55660f029e4deae2f4df3bd14bfd1a9404e7f7e57b7de611db66f7d",
+    "acceptance_sha256": "f3e0581ced6e772625c235875f362140bde098eb0d99e9b643e3e53a397a6a22",
+    "integrity_sha256": "7eb843d87c83d1e96fa753d9d7ef69365c3d1978463064142b591330222e10cf",
+    "verifier": "artifacts/firmware-runtime-RT1I-validation-20261116/freeze-evidence.py",
+    "complete_pairs": 10800,
+    "requests": {
+      "03": 20,
+      "05": 10800,
+      "54": 10805
+    },
+    "replies": {
+      "03": 16,
+      "05": 10800,
+      "54": 10805
+    },
+    "initial_03_timeouts": 4,
+    "busy_responses_retained": 5,
+    "window_rates": [
+      {
+        "capture": "firmware-runtime-RT1I-hardware-20261116-baseline-01",
+        "pairs": 100,
+        "device_hz": 5.891534054497961,
+        "host_hz": 10.056239161987898,
+        "gains": {
+          "samples": 58,
+          "loops": 58,
+          "tick": 986,
+          "sequence": 116
+        },
+        "timeouts": 0
+      },
+      {
+        "capture": "firmware-runtime-RT1I-hardware-20261116-5v-01",
+        "pairs": 900,
+        "device_hz": 5.87385780888089,
+        "host_hz": 10.001132898075607,
+        "gains": {
+          "samples": 528,
+          "loops": 528,
+          "tick": 8991,
+          "sequence": 1056
+        },
+        "timeouts": 0
+      },
+      {
+        "capture": "firmware-runtime-RT1I-hardware-20261116-5v-tail-01",
+        "pairs": 100,
+        "device_hz": 5.8901274913016,
+        "host_hz": 10.053838304118248,
+        "gains": {
+          "samples": 58,
+          "loops": 58,
+          "tick": 986,
+          "sequence": 116
+        },
+        "timeouts": 0
+      },
+      {
+        "capture": "firmware-runtime-RT1I-hardware-20261116-remaining-voltages-01",
+        "pairs": 6000,
+        "device_hz": 5.877735122336815,
+        "host_hz": 10.00015116247832,
+        "gains": {
+          "samples": 3526,
+          "loops": 3526,
+          "tick": 59983,
+          "sequence": 7052
+        },
+        "timeouts": 0
+      },
+      {
+        "capture": "firmware-runtime-RT1I-hardware-20261116-20v-01",
+        "pairs": 3000,
+        "device_hz": 5.878627747490084,
+        "host_hz": 10.000002617539854,
+        "gains": {
+          "samples": 1763,
+          "loops": 1763,
+          "tick": 29995,
+          "sequence": 3526
+        },
+        "timeouts": 2
+      },
+      {
+        "capture": "firmware-runtime-RT1I-hardware-20261116-20v-tail-01",
+        "pairs": 100,
+        "device_hz": 5.858214069102196,
+        "host_hz": 9.999365393812369,
+        "gains": {
+          "samples": 58,
+          "loops": 58,
+          "tick": 986,
+          "sequence": 116
+        },
+        "timeouts": 2
+      },
+      {
+        "capture": "firmware-runtime-RT1I-hardware-20261116-powered-replug-01",
+        "pairs": 300,
+        "device_hz": 5.854394047567967,
+        "host_hz": 10.00265040127327,
+        "gains": {
+          "samples": 175,
+          "loops": 175,
+          "tick": 2976,
+          "sequence": 350
+        },
+        "timeouts": 0
+      },
+      {
+        "capture": "firmware-runtime-RT1I-hardware-20261116-cold-5v-01",
+        "pairs": 300,
+        "device_hz": 5.8878633870106585,
+        "host_hz": 10.002677004069245,
+        "gains": {
+          "samples": 176,
+          "loops": 176,
+          "tick": 2992,
+          "sequence": 352
+        },
+        "timeouts": 0
+      }
+    ],
+    "running_periods_by_voltage": {
+      "5": {
+        "starts_observed": 3,
+        "stops_observed": 2,
+        "running_periods": 3
+      },
+      "12": {
+        "starts_observed": 3,
+        "stops_observed": 3,
+        "running_periods": 3
+      },
+      "15": {
+        "starts_observed": 3,
+        "stops_observed": 3,
+        "running_periods": 3
+      },
+      "20": {
+        "starts_observed": 3,
+        "stops_observed": 2,
+        "running_periods": 3
+      }
+    },
+    "sampled_operation_totals": {
+      "running": 1425,
+      "off": 9375,
+      "voltage_misses": 13,
+      "current_misses": 0,
+      "power_misses": 0,
+      "missed_poll_slots": 0
+    },
+    "powered_replug": {
+      "previous_last_samples": 9829,
+      "first_samples": 10631,
+      "last_samples": 10806,
+      "same_boot_progress_compatible": true,
+      "previous_last_values": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 19.987422943115234,
+        "current_min_a": -0.3710871636867523,
+        "current_max_a": 0.1010047122836113,
+        "power_min_w": 0.0,
+        "power_max_w": 7.1247029304504395
+      },
+      "first_values": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 19.988433837890625,
+        "current_min_a": -0.3710871636867523,
+        "current_max_a": 0.1010047122836113,
+        "power_min_w": 0.0,
+        "power_max_w": 7.1247029304504395
+      },
+      "I_and_P_raw_words_identical": true,
+      "six_bounds_preserved_or_expanded": true,
+      "user_physical_action_quote": "已重连，屏幕始终亮着"
+    },
+    "cold_start": {
+      "previous_last_samples": 10806,
+      "first_samples": 320,
+      "last_samples": 496,
+      "old_20v_extrema_cleared": true,
+      "last_values": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 4.996440410614014,
+        "current_min_a": -0.0006705121486447752,
+        "current_max_a": 0.0006857671542093158,
+        "power_min_w": 0.0,
+        "power_max_w": 0.0034230651799589396
+      },
+      "running_pairs": 0,
+      "settings_change": {
+        "before_target_a": 0.09999992698431015,
+        "cold_target_a": 1.0,
+        "changed_byte_indices": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "all_other_bytes_identical": true
+      },
+      "target_reset_classification": "User previously confirmed the same target reset in original firmware; no new original cold boot comparison in this round."
+    },
+    "about_reports": {
+      "initial": {
+        "quote": "I47 I87 就绪",
+        "context": "User instructed to flash RT1I and prepare 5 V CC 0.1 A off; not independently synchronized with USB."
+      },
+      "cold": {
+        "quote": "I84 IBA",
+        "first_hex": "84",
+        "second_hex": "BA",
+        "modulo_256_gain": 54,
+        "context": "After cold-start USB capture, user instructed to keep load off, view About, exit, wait about 5 s then re-enter. Not synchronized with exact USB frames; no inferred exact observation duration."
+      }
+    },
+    "capture_gaps_retained": [
+      "5 V third stopping waveform occurred outside fixed 90 s record; later off tail is separate.",
+      "20 V third stopping waveform occurred outside fixed 300 s record; later off tail is separate."
+    ],
+    "candidate_retained": true,
+    "original_restore_this_round": false,
+    "prior_frozen_build_and_raw_evidence_unchanged": true
+  },
+  "hardware_integrity": {
+    "record": "docs/analysis/firmware-runtime-fast-peaks-20261116.hardware-integrity.json",
+    "record_sha256": "7eb843d87c83d1e96fa753d9d7ef69365c3d1978463064142b591330222e10cf",
+    "status": "passed",
+    "prior_build_manifests_verified": 27,
+    "prior_build_file_references_verified": 323,
+    "separate_prior_verification_bundle_files": 3,
+    "hardware_manifest_files": 46,
+    "verifier_device_access": false
+  },
+  "independent_raw_crosscheck": {
+    "path": "docs/analysis/firmware-runtime-fast-peaks-20261116.independent-crosscheck.json",
+    "sha256": "74e6b87053a4b2383a2d3eeb31070952f93485c8ba430509315c68653830a37c",
+    "status": "passed",
+    "runtime": "Node.js independent raw request/reply and numeric verification",
+    "hardware_access": false,
+    "complete_pairs": 10800
+  }
+}

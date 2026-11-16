@@ -1,0 +1,280 @@
+{
+  "status": "user_reported_rt1c_failed_immediate_flicker_original_restored",
+  "date": "2026-11-15",
+  "timezone": "Asia/Shanghai",
+  "hardware_tested": true,
+  "hardware_access": false,
+  "automated_hardware_tested": false,
+  "prior_user_acceptance": {
+    "candidate": "RT1B",
+    "quote": "全部通过，继续",
+    "source": "user_report_only",
+    "agreed_checklist": "Boot observation before About; About/reentry; available common functions; cold start; original recovery, overall pass reported.",
+    "separately_reported_about_code": null,
+    "separately_reported_measurements": null,
+    "independently_observed": false,
+    "changes_old_RT1_failure": false,
+    "old_RT2_RT3": "on_hold"
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-RT1C-STACK-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "6f75b7361836a776f43dd42aba0b1efc20852c3fd38435d1ce5e9e4eaeda31df",
+    "app_sha256": "0da52b87cbaea19132c3ab6dfa3c6a21d05d3aaf34420cfe8d06c8b26693ebc6"
+  },
+  "artifact_directory": "artifacts/firmware-runtime-stack-20261115",
+  "manifest_sha256": "37e73a7d11ed104d4fb3eeb926dbf74be2a0029873bf29f304170be333c39d88",
+  "manifest_files": 6,
+  "analysis_sha256": "7d2d66da8d6ad86df7bedf3d934bee68966791a89a0e94bd413246ad915c5d0d",
+  "source": "tools/firmware_runtime_stack.py",
+  "source_sha256": "4b9a430791217f4dfff6d1b9b9982a1afae26129f8d350eaa78b465aee1c6273",
+  "previous_helper_sha256": "099edd2be0c9c629fc5776b89c6359ff1147e5dd0bc18f6ce086fa79a0aa002f",
+  "layout": {
+    "entry": "0x1e97038",
+    "code_end": "0x1e9761e",
+    "pc_high": "0x1e97640",
+    "constant_data_begin": "0x1e97640",
+    "new_instruction_bytes": 1510,
+    "new_instructions": 521,
+    "extension_used": 2946,
+    "extension_reserved": 3200,
+    "tail_bytes": 90
+  },
+  "ownership": {
+    "original_stack_words": 256,
+    "new_stack_words": 304,
+    "allocation_added_bytes": 192,
+    "allocation_via_original_task_creator": true,
+    "permanent_wrapper_stack_bytes": 144,
+    "snapshot_bytes": 128,
+    "state_address": "TCB.pxStack + 0x440 (last 128 bytes of this allocation)",
+    "pointer_slot": "Owned wrapper-frame offset 0; a bounded relative offset, magic and complement are checked.",
+    "entry_sp_gap_accepted_bytes": [0, 80],
+    "relative_state_offset_bounds": [16, 96],
+    "working_stack_headroom_added_bytes_before_periodic_save": 48,
+    "working_stack_headroom_added_bytes_during_periodic_save": 12,
+    "physical_heap_end_modified": false,
+    "fixed_private_ram_address": false,
+    "TCB_application_tag_modified": false,
+    "early_initialization_hook": false,
+    "task_depth_instruction": {
+      "address": "0x1e04910",
+      "bytes": "03fb3001",
+      "length": 4,
+      "mnemonic": "mov",
+      "operands": "r3, #0x130",
+      "pcode": ["IMARK ram[1e04910:4]", "r3 = 0x130"]
+    }
+  },
+  "snapshot": {
+    "period_os_ticks": 100,
+    "tick_frequency_assumed": false,
+    "source_words": [
+      {
+        "name": "voltage_v",
+        "address": "0x41a4",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "current_a",
+        "address": "0x41b0",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "power_w",
+        "address": "0x41bc",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "mos_c",
+        "address": "0x419c",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "ntc_c",
+        "address": "0x4198",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "cpu_c",
+        "address": "0x8fc",
+        "representation": "IEEE binary32 raw word"
+      }
+    ],
+    "state_words": {
+      "0": "HEAD",
+      "4": "MAGIC",
+      "8": "sequence",
+      "12": "loop_count",
+      "16": "snapshot_count",
+      "20": "snapshot_tick",
+      "24": "sticky_numeric_or_checksum_flags",
+      "28": "snapshot_xor_checksum",
+      "32..52": "six source words",
+      "56": "self pointer",
+      "60": "size",
+      "64": "task depth words",
+      "96": "READY independent of count",
+      "124": "TAIL"
+    },
+    "checksum_offsets": [16, 20, 32, 36, 40, 44, 48, 52, 96],
+    "checksum_security": "Diagnostic XOR consistency check, not cryptographic integrity.",
+    "publisher": "Single original data task",
+    "reader": "About page, at most three seqlock attempts",
+    "display": "C00..CFF: immutable Flash text, low eight bits of full u32 background snapshot count; wraps FF -> 00.",
+    "numeric_accuracy_or_synchronous_ADC_validation": false
+  },
+  "runtime_scope": {
+    "original_delay_state_preserved": true,
+    "new_private_usb_command": false,
+    "load_or_calibration_writes": false,
+    "new_calls_in_periodic": 0,
+    "new_external_api": "xTaskGetHandle, only from About after all 304 ROM bytes match",
+    "new_external_api_execution_model": "Explicit ABI/live-TCB fixture; kernel scheduler/list memory not executed.",
+    "original_app_uses_same_api_export": {
+      "address": "0x1e4e48e",
+      "bytes": "d5f3d5c4",
+      "length": 4,
+      "mnemonic": "goto",
+      "operands": "0x2106e3c",
+      "pcode": ["IMARK ram[1e4e48e:4]", "goto ram[2106e3c:4]"]
+    },
+    "about_additional_local_stack_bytes": 48,
+    "barrier": "Emitted CSYNC; sequential host models treat it as an ordering no-op, not a proof of hardware ordering."
+  },
+  "errors": {
+    "C:ROM": "Selected ROM contract mismatch; no new API/TCB read.",
+    "C:MEM": "Unsupported task stack/layout or state guard.",
+    "C:NONE": "Task lookup returned null.",
+    "C:WAIT": "No completed first snapshot yet.",
+    "C:CRC": "Current selected-field checksum/READY invalid or prior diagnostic checksum fault is sticky.",
+    "C:NUM": "A nonfinite source was captured; sticky until restart.",
+    "C:BUS": "No coherent snapshot within three attempts."
+  },
+  "checks": {
+    "initial_states_each_path": 64,
+    "aligned_entry_gap_cases": 21,
+    "periodic_calls": 513,
+    "original_draw_paths": 512,
+    "rom_byte_mismatch_cases": 304,
+    "nonfinite_source_cases": 18,
+    "checksum_field_fault_cases": 10,
+    "zero_counter_and_ready_corruption_rejected": true,
+    "layout_guard_fault_cases": 6,
+    "frame_guard_fault_cases": 3,
+    "invalid_frame_offset_cases": 7,
+    "bounded_read_retry_cases": [
+      {
+        "schedule_fixture": "once",
+        "sequence_reads": 4,
+        "result": "C02"
+      },
+      {
+        "schedule_fixture": "always",
+        "sequence_reads": 6,
+        "result": "C:BUS"
+      }
+    ],
+    "random_finite_source_cases": 128,
+    "negative_container_cases": 6,
+    "previous_manifests_verified": 12,
+    "previous_files_verified": 77
+  },
+  "protocol_rehearsal": {
+    "log": "artifacts/firmware-runtime-stack-protocol-20261115.txt",
+    "sha256": "5c4ea0563be978552fdf6a0a065609b77682d908d3ab7056fb4bf4d1466fac4f",
+    "offline": true,
+    "hardware_transmission": false,
+    "files": 2,
+    "phase": "Complete",
+    "blocks_each": 11088,
+    "last_block_bytes": 26,
+    "AA": "AA 07 50 2B 1A A2 46"
+  },
+  "original_identical_recovery": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical": true
+  },
+  "physical_acceptance": {
+    "boot_before_about": "user_reported_immediate_flicker_failed",
+    "counter_advances_while_about_closed": "not_accepted_due_to_startup_failure",
+    "counter_advances_without_PC_communication_if_separate_power": "not_accepted_due_to_startup_failure",
+    "original_pages_and_available_USB_BLE": "not_accepted_due_to_startup_failure",
+    "cold_start_and_counter": "not_separately_reported",
+    "original_restore": "user_reported_restored",
+    "full_snapshot_values_units_accuracy": "not_in_this_candidate",
+    "old_RT2_RT3": "on_hold"
+  },
+  "limitations": [
+    "Hardware acceptance is pending for RT1C; RT1B overall pass is a user report, not an independently observed device trace.",
+    "The physical cause of old RT1 flicker remains unconfirmed. Old RT2/RT3 stay on hold.",
+    "Hand-assembled original-task extension, not a new C compiler/linker, standalone firmware, driver or control loop.",
+    "The added 192 bytes still depend on the original allocator succeeding. Pointer/TCB validity relies on the gated original OS contract, not arbitrary corrupted-kernel-memory recovery.",
+    "Local field/SLEIGH models stop at the original task entry/delay or About continuation; they do not execute the full scheduler, MMU, interrupts or PSR. CALL/RETS uses the inherited explicit SLEIGH adapter.",
+    "The xTaskGetHandle call is modeled by an explicit ABI fixture. Its actual ROM scheduler/list effects and total nested stack usage require physical acceptance.",
+    "CSYNC ordering is not simulated by either sequential host interpreter. Bounded interleaving fixtures are not a hardware concurrency proof.",
+    "A snapshot publishes six real RAM words coherently as a software record; this does not make six asynchronous sources a simultaneous ADC conversion or establish values/units/accuracy.",
+    "The About code exports a counter/diagnostic only. Full numeric USB export and measurement comparison remain later work; original USB/BLE receive handlers are unchanged.",
+    "Selected-field XOR and two guards do not establish cryptographic integrity, the whole physical stack high-water mark or every RAM byte."
+  ],
+  "offline_build_status": "offline_stack_snapshot_checks_passed_hardware_pending",
+  "hardware_evidence_source": "user_report_only",
+  "user_hardware_report": {
+    "quote": "刷完直接闪屏，现已恢复原厂",
+    "source": "user_report_only",
+    "independently_observed": false,
+    "physical_reset_confirmed": false,
+    "exact_fault_PC": null,
+    "exception_log": null,
+    "flashed_hash_independently_read_back": false,
+    "original_restore": "user_reported_restored",
+    "normal_operation_after_restore_separately_reported": false
+  },
+  "failure_audit": {
+    "report": "docs/firmware-runtime-rt1c-failure-20261115.md",
+    "tool": "tools/audit_firmware_runtime_stack_failure.py",
+    "directory": "artifacts/firmware-runtime-rt1c-failure-20261115",
+    "hardware_access": false,
+    "new_flashable_candidates_emitted": 0,
+    "audit_sha256": "771600d57692b0ddfc04775bd69b12b4fd9a2b0b874f9883c3275f42e44ebcff",
+    "manifest_sha256": "5407febdbc60237e5e6bd2d12f46ce9523da7488f4df2c903302a863247aba59",
+    "tool_sha256": "1865c1087b49bd1432f24e952fdb8ce7ecdd69bffe5a280c66cb324d39c3da8e",
+    "frozen_manifests_verified": 13,
+    "frozen_files_verified": 83,
+    "candidate_reproduces_byte_identically": true
+  },
+  "validation_correction": {
+    "date": "2026-11-15",
+    "confirmed_static_defects": [
+      "0xFB29 write-special register fields swapped; three intended RETS restorations actually write RETI from r3",
+      "0x130 stack words = 1216 bytes violates original 128-byte stack-page contract"
+    ],
+    "vendor_sr_records": 23,
+    "sleigh_write_mismatch_records": 10,
+    "correct_RETS_from_r0_hex": "29fb0003",
+    "failed_RETS_from_r0_hex": "29fb0030",
+    "aligned_host_positive_control_words": 320,
+    "host_positive_control_is_not_a_firmware": true,
+    "physical_failure_PC_confirmed": false,
+    "old_restoration_model_claim": "Invalid for paths containing these wrongly encoded writes",
+    "synthetic_full_memory_fixture_covers_original_allocator_and_premapping": false
+  },
+  "current_disposition": {
+    "candidate": "failed_stop_testing",
+    "RT1B": "user_overall_pass_retained",
+    "old_RT2_RT3": "on_hold",
+    "new_candidate_emitted_this_turn": false,
+    "physical_root_cause": "The two code/contracts defects are confirmed statically and can affect startup. Which instruction caused the physical flicker, whether an assert/reset occurred, and whether other causes coexist remain unconfirmed without device exception evidence."
+  },
+  "current_successor_candidate": {
+    "name": "RT1G",
+    "report": "docs/firmware-runtime-usb-20261116.md",
+    "summary": "docs/analysis/firmware-runtime-usb-20261116.summary.json",
+    "hardware_status": "pending",
+    "status": "offline_rt1g_usb_checks_passed_hardware_pending",
+    "file": "BW150-V1.1.0-RT1G-USB-EXPERIMENTAL.bin",
+    "sha256": "8a17dbf252f0d1f1de85599d44c824d5e256a26f1e98a56ad18560ce98efc319",
+    "scope": "Retained RT1F background snapshot plus conditional original-HID context publication and token/version-gated read-only USB export; new address interval and physical USB behavior pending."
+  }
+}

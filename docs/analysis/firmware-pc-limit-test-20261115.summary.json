@@ -1,0 +1,575 @@
+{
+  "status": "offline_pc_limit_checks_and_user_reported_B5_acceptance_passed",
+  "hardware_tested": true,
+  "prior_hardware_report": {
+    "date": "2026-11-15",
+    "user_quote": "A通过\nB失败：进入关于页设备重启",
+    "A_area_read": "user_reported_passed",
+    "B_branch_roundtrip": "user_reported_failed_about_page_restart",
+    "B_original_firmware_restore": "not_reported",
+    "independently_observed": false
+  },
+  "diagnosis": {
+    "static_conflict_confirmed": true,
+    "device_exception_cause_confirmed": false,
+    "old_flash_pc_high": "0x1e9409c",
+    "B4_new_code": "0x1e97038",
+    "outside_by_bytes": 12188,
+    "B5_flash_pc_high": "0x1e97048",
+    "range_extension_bytes": 12204,
+    "interpretation": "B4's appended execution is outside the configured flash PC interval. The observed restart fits this conflict; no exception trace proves causality yet.",
+    "previous_validation_gap": "The prior selected-instruction model omitted configured hardware PC execution ranges.",
+    "controlled_revision_user_reported_passed": true,
+    "restart_explanation_supported_by_controlled_revision": true
+  },
+  "source": {
+    "path": "Firmware&Software/BW150-6321-APP-1-1-0-UPP.bin",
+    "size": 643072,
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+  },
+  "tool_sha256": "06f221215590827436c1551e2cebda83327b98788e04b9920cac11229dd6daee",
+  "fourth_helper_sha256": "e638b6601bdef109f76abfda7373ac4a4a3874903ff999aed52a717b4257176d",
+  "primary_sources": {
+    "rom.lst": {
+      "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-AC63_BT_SDK/fdc018de81629e21e594d677cf05f87d288be0f0/cpu/bd19/tools/rom.lst",
+      "sha256": "77a567a419308f7389ea7c3b69ef0f4834e11cba2233c01aa9228771c9e8878e",
+      "size": 749560
+    },
+    "bd19-csfr.h": {
+      "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-AC63_BT_SDK/fdc018de81629e21e594d677cf05f87d288be0f0/include_lib/driver/cpu/bd19/asm/csfr.h",
+      "sha256": "3976d0f7981eb506392166583c142ed53b5f597ef0fc6690800ae112d47f0fa3",
+      "size": 10344
+    }
+  },
+  "previous_frozen_evidence_verified": {
+    "artifacts/firmware-minimal-test-20261115/manifest.json": {
+      "sha256": "d3862fd853920ea685e6b532822bd364e591f0635e0be3a96026974ab2e59906",
+      "covered_files_verified": 9
+    },
+    "artifacts/firmware-instruction-test-20261115/manifest.json": {
+      "sha256": "3d5ec6334166ba1a141f2b45ce8e347e0272edaf35a10a19c23f4e133b98db82",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-sequence-test-20261115/manifest.json": {
+      "sha256": "f14f7545931f0da4101443346b33e73aba343642d5b6f7b2bd209c7b7a785520",
+      "covered_files_verified": 8
+    },
+    "artifacts/firmware-trampoline-test-20261115/manifest.json": {
+      "sha256": "b75a7d86eb8150f0fe2d268d87bf7a9ef7a7dc3cd8c18d8ba354de3a3f5f9316",
+      "covered_files_verified": 7
+    }
+  },
+  "official_register_addresses": {
+    "EMU_CON": "0x1be200",
+    "LIM_PC0_H": "0x1be218",
+    "LIM_PC0_L": "0x1be21c",
+    "LIM_PC1_H": "0x1be220",
+    "LIM_PC1_L": "0x1be224",
+    "LIM_PC2_H": "0x1be228",
+    "LIM_PC2_L": "0x1be22c"
+  },
+  "setup_call_site": {
+    "address": "0x1e3f534",
+    "bytes": "4917",
+    "target": "0x1e3f3c8",
+    "parent_entry": "0x1e3f44a",
+    "parent_call_site": "0x1e51432",
+    "scope": "Decoded initialization call sites; no claim of a complete startup/peripheral simulation."
+  },
+  "patch_from_B4": {
+    "address": "0x1e3f3fe",
+    "package_offset": "0x433fe",
+    "before": "c0ff9c40e901",
+    "after": "c0ff4870e901",
+    "decoded_app_byte_diff": [
+      {
+        "offset": "0x3f2e0",
+        "before": "9C",
+        "after": "48"
+      },
+      {
+        "offset": "0x3f2e1",
+        "before": "40",
+        "after": "70"
+      }
+    ],
+    "package_byte_diff": [
+      {
+        "offset": "0x4000",
+        "before": "76",
+        "after": "49"
+      },
+      {
+        "offset": "0x4001",
+        "before": "B9",
+        "after": "15"
+      },
+      {
+        "offset": "0x4002",
+        "before": "48",
+        "after": "DC"
+      },
+      {
+        "offset": "0x4003",
+        "before": "98",
+        "after": "F0"
+      },
+      {
+        "offset": "0x4020",
+        "before": "06",
+        "after": "C8"
+      },
+      {
+        "offset": "0x4021",
+        "before": "F1",
+        "after": "A9"
+      },
+      {
+        "offset": "0x4022",
+        "before": "EE",
+        "after": "7E"
+      },
+      {
+        "offset": "0x4023",
+        "before": "6B",
+        "after": "61"
+      },
+      {
+        "offset": "0x43400",
+        "before": "9B",
+        "after": "4F"
+      },
+      {
+        "offset": "0x43401",
+        "before": "4E",
+        "after": "7E"
+      }
+    ],
+    "hook_stub_text_identical": true,
+    "other_setup_writes_identical": true,
+    "boot_prefix_and_other_members_identical": true
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-JUMP4-LIMIT5-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "a74e132d85397b802639aca2193d41c6c7adb805b4987275a5b376006845f227",
+    "app_sha256": "8ac37f2d565f5472aa403849bfd64f3d9b850de04e74fd763e21612f02adefcc",
+    "expected_about_model": "BW150",
+    "expected_about_version": "JUMP4",
+    "expected_usb_product": "ATORCH BW150 V1.1.0"
+  },
+  "static_pc_interval_checks": {
+    "B4_failed": {
+      "low": "0x1e00120",
+      "high": "0x1e9409c",
+      "all_selected_instructions_inside": false,
+      "instructions": [
+        {
+          "address": "0x1e36aca",
+          "length": 4,
+          "instruction": "goto",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e36ace",
+          "length": 2,
+          "instruction": "nop",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e97038",
+          "length": 6,
+          "instruction": "mov",
+          "inside_interval": false
+        },
+        {
+          "address": "0x1e9703e",
+          "length": 4,
+          "instruction": "goto",
+          "inside_interval": false
+        },
+        {
+          "address": "0x1e36ad0",
+          "length": 4,
+          "instruction": "jeq",
+          "inside_interval": true
+        }
+      ],
+      "scope": "Static conservative interval test; actual fault reason requires device exception evidence."
+    },
+    "B5_candidate": {
+      "low": "0x1e00120",
+      "high": "0x1e97048",
+      "all_selected_instructions_inside": true,
+      "instructions": [
+        {
+          "address": "0x1e36aca",
+          "length": 4,
+          "instruction": "goto",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e36ace",
+          "length": 2,
+          "instruction": "nop",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e97038",
+          "length": 6,
+          "instruction": "mov",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e9703e",
+          "length": 4,
+          "instruction": "goto",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e36ad0",
+          "length": 4,
+          "instruction": "jeq",
+          "inside_interval": true
+        }
+      ],
+      "scope": "Static conservative interval test; actual fault reason requires device exception evidence."
+    },
+    "insufficient_high_memory_only": {
+      "low": "0x1e00120",
+      "high": "0x1e9703e",
+      "all_selected_instructions_inside": false,
+      "instructions": [
+        {
+          "address": "0x1e36aca",
+          "length": 4,
+          "instruction": "goto",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e36ace",
+          "length": 2,
+          "instruction": "nop",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e97038",
+          "length": 6,
+          "instruction": "mov",
+          "inside_interval": true
+        },
+        {
+          "address": "0x1e9703e",
+          "length": 4,
+          "instruction": "goto",
+          "inside_interval": false
+        },
+        {
+          "address": "0x1e36ad0",
+          "length": 4,
+          "instruction": "jeq",
+          "inside_interval": true
+        }
+      ],
+      "scope": "Static conservative interval test; actual fault reason requires device exception evidence."
+    }
+  },
+  "hook_state_checks": {
+    "cases": [
+      {
+        "variant": "B_branch_roundtrip",
+        "state_cases": 256,
+        "selected_instruction_steps": 768,
+        "modeled_other_gprs_sp_rets_psr_unchanged": true,
+        "exit_address": "0x1e36ad0"
+      }
+    ],
+    "hardware_state_preservation_certified": false,
+    "scope": "Modeled register/PC checks only; hardware status and interrupt semantics remain unverified for these samples."
+  },
+  "negative_parser_controls_memory_only": [
+    {
+      "case": "flash_header_crc",
+      "rejected": true,
+      "reason": "Flash header CRC"
+    },
+    {
+      "case": "top_entry_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x20"
+    },
+    {
+      "case": "inner_header_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x4020"
+    },
+    {
+      "case": "app_payload_crc",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "outer_data_crc",
+      "rejected": true,
+      "reason": "Outer data CRC: app_area_head"
+    },
+    {
+      "case": "truncated_file",
+      "rejected": true,
+      "reason": "Truncated BANKCB"
+    },
+    {
+      "case": "grown_app_changed_without_crc_update",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "config_not_relocated_but_header_crc_valid",
+      "rejected": true,
+      "reason": "Inner data CRC: cfg_tool.bin"
+    },
+    {
+      "case": "app_size_not_extended_but_header_crc_valid",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "limit_operand_reverted_without_crc_update",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    }
+  ],
+  "third_party_cross_checks": {
+    "B5": {
+      "matched_files": 5,
+      "decoded_container_identical": true,
+      "chipkey": "0x8d07",
+      "entry_point": "0x1e00120"
+    },
+    "original": {
+      "matched_files": 5,
+      "decoded_container_identical": true,
+      "chipkey": "0x8d07",
+      "entry_point": "0x1e00120"
+    }
+  },
+  "roundtrip": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "size": 643072,
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical_rebuild": true,
+    "reverse_to_B4_identical": true,
+    "reverse_to_original_identical": true
+  },
+  "limitations": [
+    "B5 acceptance is user reported, not independently observed; no additional per-item measurements or exception logs are supplied.",
+    "The one-operand revision passing supports the PC-limit explanation. No concrete device fault bit or reset log has been captured.",
+    "Frozen B5 analysis, manifest and binaries retain their original hardware_tested=false scope and are not rewritten.",
+    "Success of B5 does not establish the next six-group suite or a general C ABI; its 1024-byte extension is a new experiment.",
+    "No new Flash readback, independent accuracy measurement or complete peripheral certification is available."
+  ],
+  "official_branch_oracle": {
+    "record_count": 527,
+    "counts": {
+      "goto": 159,
+      "call": 368
+    },
+    "mismatches": 0,
+    "scope": "Real vendor ROM encodings and explicit targets; not device execution of the new stub."
+  },
+  "setup_writes": {
+    "original": {
+      "write_count": 8,
+      "models_agree": true,
+      "register_values": {
+        "EMU_CON": {
+          "mmio_address": "0x1be200",
+          "value": "0x80000017"
+        },
+        "LIM_PC0_L": {
+          "mmio_address": "0x1be21c",
+          "value": "0x1e00120"
+        },
+        "LIM_PC0_H": {
+          "mmio_address": "0x1be218",
+          "value": "0x1e9409c"
+        },
+        "LIM_PC1_L": {
+          "mmio_address": "0x1be224",
+          "value": "0x7b60"
+        },
+        "LIM_PC1_H": {
+          "mmio_address": "0x1be220",
+          "value": "0xa0a8"
+        },
+        "LIM_PC2_L": {
+          "mmio_address": "0x1be22c",
+          "value": "0x100000"
+        },
+        "LIM_PC2_H": {
+          "mmio_address": "0x1be228",
+          "value": "0x110000"
+        }
+      },
+      "other_write": {
+        "mmio_address": "0x1be1c0",
+        "value": "0x1"
+      },
+      "scope": "Bounded setup writes in memory models; not live MMIO or an exception trace."
+    },
+    "B4_failed": {
+      "write_count": 8,
+      "models_agree": true,
+      "register_values": {
+        "EMU_CON": {
+          "mmio_address": "0x1be200",
+          "value": "0x80000017"
+        },
+        "LIM_PC0_L": {
+          "mmio_address": "0x1be21c",
+          "value": "0x1e00120"
+        },
+        "LIM_PC0_H": {
+          "mmio_address": "0x1be218",
+          "value": "0x1e9409c"
+        },
+        "LIM_PC1_L": {
+          "mmio_address": "0x1be224",
+          "value": "0x7b60"
+        },
+        "LIM_PC1_H": {
+          "mmio_address": "0x1be220",
+          "value": "0xa0a8"
+        },
+        "LIM_PC2_L": {
+          "mmio_address": "0x1be22c",
+          "value": "0x100000"
+        },
+        "LIM_PC2_H": {
+          "mmio_address": "0x1be228",
+          "value": "0x110000"
+        }
+      },
+      "other_write": {
+        "mmio_address": "0x1be1c0",
+        "value": "0x1"
+      },
+      "scope": "Bounded setup writes in memory models; not live MMIO or an exception trace."
+    },
+    "B5_candidate": {
+      "write_count": 8,
+      "models_agree": true,
+      "register_values": {
+        "EMU_CON": {
+          "mmio_address": "0x1be200",
+          "value": "0x80000017"
+        },
+        "LIM_PC0_L": {
+          "mmio_address": "0x1be21c",
+          "value": "0x1e00120"
+        },
+        "LIM_PC0_H": {
+          "mmio_address": "0x1be218",
+          "value": "0x1e97048"
+        },
+        "LIM_PC1_L": {
+          "mmio_address": "0x1be224",
+          "value": "0x7b60"
+        },
+        "LIM_PC1_H": {
+          "mmio_address": "0x1be220",
+          "value": "0xa0a8"
+        },
+        "LIM_PC2_L": {
+          "mmio_address": "0x1be22c",
+          "value": "0x100000"
+        },
+        "LIM_PC2_H": {
+          "mmio_address": "0x1be228",
+          "value": "0x110000"
+        }
+      },
+      "other_write": {
+        "mmio_address": "0x1be1c0",
+        "value": "0x1"
+      },
+      "scope": "Bounded setup writes in memory models; not live MMIO or an exception trace."
+    }
+  },
+  "bounded_flow": {
+    "case_count": 32,
+    "selected_instruction_steps": 160,
+    "all_models_agree": true,
+    "scope": "Selected setup, hook PC/GPR path and draw transfers only. Original intervening calls, hardware flags, interrupt behavior and full UI are not emulated."
+  },
+  "local_evidence": {
+    "directory": "artifacts/firmware-pc-limit-test-20261115",
+    "scope": "frozen_offline_B5_build_hardware_not_tested",
+    "git_ignored": true,
+    "analysis_sha256": "5f35b0d5f0d7ecf1d857abd354205aa0d5400f3817a655ebe20c195e7e0605a7",
+    "manifest_sha256": "b1115147e818eee7e122323bc807f73e05035e5fc7a82846bed8037f82ba036c",
+    "manifest": {
+      "hardware_tested": false,
+      "files": {
+        "analysis.json": {
+          "size": 204283,
+          "sha256": "5f35b0d5f0d7ecf1d857abd354205aa0d5400f3817a655ebe20c195e7e0605a7"
+        },
+        "bd19-csfr.h": {
+          "size": 10344,
+          "sha256": "3976d0f7981eb506392166583c142ed53b5f597ef0fc6690800ae112d47f0fa3"
+        },
+        "BW150-V1.1.0-JUMP4-LIMIT5-EXPERIMENTAL.bin": {
+          "size": 643072,
+          "sha256": "a74e132d85397b802639aca2193d41c6c7adb805b4987275a5b376006845f227"
+        },
+        "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin": {
+          "size": 643072,
+          "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+        },
+        "rom.lst": {
+          "size": 749560,
+          "sha256": "77a567a419308f7389ea7c3b69ef0f4834e11cba2233c01aa9228771c9e8878e"
+        }
+      }
+    }
+  },
+  "offline_build_status": "offline_pc_limit_revision_checks_passed_hardware_not_tested",
+  "automated_hardware_tested": false,
+  "hardware_experiment": {
+    "report_date": "2026-11-15",
+    "timezone": "Asia/Shanghai",
+    "user_quote": "通过，进行下一步，当前每轮测试太少了，需要加快进程，减少刷写次数",
+    "candidate_sha256": "a74e132d85397b802639aca2193d41c6c7adb805b4987275a5b376006845f227",
+    "status": "user_reported_agreed_acceptance_passed",
+    "reported_agreed_acceptance": {
+      "enter_about_without_restart_and_JUMP4_display": true,
+      "about_page_reentry": true,
+      "previously_used_connection_monitoring_parameter_panel_checks": true,
+      "full_power_cycle_cold_start_and_effect_persistence": true,
+      "original_firmware_restoration": true
+    },
+    "scope": "User reported the agreed acceptance passed as a whole; no separate measurements supplied.",
+    "independently_observed_by_assistant": false,
+    "new_transfer_capture_available": false,
+    "device_exception_log_available": false,
+    "flash_readback_available": false,
+    "independent_parameter_or_accuracy_validation": false
+  },
+  "offline_build_limitations_at_freeze": [
+    "B5 has not been flashed, power-cycled or restored by the assistant or user.",
+    "No device exception registers, UART reset log or Flash readback are available.",
+    "Configured PC interval conflict is proven statically; its role in this observed reset remains a hypothesis until controlled B5 testing or an exception trace.",
+    "The revised flash PC interval also includes the intervening existing data region; other limit registers and EMU_CON remain unchanged.",
+    "The frozen fourth-stage code/state model passed despite B4's failure and is not a full hardware simulator.",
+    "No new CALL/RTS, stack frame, device-register logic or production flashing acceptance changes are introduced."
+  ],
+  "next_experiment": {
+    "report": "docs/firmware-suite-test-20261115.md",
+    "summary": "docs/analysis/firmware-suite-test-20261115.summary.json",
+    "candidate": "BW150-V1.1.0-SUITE6-EXPERIMENTAL.bin",
+    "candidate_sha256": "f86fad3fb2dd22f2408dfbf28cc15f6e940544daf474e3edff8f568f308a0e73",
+    "hardware_tested": false,
+    "plan": "One suite image with six result bits; one combined cold-start check and one original restore."
+  }
+}

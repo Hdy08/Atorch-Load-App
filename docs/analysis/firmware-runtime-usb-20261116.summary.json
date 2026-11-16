@@ -1,0 +1,504 @@
+{
+  "status": "rt1g_read_only_hardware_paths_verified_timing_reviewed_original_restored",
+  "date": "2026-11-16",
+  "timezone": "Asia/Shanghai",
+  "hardware_tested": true,
+  "hardware_access": true,
+  "automated_hardware_tested": true,
+  "prior_user_acceptance": {
+    "candidate": "RT1F",
+    "quote": "通过，下一轮",
+    "date_recorded": "2026-11-16",
+    "source": "user_report_only",
+    "independently_observed": false,
+    "separately_reported_about_codes": null,
+    "duration": null,
+    "measurement_values": null,
+    "old_rt1_rt1c_failures_unchanged": true,
+    "old_rt2_rt3": "on_hold"
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-RT1G-USB-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "8a17dbf252f0d1f1de85599d44c824d5e256a26f1e98a56ad18560ce98efc319",
+    "app_sha256": "4f4df3c9be3d5338a1b932b1e5a52552348a7cb8d2df0bdeffaec2592ed7ec88"
+  },
+  "artifact_directory": "artifacts/firmware-runtime-usb-20261116",
+  "manifest_sha256": "46009f4dc8b69e00841233fdd874289ecc2cef8a06f8de82538687622395d824",
+  "manifest_files": 7,
+  "analysis_sha256": "53f335d7015a4b4df6902d710d465820719f86b8bc07416c5ab279ec8f3d41cd",
+  "source": "tools/firmware_runtime_usb.py",
+  "source_sha256": "d3d1e4103cc74e16317140fd2bd05edff3c8f03f56c06d335a441080729589dd",
+  "verifier": "tools/verify_firmware_runtime_usb.py",
+  "verifier_sha256": "a77424ea50df6b1855a49a26f4ce0206c5c8559eb0459d560d63d01394ecd0c8",
+  "previous_helper_sha256": "2be1321b4b82d86d0dcc4bf1b995a00573a79eed7f78fb47e58b9d5cf9446bef",
+  "layout": {
+    "entry": "0x1e97038",
+    "retained_rt1f_code_end": "0x1e9738a",
+    "code_end": "0x1e974b8",
+    "new_instruction_bytes": 1152,
+    "new_instructions": 436,
+    "added_publisher_and_usb_instruction_bytes": 302,
+    "pc_high": "0x1e974c0",
+    "pc_high_increased_from_rt1f": true,
+    "constant_data_begin": "0x1e974c0",
+    "extension_used": 2624,
+    "extension_reserved": 3200,
+    "tail_bytes": 90,
+    "new_pc_interval_hardware_pending_at_build": true,
+    "new_execution_paths_observed": [
+      "background publication",
+      "USB G schema 1 read",
+      "powered physical replug",
+      "cold-start read"
+    ],
+    "all_new_address_and_fault_branch_coverage_established": false
+  },
+  "retained_core": {
+    "all_rt1f_instruction_addresses_and_operations_identical": true,
+    "only_relocated_core_data_pointers": [
+      {
+        "address": "0x1e97064",
+        "label": "gate_0",
+        "before": "c1ffe477e901",
+        "after": "c1ff0479e901"
+      },
+      {
+        "address": "0x1e97226",
+        "label": "error_rom",
+        "before": "c8ffa077e901",
+        "after": "c8ffc078e901"
+      },
+      {
+        "address": "0x1e97232",
+        "label": "task_name",
+        "before": "c0ffd877e901",
+        "after": "c0fff878e901"
+      },
+      {
+        "address": "0x1e9723c",
+        "label": "error_none",
+        "before": "c8ffa877e901",
+        "after": "c8ffc878e901"
+      },
+      {
+        "address": "0x1e97246",
+        "label": "error_mem",
+        "before": "c8ffb077e901",
+        "after": "c8ffd078e901"
+      },
+      {
+        "address": "0x1e972ba",
+        "label": "error_crc",
+        "before": "c8ffb877e901",
+        "after": "c8ffd878e901"
+      },
+      {
+        "address": "0x1e972c8",
+        "label": "error_wait",
+        "before": "c8ffc877e901",
+        "after": "c8ffe878e901"
+      },
+      {
+        "address": "0x1e972d0",
+        "label": "error_crc",
+        "before": "c8ffb877e901",
+        "after": "c8ffd878e901"
+      },
+      {
+        "address": "0x1e972e0",
+        "label": "error_num",
+        "before": "c8ffc077e901",
+        "after": "c8ffe078e901"
+      },
+      {
+        "address": "0x1e972f2",
+        "label": "results",
+        "before": "c8ffa073e901",
+        "after": "c8ffc074e901"
+      },
+      {
+        "address": "0x1e97302",
+        "label": "error_busy",
+        "before": "c8ffd077e901",
+        "after": "c8fff078e901"
+      },
+      {
+        "address": "0x1e97354",
+        "label": "gate_table",
+        "before": "c4fff878e901",
+        "after": "c4ff187ae901"
+      }
+    ],
+    "immutable_data_bytes_identical_except_relocated_descriptor_addresses": true,
+    "task_stack_words": 288,
+    "permanent_state_bytes": 64,
+    "state_layout_unchanged": true,
+    "no_fixed_ram_or_heap_end_change": true,
+    "no_new_startup_api": true,
+    "about_counter_text": "F00..FFF retained",
+    "get_handle_model": "Retained About-only explicit TCB/volatile r0..r3 API fixture; USB has no task query",
+    "publisher": "16-byte temporary thunk; republishes owned state pointer only to the original application's registered HID callback context, then releases frame and tail-jumps RT1F periodic core",
+    "publisher_context_address": "0x432c"
+  },
+  "usb": {
+    "command": 82,
+    "token": "46470100",
+    "reply_signature": "G",
+    "schema": 1,
+    "frame_bytes": 64,
+    "request_pointer_slot": [0, 4],
+    "retry_sequence_slot": [4, 8],
+    "original_reply_buffer": [48, 112],
+    "original_function_local_frame_bytes": 176,
+    "additional_local_call_frame_bytes_modeled": 4,
+    "status_codes": {
+      "0": "copied; host must validate snapshot",
+      "1": "ROM mismatch",
+      "2": "callback/context unavailable or misaligned",
+      "3": "state headers mismatch",
+      "4": "busy after three attempts"
+    },
+    "legacy_commands_unchanged": true,
+    "state_and_tcb_read_only": true,
+    "usb_api_calls": 0,
+    "usb_tcb_reads": 0,
+    "reply_fields_8_through_59": "RT1F state offsets 8..59, unchanged bit representation",
+    "os_tick_frequency_assumed": false
+  },
+  "usb_primary_evidence": {
+    "manifest": "artifacts/firmware-runtime-usb-primary-20261116/manifest.json",
+    "manifest_sha256": "38f4d63bf218607c6be80fec036d06fad9b0b4e98b7c80129e8d1f0789a8bcb9",
+    "original_binary_blocks": 6,
+    "usb_task_query_added": false
+  },
+  "execution_checks": {
+    "hardware_access": false,
+    "invalid_token_cases": 1020,
+    "rom_byte_mismatch_cases": 268,
+    "callback_context_faults": [
+      ["0x432c", 0],
+      ["0x432c", 2229309],
+      ["0x4330", 0],
+      ["0x4330", 31462584]
+    ],
+    "state_header_fault_cases": 3,
+    "unaligned_context_pointer_rejected": true,
+    "publisher_skips_other_callback_and_recovers_registration_or_reset": true,
+    "concurrent_cases": [
+      {
+        "publication": "once",
+        "status": 0,
+        "sequence_reads": 6
+      },
+      {
+        "publication": "always",
+        "status": 4,
+        "sequence_reads": 9
+      }
+    ],
+    "odd_sequence_read_budget": 3,
+    "corrupt_emitted_snapshots_rejected": 11,
+    "random_finite_export_cases": 128,
+    "nonfinite_source_export_cases": 18,
+    "repeated_periodic_calls": 513,
+    "decimated_snapshots": 6,
+    "exported_wrap_cases": [
+      {
+        "counter_before": 4294967295,
+        "counter_after": 0,
+        "tick_after": 12445,
+        "sequence_after": 0
+      },
+      {
+        "counter_before": 4294967295,
+        "counter_after": 0,
+        "tick_after": 68,
+        "sequence_after": 0
+      },
+      {
+        "counter_before": 4294967294,
+        "counter_after": 4294967295,
+        "tick_after": 68,
+        "sequence_after": 0
+      }
+    ],
+    "original_usb_function_only_dispatch_4_bytes_changed": true,
+    "legacy_register_and_memory_equivalence": true,
+    "usb_new_frame_bytes_modeled": 4,
+    "publisher_temporary_frame_bytes": 16,
+    "no_usb_task_lookup_or_tcb_access": true,
+    "kernel_api_internal_stack_not_executed": true,
+    "host_self_test": {
+      "status": "host_only_passed",
+      "hardware_access": false,
+      "malformed_frame_or_field_controls": 89,
+      "error_payloads_hidden": 4,
+      "old_suite_versions_rejected": 3,
+      "nonfinite_with_valid_xor_rejected": 3,
+      "all_non_read_commands_rejected": 253,
+      "original_signed_telemetry_fixture": true,
+      "emitted_firmware_fixtures": 5
+    }
+  },
+  "frozen_previous_evidence": {
+    "artifacts/firmware-minimal-test-20261115/manifest.json": {
+      "sha256": "d3862fd853920ea685e6b532822bd364e591f0635e0be3a96026974ab2e59906",
+      "covered_files_verified": 9
+    },
+    "artifacts/firmware-instruction-test-20261115/manifest.json": {
+      "sha256": "3d5ec6334166ba1a141f2b45ce8e347e0272edaf35a10a19c23f4e133b98db82",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-sequence-test-20261115/manifest.json": {
+      "sha256": "f14f7545931f0da4101443346b33e73aba343642d5b6f7b2bd209c7b7a785520",
+      "covered_files_verified": 8
+    },
+    "artifacts/firmware-trampoline-test-20261115/manifest.json": {
+      "sha256": "b75a7d86eb8150f0fe2d268d87bf7a9ef7a7dc3cd8c18d8ba354de3a3f5f9316",
+      "covered_files_verified": 7
+    },
+    "artifacts/firmware-pc-limit-test-20261115/manifest.json": {
+      "sha256": "b1115147e818eee7e122323bc807f73e05035e5fc7a82846bed8037f82ba036c",
+      "covered_files_verified": 5
+    },
+    "artifacts/firmware-suite-test-20261115/manifest.json": {
+      "sha256": "73baee8e7fee431390806d56143c374377e6f4dfaf3bc71791046755cf9aba21",
+      "covered_files_verified": 4
+    },
+    "artifacts/firmware-batch-test-20261115/manifest.json": {
+      "sha256": "e7da807fffe12b2632d0da0fe88f1647370848d39de0657051f64547d01fa10d",
+      "covered_files_verified": 4
+    },
+    "artifacts/firmware-rom-test-20261115/manifest.json": {
+      "sha256": "566a4eb7d750c03b7449772a8b6c8f96d5b9e53aa5ce4be9799b3e4b60e563aa",
+      "covered_files_verified": 5
+    },
+    "artifacts/firmware-numeric-test-20261115/manifest.json": {
+      "sha256": "e09dc49a769fbe31f410fd9138f3ad0c765450869ecc45ea00e3205ed7bfb526",
+      "covered_files_verified": 5
+    },
+    "artifacts/firmware-runtime-suite-20261115/manifest.json": {
+      "sha256": "7e4406e2f42f8f9a27d1f3d8651b5e7cd66d62dfe1a98330fdc262e4f2b9c9a5",
+      "covered_files_verified": 16
+    },
+    "artifacts/firmware-runtime-rt1-failure-20261115/manifest.json": {
+      "sha256": "366265bc2df426e2c4ac03bfef7df1fedb0bf0ea2b115664be5fea792614e92c",
+      "covered_files_verified": 2
+    },
+    "artifacts/firmware-runtime-isolation-20261115/manifest.json": {
+      "sha256": "8dc43897f4cd03025e26d7286864e4ad6b3aec0983cfff639b20346d5aae069a",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-stack-20261115/manifest.json": {
+      "sha256": "37e73a7d11ed104d4fb3eeb926dbf74be2a0029873bf29f304170be333c39d88",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-rt1c-failure-20261115/manifest.json": {
+      "sha256": "5407febdbc60237e5e6bd2d12f46ce9523da7488f4df2c903302a863247aba59",
+      "covered_files_verified": 2
+    },
+    "artifacts/firmware-runtime-return-20261115/manifest.json": {
+      "sha256": "56a3b1d7d7206ffdf565e4ef2e6c32f44ebc753db44f9922d102fc2556085a9b",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-entry-20261115/manifest.json": {
+      "sha256": "7c6492ee66805ed7e540152ab47876ef4789bc3439d70aee4669b45535afe5f5",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-state-20261115/manifest.json": {
+      "sha256": "d9cfca5556b9e594790d6d29807c8d34242c05336b1ab9d12403b215b49ffcc6",
+      "covered_files_verified": 6
+    }
+  },
+  "third_party_cross_check": {
+    "matched_files": 5,
+    "decoded_container_identical": true,
+    "chipkey": "0x8d07",
+    "entry_point": "0x1e00120"
+  },
+  "negative_container_controls_memory_only": [
+    {
+      "case": "flash_header_crc",
+      "rejected": true,
+      "reason": "Flash header CRC"
+    },
+    {
+      "case": "top_entry_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x20"
+    },
+    {
+      "case": "inner_header_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x4020"
+    },
+    {
+      "case": "app_payload_crc",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "outer_data_crc",
+      "rejected": true,
+      "reason": "Outer data CRC: app_area_head"
+    },
+    {
+      "case": "truncated_file",
+      "rejected": true,
+      "reason": "Truncated BANKCB"
+    }
+  ],
+  "protocol_rehearsal": {
+    "path": "artifacts/firmware-runtime-usb-protocol-20261116.txt",
+    "sha256": "00745cdafaef3465f6296242f7e1eb544c49485b04c1f33ecbfc993b388e193f",
+    "offline": true,
+    "hardware_transmission": false,
+    "files": 2,
+    "phase": "Complete",
+    "blocks_each": 11088,
+    "last_block_bytes": 26,
+    "AA": "AA 07 50 2B 1A A2 46"
+  },
+  "host_transport_integration": {
+    "path": "artifacts/firmware-runtime-usb-host-20261116/analysis.json",
+    "analysis_sha256": "ff1922547b0d0bad401f56b43fd76bf4aaa3632ec0178c348f54169e4107482d",
+    "manifest_sha256": "8084cc34daa00be8aa1e263e01f51619057031bf954662dcb1e2a2b21250c13d",
+    "covered_files": 23,
+    "status": "offline_injected_transport_checks_passed",
+    "cases": 7,
+    "hardware_access": false,
+    "simulated_transport": true
+  },
+  "original_identical_recovery": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical": true
+  },
+  "physical_acceptance": {
+    "boot_without_about": "not_separately_timed; user reported successful flash/About and normal display/keys",
+    "background_about_count_changes": "user_reported_F09_to_F1D",
+    "usb_300_second_numeric_and_counter_record": "completed; counters/frames valid; five fields within tolerance; CPU timing reviewed with prior original reads; direct mismatch status retained",
+    "usb_reconnect_with_independent_power": "passed; user confirmed screen remained on; full count 1050 -> 1294 -> 1323",
+    "cold_start_new_counter_record": "passed; user confirmed full poweroff and normal UI/keys; count reset and grew 18 -> 47",
+    "original_ui_usb_ble_regression": "UI/keys user-confirmed; original USB 03/05 observed before and after restore; BLE not tested this turn",
+    "final_original_restore": "user reported normal; original 03/05 readback recovered with bounded same-handle retry; settings match; no full Flash digest readback"
+  },
+  "limitations": [
+    "Actual hardware evidence covers these near-zero electrical conditions on this USB-identified device, not calibrated nonzero ranges, sustained load, protection or BLE.",
+    "Background/USB happy paths, one powered physical replug and one cold boot were observed. Full IRQ scheduling, MMU growth, all branches, physical CSYNC ordering and stack margin are not established.",
+    "Snapshot XOR covers selected fields, has collisions and is not a cryptographic CRC; sequence/loop/headers are not all checksum-covered.",
+    "Adjacent reads are asynchronous. CPU same-pair mismatches remain in 35 of 395 pairs; prior-original exact matches support a timing explanation without establishing a unique scheduling mechanism or sensor accuracy.",
+    "First-read timeouts occurred in both RT1G and user-restored original sessions; later replies and bounded retry do not establish the root cause or erase failures.",
+    "User confirmed normal startup/keys and final original restoration; a separately timed 60-second initial boot and full post-restore Flash readback digest were not obtained.",
+    "No output/load/protection/calibration/persistent-Flash setting command or production whitelist change by the agent. User performed flashing. Old RT1/RT1C failures and old RT2/RT3 hold conclusions remain."
+  ],
+  "final_integrity": {
+    "status": "passed",
+    "manifests_verified": 20,
+    "covered_files_verified": 135,
+    "generator_and_verifier_snapshots_match": true,
+    "original_recovery_byte_identical": true,
+    "format_checks": "passed",
+    "git_diff_check": "passed",
+    "hardware_access": false,
+    "canonical_readme_matches_frozen_copy_at_build": true,
+    "scope": "Build-time checks; frozen artifacts retained; mutable validation summary may record later hardware results."
+  },
+  "user_hardware_reports": [
+    {
+      "date": "2026-11-16",
+      "quote": "已刷入 F09 F1D",
+      "source": "user_report_only",
+      "about_values": ["F09", "F1D"],
+      "low_8_bit_increment_mod_256": 20,
+      "elapsed_time_not_reported": true
+    },
+    {
+      "date": "2026-11-16",
+      "quote": "显示正常，按键仍可操作",
+      "source": "user_report_only",
+      "context": "After first original 03 read timed out"
+    },
+    {
+      "quote": "仅靠 USB 供电，拔线会关机",
+      "source": "user_report_only",
+      "date_recorded": "2026-11-16"
+    },
+    {
+      "quote": "已连接独立供电",
+      "source": "user_report_only",
+      "date_recorded": "2026-11-16"
+    },
+    {
+      "quote": "已重连，屏幕始终亮着",
+      "source": "user_report_only",
+      "date_recorded": "2026-11-16"
+    },
+    {
+      "quote": "已重新上电，显示和按键正常",
+      "source": "user_report_only",
+      "date_recorded": "2026-11-16"
+    },
+    {
+      "quote": "已恢复原厂，正常，官方程序已关闭",
+      "source": "user_report_only",
+      "date_recorded": "2026-11-16"
+    }
+  ],
+  "hardware_records": {
+    "initial_300s_attempt": "artifacts/firmware-runtime-RT1G-hardware-20261116-usb300-01/summary.json",
+    "initial_status": "failed_before_collection_first_03_timeout",
+    "original_probe": "artifacts/firmware-runtime-RT1G-hardware-20261116-usb-probe-01/analysis.json",
+    "diagnostic_probe": "artifacts/firmware-runtime-RT1G-hardware-20261116-usb-probe-02/analysis.json",
+    "current_300s_attempt": "artifacts/firmware-runtime-RT1G-hardware-20261116-usb300-02",
+    "current_status": "completed; CPU asynchronous timing reviewed; original raw review statuses preserved",
+    "new_flash_during_validation": false,
+    "settings_load_or_control_commands_sent": false,
+    "initial_timeout_root_cause": "unconfirmed",
+    "software_handle_reopen": "artifacts/firmware-runtime-RT1G-hardware-20261116-soft-reopen-01",
+    "physical_replug_baseline": "artifacts/firmware-runtime-RT1G-hardware-20261116-pre-replug-01",
+    "powered_physical_replug": "artifacts/firmware-runtime-RT1G-hardware-20261116-physical-replug-01",
+    "cold_start": "artifacts/firmware-runtime-RT1G-hardware-20261116-cold-start-01",
+    "original_restore_final": "artifacts/firmware-runtime-RT1G-hardware-20261116-original-restored-04",
+    "original_restore_first_read_failures": [
+      "artifacts/firmware-runtime-RT1G-hardware-20261116-original-restored-01",
+      "artifacts/firmware-runtime-RT1G-hardware-20261116-original-restored-02",
+      "artifacts/firmware-runtime-RT1G-hardware-20261116-original-restored-03"
+    ],
+    "original_restore_bounded_sequence": "artifacts/firmware-runtime-RT1G-hardware-20261116-original-sequence-01",
+    "hardware_report": "artifacts/firmware-runtime-RT1G-validation-20261116/analysis.json",
+    "human_readable_report": "docs/firmware-runtime-usb-hardware-20261116.md",
+    "completed_sample_pairs": 395,
+    "outgoing_queries_all_records": 824,
+    "incoming_replies_all_records": 816,
+    "all_recorded_query_bytes_read_only_whitelist_verified": true,
+    "all_completed_windows_guards_flags_sequences_and_selected_xor_valid": true,
+    "cross_replug_cold_and_restore_settings_identical": true,
+    "same_pair_cpu_within_tolerance": {
+      "matches": 360,
+      "pairs": 395,
+      "tolerance_c_unchanged": 0.25
+    },
+    "previous_original_cpu_exact_matches": {
+      "usb300": [299, 299],
+      "cold_start": [29, 29]
+    },
+    "initial_timeout_observed_after_user_restored_original_also": true,
+    "all_hid_handles_closed": true
+  },
+  "hardware_report_integrity": {
+    "status": "passed",
+    "record": "docs/analysis/firmware-runtime-usb-20261116.hardware-integrity.json",
+    "record_sha256": "89f37a55ee49472e1bff6696fae2377234e6f42da76a179e12b2f9cefc03c41b",
+    "manifest": "artifacts/firmware-runtime-RT1G-validation-20261116/manifest.json",
+    "manifest_sha256": "d81ceed7a429d49dc8f0562d61e751e9da6dda5e60094484f985e80ec44f809b",
+    "actual_hardware_evidence_files_verified": 49,
+    "all_manifests_verified": 21,
+    "all_covered_files_verified": 184,
+    "hardware_and_cpu_phase_analysis_reproduced": true,
+    "hardware_analysis_and_frozen_verifier_source_snapshots_match": true,
+    "old_build_evidence_unchanged": true,
+    "scope": "Offline evidence integrity, distinct from actual hardware acceptance or Flash readback"
+  }
+}

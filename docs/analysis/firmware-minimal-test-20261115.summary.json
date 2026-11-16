@@ -1,0 +1,617 @@
+{
+  "status": "offline_checks_and_user_reported_cold_start_recovery_passed",
+  "hardware_tested": true,
+  "automated_hardware_tested": false,
+  "offline_build_status": "offline_checks_passed_hardware_not_tested",
+  "hardware_experiment": {
+    "report_date_local": "2026-11-15",
+    "timezone": "Asia/Shanghai",
+    "evidence_source": "user_report",
+    "user_quote": "设备重启成功，标记存在，未发现功能异常。回刷原厂后完全恢复",
+    "user_correction": "更正：完全断电冷启动通过",
+    "associated_candidate_file": "BW150-V1.1.0-UI-T1.1.0-EXPERIMENTAL.bin",
+    "associated_candidate_sha256": "e731462066f28b0612d9c28a1c1b998207aa662fd86d6a7ed0f8710c058381e6",
+    "reported_results": {
+      "restart_successful": true,
+      "marker_present_after_restart": true,
+      "full_power_cycle_cold_start_successful": true,
+      "marker_present_after_cold_start": true,
+      "functional_abnormalities_observed": false,
+      "original_firmware_restoration_successful": true
+    },
+    "power_cycle_cold_start": "user_confirmed_passed",
+    "independently_observed_by_assistant": false,
+    "new_transfer_capture_available": false,
+    "flash_readback_available": false,
+    "independent_parameter_or_accuracy_validation": false,
+    "result": "minimal_display_data_modification_cold_start_persistence_and_recovery_user_reported_passed",
+    "scope": "User explicitly clarified that a complete power-off cold start passed with the marker present, and reported complete recovery after restoring original firmware. This is not a custom-instruction execution test or a full functional/accuracy acceptance test."
+  },
+  "source": {
+    "path": "Firmware&Software/BW150-6321-APP-1-1-0-UPP.bin",
+    "size": 643072,
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+  },
+  "tool_sha256": "6df237d285d68eba85b3c2c9c2d069bc753a33af84f0feff11d37c29883b52ae",
+  "dependency_sha256": {
+    ".local/jl-misctools/firmware/fwunpack_newfw.py": "2daf8da2aba6e19981f55e8c6d221ff102c987fe31677056a5bf49c41601103a",
+    ".local/jl-misctools/firmware/jltech/cipher.py": "cdee5d507d2a312f576cc66b3d4defa4428b0f973dc22307d65aa011e51767fe",
+    ".local/jl-misctools/firmware/jltech/crc.py": "0fda1dc981b114b48c2e44ce4aa81cddf676fab0b2528fa14081bee9fb36821c",
+    ".local/ghidra-jieli/data/languages/q32s.sla": "c4604f1eaf06c0ba8355a2bf0be855320535292f461e16cf1b23814d62d7c6dd"
+  },
+  "roundtrip": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical": true,
+    "scope": "Lossless template-preserving unpack/rebuild of this pinned image; no boot recompression or relocated layout."
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-UI-T1.1.0-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "e731462066f28b0612d9c28a1c1b998207aa662fd86d6a7ed0f8710c058381e6",
+    "app_sha256": "b4c786d6586cf7b15a1da862b2467ec728574af9951c09e78fa4b25287e925a6",
+    "marker_before": "V1.1.0",
+    "marker_after": "T1.1.0",
+    "app_offset": "0x54045",
+    "package_offset": "0x58165",
+    "mapped_address": "0x1e54165"
+  },
+  "checks": {
+    "source_unchanged": true,
+    "same_size_and_entry_point": true,
+    "prefix_0_to_4000_identical": true,
+    "non_app_members_identical": true,
+    "application_diff_is_one_display_byte": true,
+    "usb_product_identical": true,
+    "network_version_suffix_identical": true,
+    "tail_identical_and_ff": true,
+    "deterministic_build": true,
+    "reverse_patch_recovers_original_exactly": true
+  },
+  "layout": {
+    "application_base": "0x4000",
+    "payload_end": "0x9c326",
+    "chipkey": "0x8d07"
+  },
+  "directories_before": {
+    "top": [
+      {
+        "name": "uboot.boot",
+        "header_offset": "0x20",
+        "data_offset": "0xa0",
+        "data_size": 15612,
+        "offset_field": "0xa0",
+        "size_field": 15612,
+        "flags": "0x40",
+        "reserved": "0x0",
+        "index": 0,
+        "header_crc": "640C",
+        "data_crc": "06CD",
+        "data_sha256": "f0d1d1d9f7eb970ecba7a6755007e214874498baa28b69e3642a06cb48bc0515"
+      },
+      {
+        "name": "isd_config.ini",
+        "header_offset": "0x40",
+        "data_offset": "0x3d9c",
+        "data_size": 122,
+        "offset_field": "0x3d9c",
+        "size_field": 122,
+        "flags": "0x2",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "8572",
+        "data_crc": "6F83",
+        "data_sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea"
+      },
+      {
+        "name": "app_dir_head",
+        "header_offset": "0x60",
+        "data_offset": "0x4000",
+        "data_size": 4294967295,
+        "offset_field": "0x4000",
+        "size_field": 4294967295,
+        "flags": "0x81",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "7DA6",
+        "data_crc": "FFFF"
+      },
+      {
+        "name": "key_mac",
+        "header_offset": "0x80",
+        "data_offset": "0xff000",
+        "data_size": 4096,
+        "offset_field": "0xff000",
+        "size_field": 4096,
+        "flags": "0x12",
+        "reserved": "0x1",
+        "index": 65535,
+        "header_crc": "06DD",
+        "data_crc": "FFFF"
+      }
+    ],
+    "outer": [
+      {
+        "name": "app_area_head",
+        "header_offset": "0x4000",
+        "data_offset": "0x4020",
+        "data_size": 619238,
+        "offset_field": "0x1e00120",
+        "size_field": 619270,
+        "flags": "0x83",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "8AF5",
+        "data_crc": "C640",
+        "data_sha256": "8654dcdb36c5fd378bcb1a2b66a9710456cef6e6a353061555a079903cd78dc3"
+      },
+      {
+        "name": "p11_code.bin",
+        "header_offset": "0x9b306",
+        "data_offset": "0x9b326",
+        "data_size": 4096,
+        "offset_field": "0x20",
+        "size_field": 4128,
+        "flags": "0x82",
+        "reserved": "0xff",
+        "index": 1,
+        "header_crc": "D481",
+        "data_crc": "AE73",
+        "data_sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c"
+      }
+    ],
+    "inner": [
+      {
+        "name": "app.bin",
+        "header_offset": "0x4020",
+        "data_offset": "0x4120",
+        "data_size": 618264,
+        "offset_field": "0x120",
+        "size_field": 618264,
+        "flags": "0x82",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "743C",
+        "data_crc": "26BD",
+        "data_sha256": "afe464c4f358787bcaca409223e9c327926845b89e1f2d6dc3ada3181dab87cf"
+      },
+      {
+        "name": "cfg_tool.bin",
+        "header_offset": "0x4040",
+        "data_offset": "0x9b038",
+        "data_size": 718,
+        "offset_field": "0x97038",
+        "size_field": 718,
+        "flags": "0x82",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "D3BD",
+        "data_crc": "C22A",
+        "data_sha256": "7e86423c6b46962b16c09a0a0d8fce4bbcadf82167f140ca6126478044163631"
+      },
+      {
+        "name": "VM",
+        "header_offset": "0x4060",
+        "data_offset": "0xdb000",
+        "data_size": 86016,
+        "offset_field": "0xd7000",
+        "size_field": 86016,
+        "flags": "0x12",
+        "reserved": "0x81",
+        "index": 0,
+        "header_crc": "BB37",
+        "data_crc": "01FF"
+      },
+      {
+        "name": "PRCT",
+        "header_offset": "0x4080",
+        "data_offset": "0x4000",
+        "data_size": 643072,
+        "offset_field": "0x0",
+        "size_field": 643072,
+        "flags": "0x92",
+        "reserved": "0x82",
+        "index": 0,
+        "header_crc": "3C1D",
+        "data_crc": "FFFF"
+      },
+      {
+        "name": "BTIF",
+        "header_offset": "0x40a0",
+        "data_offset": "0xf0000",
+        "data_size": 4096,
+        "offset_field": "0xec000",
+        "size_field": 4096,
+        "flags": "0x92",
+        "reserved": "0x81",
+        "index": 0,
+        "header_crc": "21E8",
+        "data_crc": "FFFF"
+      },
+      {
+        "name": "USERIF",
+        "header_offset": "0x40c0",
+        "data_offset": "0xf1000",
+        "data_size": 73728,
+        "offset_field": "0xed000",
+        "size_field": 73728,
+        "flags": "0x92",
+        "reserved": "0x81",
+        "index": 1,
+        "header_crc": "7735",
+        "data_crc": "FFFF"
+      }
+    ]
+  },
+  "directories_after": {
+    "top": [
+      {
+        "name": "uboot.boot",
+        "header_offset": "0x20",
+        "data_offset": "0xa0",
+        "data_size": 15612,
+        "offset_field": "0xa0",
+        "size_field": 15612,
+        "flags": "0x40",
+        "reserved": "0x0",
+        "index": 0,
+        "header_crc": "640C",
+        "data_crc": "06CD",
+        "data_sha256": "f0d1d1d9f7eb970ecba7a6755007e214874498baa28b69e3642a06cb48bc0515"
+      },
+      {
+        "name": "isd_config.ini",
+        "header_offset": "0x40",
+        "data_offset": "0x3d9c",
+        "data_size": 122,
+        "offset_field": "0x3d9c",
+        "size_field": 122,
+        "flags": "0x2",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "8572",
+        "data_crc": "6F83",
+        "data_sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea"
+      },
+      {
+        "name": "app_dir_head",
+        "header_offset": "0x60",
+        "data_offset": "0x4000",
+        "data_size": 4294967295,
+        "offset_field": "0x4000",
+        "size_field": 4294967295,
+        "flags": "0x81",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "7DA6",
+        "data_crc": "FFFF"
+      },
+      {
+        "name": "key_mac",
+        "header_offset": "0x80",
+        "data_offset": "0xff000",
+        "data_size": 4096,
+        "offset_field": "0xff000",
+        "size_field": 4096,
+        "flags": "0x12",
+        "reserved": "0x1",
+        "index": 65535,
+        "header_crc": "06DD",
+        "data_crc": "FFFF"
+      }
+    ],
+    "outer": [
+      {
+        "name": "app_area_head",
+        "header_offset": "0x4000",
+        "data_offset": "0x4020",
+        "data_size": 619238,
+        "offset_field": "0x1e00120",
+        "size_field": 619270,
+        "flags": "0x83",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "3BF7",
+        "data_crc": "395F",
+        "data_sha256": "b186565a2f01a0f15a53f15817c1e3d286503b28a9eca36591728cc582a24690"
+      },
+      {
+        "name": "p11_code.bin",
+        "header_offset": "0x9b306",
+        "data_offset": "0x9b326",
+        "data_size": 4096,
+        "offset_field": "0x20",
+        "size_field": 4128,
+        "flags": "0x82",
+        "reserved": "0xff",
+        "index": 1,
+        "header_crc": "D481",
+        "data_crc": "AE73",
+        "data_sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c"
+      }
+    ],
+    "inner": [
+      {
+        "name": "app.bin",
+        "header_offset": "0x4020",
+        "data_offset": "0x4120",
+        "data_size": 618264,
+        "offset_field": "0x120",
+        "size_field": 618264,
+        "flags": "0x82",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "1339",
+        "data_crc": "B668",
+        "data_sha256": "b4c786d6586cf7b15a1da862b2467ec728574af9951c09e78fa4b25287e925a6"
+      },
+      {
+        "name": "cfg_tool.bin",
+        "header_offset": "0x4040",
+        "data_offset": "0x9b038",
+        "data_size": 718,
+        "offset_field": "0x97038",
+        "size_field": 718,
+        "flags": "0x82",
+        "reserved": "0xff",
+        "index": 0,
+        "header_crc": "D3BD",
+        "data_crc": "C22A",
+        "data_sha256": "7e86423c6b46962b16c09a0a0d8fce4bbcadf82167f140ca6126478044163631"
+      },
+      {
+        "name": "VM",
+        "header_offset": "0x4060",
+        "data_offset": "0xdb000",
+        "data_size": 86016,
+        "offset_field": "0xd7000",
+        "size_field": 86016,
+        "flags": "0x12",
+        "reserved": "0x81",
+        "index": 0,
+        "header_crc": "BB37",
+        "data_crc": "01FF"
+      },
+      {
+        "name": "PRCT",
+        "header_offset": "0x4080",
+        "data_offset": "0x4000",
+        "data_size": 643072,
+        "offset_field": "0x0",
+        "size_field": 643072,
+        "flags": "0x92",
+        "reserved": "0x82",
+        "index": 0,
+        "header_crc": "3C1D",
+        "data_crc": "FFFF"
+      },
+      {
+        "name": "BTIF",
+        "header_offset": "0x40a0",
+        "data_offset": "0xf0000",
+        "data_size": 4096,
+        "offset_field": "0xec000",
+        "size_field": 4096,
+        "flags": "0x92",
+        "reserved": "0x81",
+        "index": 0,
+        "header_crc": "21E8",
+        "data_crc": "FFFF"
+      },
+      {
+        "name": "USERIF",
+        "header_offset": "0x40c0",
+        "data_offset": "0xf1000",
+        "data_size": 73728,
+        "offset_field": "0xed000",
+        "size_field": 73728,
+        "flags": "0x92",
+        "reserved": "0x81",
+        "index": 1,
+        "header_crc": "7735",
+        "data_crc": "FFFF"
+      }
+    ]
+  },
+  "package_diff": [
+    {
+      "offset": "0x4000",
+      "before": "F2",
+      "after": "F0"
+    },
+    {
+      "offset": "0x4001",
+      "before": "A5",
+      "after": "14"
+    },
+    {
+      "offset": "0x4002",
+      "before": "1E",
+      "after": "01"
+    },
+    {
+      "offset": "0x4003",
+      "before": "7A",
+      "after": "85"
+    },
+    {
+      "offset": "0x4020",
+      "before": "33",
+      "after": "36"
+    },
+    {
+      "offset": "0x4021",
+      "before": "4B",
+      "after": "2C"
+    },
+    {
+      "offset": "0x4022",
+      "before": "C3",
+      "after": "16"
+    },
+    {
+      "offset": "0x4023",
+      "before": "DA",
+      "after": "4A"
+    },
+    {
+      "offset": "0x58165",
+      "before": "EC",
+      "after": "EE"
+    }
+  ],
+  "decoded_app_diff": [
+    {
+      "offset": "0x54045",
+      "before": "56",
+      "after": "54"
+    }
+  ],
+  "third_party_cross_checks": {
+    "original": {
+      "matched_files": 5,
+      "decoded_container_identical": true,
+      "chipkey": "0x8d07",
+      "entry_point": "0x1e00120"
+    },
+    "roundtrip": {
+      "matched_files": 5,
+      "decoded_container_identical": true,
+      "chipkey": "0x8d07",
+      "entry_point": "0x1e00120"
+    },
+    "candidate": {
+      "matched_files": 5,
+      "decoded_container_identical": true,
+      "chipkey": "0x8d07",
+      "entry_point": "0x1e00120"
+    }
+  },
+  "negative_controls_memory_only": [
+    {
+      "case": "flash_header_crc",
+      "rejected": true,
+      "reason": "Flash header CRC"
+    },
+    {
+      "case": "top_entry_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x20"
+    },
+    {
+      "case": "inner_header_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x4020"
+    },
+    {
+      "case": "app_payload_crc",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "outer_data_crc",
+      "rejected": true,
+      "reason": "Outer data CRC: app_area_head"
+    },
+    {
+      "case": "truncated_file",
+      "rejected": true,
+      "reason": "Truncated BANKCB"
+    }
+  ],
+  "marker_evidence": {
+    "references": [
+      {
+        "target": "0x1e54165",
+        "raw_u32_matches": ["0x1e36acc"],
+        "mov_immediate_matches": ["0x1e36aca"]
+      },
+      {
+        "target": "0x1e54166",
+        "raw_u32_matches": ["0x1e0798e"],
+        "mov_immediate_matches": ["0x1e0798c"]
+      },
+      {
+        "target": "0x1e54167",
+        "raw_u32_matches": [],
+        "mov_immediate_matches": []
+      },
+      {
+        "target": "0x1e54168",
+        "raw_u32_matches": [],
+        "mov_immediate_matches": []
+      },
+      {
+        "target": "0x1e54169",
+        "raw_u32_matches": [],
+        "mov_immediate_matches": []
+      },
+      {
+        "target": "0x1e5416a",
+        "raw_u32_matches": [],
+        "mov_immediate_matches": []
+      },
+      {
+        "target": "0x1e5416b",
+        "raw_u32_matches": [],
+        "mov_immediate_matches": []
+      }
+    ],
+    "limitation": "Bounded literal-reference scan and identified UI paths, not a proof of every runtime-computed pointer.",
+    "listing_lines": 128
+  },
+  "limitations": [
+    "Not manufacturer-signature verification.",
+    "No installed-Flash readback; hardware startup/restart/recovery observations are user-reported, without an independent capture.",
+    "Does not prove arbitrary custom code can run.",
+    "Reserved-region metadata is preserved; actual device VM/BTIF/USERIF/key_mac content is unavailable."
+  ],
+  "local_evidence": {
+    "directory": "artifacts/firmware-minimal-test-20261115",
+    "scope": "frozen_offline_build_and_analysis_before_user_hardware_feedback",
+    "git_ignored": true,
+    "analysis_sha256": "6d1a1f5ecf50e4faa53925f58702c96d75a4c1d75f41ec110a832c11431791ea",
+    "manifest_sha256": "d3862fd853920ea685e6b532822bd364e591f0635e0be3a96026974ab2e59906",
+    "manifest": {
+      "hardware_tested": false,
+      "files": {
+        "analysis.json": {
+          "size": 21569,
+          "sha256": "6d1a1f5ecf50e4faa53925f58702c96d75a4c1d75f41ec110a832c11431791ea"
+        },
+        "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin": {
+          "size": 643072,
+          "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+        },
+        "BW150-V1.1.0-UI-T1.1.0-EXPERIMENTAL.bin": {
+          "size": 643072,
+          "sha256": "e731462066f28b0612d9c28a1c1b998207aa662fd86d6a7ed0f8710c058381e6"
+        },
+        "marker-path-listing.txt": {
+          "size": 4939,
+          "sha256": "5209cca6134b735404c377139b5cd71a62886e5513052239fde6d01a92ca22be"
+        },
+        "original-unpacked/files/app.bin": {
+          "size": 618264,
+          "sha256": "afe464c4f358787bcaca409223e9c327926845b89e1f2d6dc3ada3181dab87cf"
+        },
+        "original-unpacked/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "7e86423c6b46962b16c09a0a0d8fce4bbcadf82167f140ca6126478044163631"
+        },
+        "original-unpacked/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c"
+        },
+        "original-unpacked/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea"
+        },
+        "original-unpacked/top/uboot.boot": {
+          "size": 15612,
+          "sha256": "f0d1d1d9f7eb970ecba7a6755007e214874498baa28b69e3642a06cb48bc0515"
+        }
+      }
+    }
+  }
+}

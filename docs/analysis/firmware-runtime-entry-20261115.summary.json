@@ -1,0 +1,397 @@
+{
+  "status": "user_reported_rt1e_agreed_acceptance_passed",
+  "date": "2026-11-15",
+  "timezone": "Asia/Shanghai",
+  "hardware_tested": true,
+  "hardware_access": false,
+  "automated_hardware_tested": false,
+  "prior_user_acceptance": {
+    "candidate": "RT1D",
+    "quote": "全部通过，开始下一轮",
+    "source": "user_report_only",
+    "independently_observed": false,
+    "separately_reported_about_code": null,
+    "duration": null,
+    "old_rt1_rt1c_failures_unchanged": true,
+    "old_rt2_rt3": "on_hold"
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-RT1E-ENTRY-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "1656a6358bd8485613202535e9c4d1cb272038eb9e43ad54ec7cbe2abd00da3a",
+    "app_sha256": "f4af49be052fedd182c493132e7bed97ff0a077679a00aee5a1c06acb473df22"
+  },
+  "artifact_directory": "artifacts/firmware-runtime-entry-20261115",
+  "manifest_sha256": "7c6492ee66805ed7e540152ab47876ef4789bc3439d70aee4669b45535afe5f5",
+  "manifest_files": 6,
+  "analysis_sha256": "5bf3b1d44fb4078f8f2d5e7b48e5b42e88d27757d9c55f2d90f6000c7dc82d59",
+  "source": "tools/firmware_runtime_entry.py",
+  "source_sha256": "9662b11f3b08b0b73cb5d6f7f452edcfe78600a66fd6e5191fad6b640a9943c7",
+  "previous_helper_sha256": "a8f885e9de3d406447032b2ed6a7c0e8f761a71a726ee4c18cb3c045354c38d2",
+  "layout": {
+    "entry": "0x1e97038",
+    "task_entry_wrapper": "0x1e97238",
+    "code_end": "0x1e97288",
+    "pc_high": "0x1e97340",
+    "pc_high_same_as_user_accepted_rt1d": true,
+    "new_instruction_bytes": 592,
+    "added_code_bytes_vs_rt1d": 80,
+    "new_instructions": 215,
+    "constant_data_begin": "0x1e972a0",
+    "extension_used": 2664,
+    "extension_reserved": 3200,
+    "tail_bytes": 90
+  },
+  "runtime_scope": {
+    "task_function_pointer_changed": true,
+    "task_stack_words": 256,
+    "task_stack_size_changed": false,
+    "stack_allocator_changed": false,
+    "context_restore_changed": false,
+    "task_body_entry_changed": false,
+    "entry_temporary_stack_bytes": 28,
+    "first_delay_maximum_depth_from_initial_entry_sp": 44,
+    "original_task_body_frame_bytes": 16,
+    "periodic_temporary_stack_bytes": 28,
+    "about_maximum_temporary_stack_bytes": 32,
+    "permanent_stack_frame_bytes": 0,
+    "reserved_fixed_ram_bytes": 0,
+    "entry_and_periodic_non_stack_reads": 0,
+    "entry_special_mov_writes": 0,
+    "new_rom_api_calls": 0,
+    "persistent_state_or_background_counter": false,
+    "new_private_usb_command": false,
+    "original_delay_continuation_retained": true
+  },
+  "expected_about": "R1E:FF",
+  "about_groups": {
+    "01": "Tick ROM reader matches before reading its tick word",
+    "02": "Six telemetry source words are finite binary32 values",
+    "04": "Two invocation-owned temporary stack markers match",
+    "08": "Original OS delay ROM stub matches",
+    "10": "Local short CALL / RTS gives 17 + 25 = 42",
+    "20": "Local long CALL / RTS gives 23 + 19 = 42",
+    "40": "Nested short CALL restores RETS with vendor-exact rets = r0",
+    "80": "Register-indirect nested CALL restores RETS with vendor-exact pop RETS"
+  },
+  "entry_observability": "The entry wrapper is selected by the original task-function MOV; About's eight-bit mask remains immediate tests, not an entry-execution flag, background count or state history.",
+  "hooks": [
+    {
+      "address": "0x1e3f3fe",
+      "before": "c0ff9c40e901",
+      "after": "c0ff4073e901"
+    },
+    {
+      "address": "0x1e06b00",
+      "before": "98f35a01",
+      "after": "84f39a82"
+    },
+    {
+      "address": "0x1e36aca",
+      "before": "c8ff6541e501",
+      "after": "c3f3dd020000"
+    },
+    {
+      "address": "0x1e04906",
+      "before": "c0ffde6ae001",
+      "after": "c0ff3872e901"
+    }
+  ],
+  "offline_checks": {
+    "initial_states_each_path": 64,
+    "paths": ["entry", "first_delay", "periodic", "about"],
+    "entry_first_page_cases": 128,
+    "registration_initial_states": 64,
+    "repeated_periodic_calls": 1024,
+    "special_register_vendor_records": 23,
+    "selected_vendor_return_instructions": [
+      {
+        "address": "0x1004d8",
+        "bytes": "3400",
+        "vendor": "[--sp] = rets"
+      },
+      {
+        "address": "0x101810",
+        "bytes": "8801",
+        "vendor": "{rets} = [sp++]"
+      },
+      {
+        "address": "0x101a52",
+        "bytes": "8801",
+        "vendor": "{rets} = [sp++]"
+      },
+      {
+        "address": "0x101a56",
+        "bytes": "8801",
+        "vendor": "{rets} = [sp++]"
+      },
+      {
+        "address": "0x105048",
+        "bytes": "29fb0003",
+        "vendor": "rets = r0"
+      }
+    ],
+    "rom_byte_mismatch_cases": 14,
+    "nonfinite_source_cases": 18,
+    "marker_fault_cases": 2,
+    "combined_failure_cases": 255,
+    "random_finite_source_cases": 128,
+    "about_draw_paths": 512,
+    "alignment_word_values_checked": 481,
+    "context_contract": {
+      "original_stack_words": 256,
+      "page_contract": {
+        "words": 256,
+        "requested_bytes": 1024,
+        "size_remainder_128": 0,
+        "reserved_page_count": 8,
+        "bitmap_reserved_bytes": 1024,
+        "reserved_size_shortfall": 0,
+        "premap_requested_offset": 896,
+        "premap_length": 128,
+        "materialized_relative_range": [896, 1024],
+        "initial_context_start_relative": 944,
+        "initial_restore_end_relative": 1020,
+        "initial_restore_bytes_beyond_premap": 0,
+        "aligned_page_contract": true,
+        "initial_context_within_materialized_page": true
+      },
+      "entry_sp_relative": 1020,
+      "entry_wrapper_low_relative": 992,
+      "first_delay_low_relative": 976,
+      "original_restore_bytes": "29fb000ea90170f3ffff1c002200",
+      "vendor_context_setup": [
+        {
+          "address": "0x1012f0",
+          "bytes": "97c0",
+          "vendor": "r7 = r2 << 0x2"
+        },
+        {
+          "address": "0x10131c",
+          "bytes": "c2bd",
+          "vendor": "r2 = r6 + r7"
+        },
+        {
+          "address": "0x10131e",
+          "bytes": "c28f",
+          "vendor": "r2 += -0x4"
+        },
+        {
+          "address": "0x101320",
+          "bytes": "32fd0329",
+          "vendor": "r2 = r2 & 0xfffffffc"
+        },
+        {
+          "address": "0x10135c",
+          "bytes": "21fcb4ff",
+          "vendor": "r1 = r2 + -0x4c"
+        },
+        {
+          "address": "0x101360",
+          "bytes": "19f60c10",
+          "vendor": "[r1 + 0xc] = r9"
+        },
+        {
+          "address": "0x101364",
+          "bytes": "2b42",
+          "vendor": "[r1 + 0x8] = r3"
+        },
+        {
+          "address": "0x101366",
+          "bytes": "1b42",
+          "vendor": "[r1 + 0x4] = r3"
+        },
+        {
+          "address": "0x101368",
+          "bytes": "18f60010",
+          "vendor": "[r1 + 0x0] = r8"
+        },
+        {
+          "address": "0x10136c",
+          "bytes": "0948",
+          "vendor": "[r4 + 0x0] = r1"
+        }
+      ],
+      "scope": "Pinned original setup/restore bytes and first-page boundary model; not an emulated physical MMU or full context-switch ISA."
+    },
+    "first_page_negative_controls": [
+      {
+        "address": "0x22037c",
+        "unmapped_read_rejected": true
+      },
+      {
+        "address": "0x220400",
+        "unmapped_read_rejected": true
+      }
+    ],
+    "missing_first_page_rejected": true,
+    "rejected_rt1c_bad_special_write": true,
+    "existing_rt1d_code_changes_only_result_pointer": true,
+    "preserved_original_regions": [
+      {
+        "name": "registration_before_function_pointer",
+        "begin": "0x1e048f0",
+        "end_exclusive": "0x1e04906",
+        "byte_identical": true
+      },
+      {
+        "name": "registration_after_function_pointer_including_depth",
+        "begin": "0x1e0490c",
+        "end_exclusive": "0x1e0491a",
+        "byte_identical": true
+      },
+      {
+        "name": "task_body_prefix",
+        "begin": "0x1e06ade",
+        "end_exclusive": "0x1e06b00",
+        "byte_identical": true
+      },
+      {
+        "name": "stack_allocator_entire_callback",
+        "begin": "0x1e4efe6",
+        "end_exclusive": "0x1e4f0e2",
+        "byte_identical": true
+      },
+      {
+        "name": "initial_context_restore",
+        "begin": "0x1e95018",
+        "end_exclusive": "0x1e95026",
+        "byte_identical": true
+      },
+      {
+        "name": "task_create_wrapper",
+        "begin": "0x1e4e216",
+        "end_exclusive": "0x1e4e246",
+        "byte_identical": true
+      },
+      {
+        "name": "early_initialization",
+        "begin": "0x1e3f404",
+        "end_exclusive": "0x1e3f414",
+        "byte_identical": true
+      },
+      {
+        "name": "physical_allocator_initialization",
+        "begin": "0x1e3f462",
+        "end_exclusive": "0x1e3f496",
+        "byte_identical": true
+      },
+      {
+        "name": "usb_receive_entire_function",
+        "begin": "0x1e014b6",
+        "end_exclusive": "0x1e0200c",
+        "byte_identical": true
+      }
+    ],
+    "pc_interval_controls": [
+      {
+        "high": "0x1e9409c",
+        "all_selected_instructions_inside": false
+      },
+      {
+        "high": "0x1e9703e",
+        "all_selected_instructions_inside": false
+      },
+      {
+        "high": "0x1e97340",
+        "all_selected_instructions_inside": true
+      }
+    ],
+    "previous_manifests_verified": 15,
+    "previous_files_verified": 91,
+    "independent_container": {
+      "matched_files": 5,
+      "decoded_container_identical": true,
+      "chipkey": "0x8d07",
+      "entry_point": "0x1e00120"
+    },
+    "negative_container_controls": [
+      {
+        "case": "flash_header_crc",
+        "rejected": true,
+        "reason": "Flash header CRC"
+      },
+      {
+        "case": "top_entry_crc",
+        "rejected": true,
+        "reason": "Directory header CRC at 0x20"
+      },
+      {
+        "case": "inner_header_crc",
+        "rejected": true,
+        "reason": "Directory header CRC at 0x4020"
+      },
+      {
+        "case": "app_payload_crc",
+        "rejected": true,
+        "reason": "Inner data CRC: app.bin"
+      },
+      {
+        "case": "outer_data_crc",
+        "rejected": true,
+        "reason": "Outer data CRC: app_area_head"
+      },
+      {
+        "case": "truncated_file",
+        "rejected": true,
+        "reason": "Truncated BANKCB"
+      }
+    ]
+  },
+  "protocol_rehearsal": {
+    "log": "artifacts/firmware-runtime-entry-protocol-20261115.txt",
+    "sha256": "b5f2c815f27b167ca89683559b2553825534edc18ff1df38846244c3366e62a5",
+    "offline": true,
+    "hardware_transmission": false,
+    "files": 2,
+    "phase": "Complete",
+    "blocks_each": 11088,
+    "last_block_bytes": 26,
+    "AA": "AA 07 50 2B 1A A2 46"
+  },
+  "original_identical_recovery": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical": true
+  },
+  "physical_acceptance": {
+    "boot_without_about": "agreed_checklist_overall_pass_reported_not_individually_requoted",
+    "about_code": "agreed_checklist_overall_pass_reported_not_individually_requoted",
+    "about_reentries": "agreed_checklist_overall_pass_reported_not_individually_requoted",
+    "original_function_regression": "agreed_checklist_overall_pass_reported_not_individually_requoted",
+    "cold_start": "agreed_checklist_overall_pass_reported_not_individually_requoted",
+    "final_original_restore": "agreed_checklist_overall_pass_reported_not_individually_requoted"
+  },
+  "limitations": [
+    "Offline task-entry isolation candidate, not a physical hardware result or a proven unique RT1C fix.",
+    "The unchanged original registration/allocator/context bytes and the selected first-page contract are checked; the complete scheduler, MMU, interrupt/PSR behavior and physical stack headroom are not emulated.",
+    "Vendor-exact POP RETS and MOV RETS use the explicitly shared primary-source adapter inherited from accepted RT1D. Other selected instructions use fields/SLEIGH with an explicit CALL/RETS adapter; no general ABI proof is claimed.",
+    "R1E:XX is computed by About-page checks and does not store whether the entry wrapper ran, a background count, snapshots or background fault history.",
+    "Old RT1/RT1C stay failed, old RT2/RT3 stay on hold. No production app/whitelist, output-control or calibration implementation is edited."
+  ],
+  "offline_build_status": "offline_rt1e_entry_checks_passed_hardware_pending",
+  "hardware_evidence_source": "user_report_only",
+  "user_hardware_report": {
+    "date": "2026-11-15",
+    "timezone": "Asia/Shanghai",
+    "quote": "通过，下一轮",
+    "agreed_checklist_overall_pass": true,
+    "independently_observed": false,
+    "separately_reported_about_code": null,
+    "duration": null,
+    "exact_reentry_count": null,
+    "measurements": null,
+    "old_rt1_rt1c_failures_unchanged": true,
+    "old_rt2_rt3": "on_hold"
+  },
+  "current_successor_candidate": {
+    "name": "RT1G",
+    "report": "docs/firmware-runtime-usb-20261116.md",
+    "summary": "docs/analysis/firmware-runtime-usb-20261116.summary.json",
+    "hardware_status": "pending",
+    "status": "offline_rt1g_usb_checks_passed_hardware_pending",
+    "file": "BW150-V1.1.0-RT1G-USB-EXPERIMENTAL.bin",
+    "sha256": "8a17dbf252f0d1f1de85599d44c824d5e256a26f1e98a56ad18560ce98efc319",
+    "scope": "Retained RT1F background snapshot plus conditional original-HID context publication and token/version-gated read-only USB export; new address interval and physical USB behavior pending."
+  }
+}

@@ -1,0 +1,1481 @@
+{
+  "status": "user_reported_rom8_agreed_acceptance_passed",
+  "hardware_tested": true,
+  "prior_result": {
+    "candidate": "BATCH8",
+    "result": "8FF",
+    "reported_by": "user",
+    "date": "2026-11-15",
+    "quote": "8FF，全部通过，继续下一轮",
+    "agreed_four_step_acceptance_reported_passed": true,
+    "scope": "User report only; no new assistant device operation, capture or Flash readback."
+  },
+  "source": {
+    "path": "Firmware&Software/BW150-6321-APP-1-1-0-UPP.bin",
+    "size": 643072,
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+  },
+  "tool_sha256": "2e72b693244cc682907565869f2d1ea2fb1881ed30bb52569e2d73723fc3928d",
+  "batch_helper_sha256": "c8011a4cbe5bdf086f1d2636d6ad20507eee9c857e74afe03fef49b0b39f829a",
+  "previous_frozen_evidence_verified": {
+    "artifacts/firmware-minimal-test-20261115/manifest.json": {
+      "sha256": "d3862fd853920ea685e6b532822bd364e591f0635e0be3a96026974ab2e59906",
+      "covered_files_verified": 9
+    },
+    "artifacts/firmware-instruction-test-20261115/manifest.json": {
+      "sha256": "3d5ec6334166ba1a141f2b45ce8e347e0272edaf35a10a19c23f4e133b98db82",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-sequence-test-20261115/manifest.json": {
+      "sha256": "f14f7545931f0da4101443346b33e73aba343642d5b6f7b2bd209c7b7a785520",
+      "covered_files_verified": 8
+    },
+    "artifacts/firmware-trampoline-test-20261115/manifest.json": {
+      "sha256": "b75a7d86eb8150f0fe2d268d87bf7a9ef7a7dc3cd8c18d8ba354de3a3f5f9316",
+      "covered_files_verified": 7
+    },
+    "artifacts/firmware-pc-limit-test-20261115/manifest.json": {
+      "sha256": "b1115147e818eee7e122323bc807f73e05035e5fc7a82846bed8037f82ba036c",
+      "covered_files_verified": 5
+    },
+    "artifacts/firmware-suite-test-20261115/manifest.json": {
+      "sha256": "73baee8e7fee431390806d56143c374377e6f4dfaf3bc71791046755cf9aba21",
+      "covered_files_verified": 4
+    },
+    "artifacts/firmware-batch-test-20261115/manifest.json": {
+      "sha256": "e7da807fffe12b2632d0da0fe88f1647370848d39de0657051f64547d01fa10d",
+      "covered_files_verified": 4
+    }
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-ROM8-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "804e540eac2a71a8fb5144bd8a7ef1611afaab1421d911fdf8d30c97b9f70070",
+    "app_sha256": "ee2ef630038ecfe9fb6804fe58a756111fc0eede82a153243674258d9e55f83e",
+    "expected_about_model": "BW150",
+    "expected_about_version": "RFF",
+    "expected_usb_product": "ATORCH BW150 V1.1.0",
+    "result_format": "R identifies ROM8; the two hex digits are the eight-group pass bitmap."
+  },
+  "groups": [
+    {
+      "bit": "01",
+      "name": "strlen",
+      "vectors": 6,
+      "result_assertions": 48,
+      "stub": "0x106efc"
+    },
+    {
+      "bit": "02",
+      "name": "memset",
+      "vectors": 6,
+      "result_assertions": 48,
+      "stub": "0x106ef0"
+    },
+    {
+      "bit": "04",
+      "name": "memcpy",
+      "vectors": 6,
+      "result_assertions": 48,
+      "stub": "0x106ee4"
+    },
+    {
+      "bit": "08",
+      "name": "memmove",
+      "vectors": 8,
+      "result_assertions": 64,
+      "stub": "0x106ee8"
+    },
+    {
+      "bit": "10",
+      "name": "memcmp",
+      "vectors": 6,
+      "result_assertions": 48,
+      "stub": "0x106eec"
+    },
+    {
+      "bit": "20",
+      "name": "strcmp",
+      "vectors": 6,
+      "result_assertions": 48,
+      "stub": "0x106ef4"
+    },
+    {
+      "bit": "40",
+      "name": "strcpy",
+      "vectors": 6,
+      "result_assertions": 48,
+      "stub": "0x106ef8"
+    },
+    {
+      "bit": "80",
+      "name": "strncmp",
+      "vectors": 6,
+      "result_assertions": 48,
+      "stub": "0x106f00"
+    }
+  ],
+  "vectors": [
+    {
+      "group": 0,
+      "function": "strlen",
+      "a0": ["flash", "blob_000", 0],
+      "a1": ["int", 0],
+      "length": 0,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "length_0_align_0",
+      "record_offset": 0,
+      "index_in_group": 0,
+      "record_address": "0x1e97614",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 0,
+      "function": "strlen",
+      "a0": ["flash", "blob_003", 1],
+      "a1": ["int", 0],
+      "length": 0,
+      "expected": ["int", 1],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "length_1_align_1",
+      "record_offset": 12,
+      "index_in_group": 1,
+      "record_address": "0x1e97620",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 0,
+      "function": "strlen",
+      "a0": ["flash", "blob_004", 2],
+      "a1": ["int", 0],
+      "length": 0,
+      "expected": ["int", 5],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "length_5_align_2",
+      "record_offset": 24,
+      "index_in_group": 2,
+      "record_address": "0x1e9762c",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 0,
+      "function": "strlen",
+      "a0": ["flash", "blob_005", 3],
+      "a1": ["int", 0],
+      "length": 0,
+      "expected": ["int", 6],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "length_6_align_3",
+      "record_offset": 36,
+      "index_in_group": 3,
+      "record_address": "0x1e97638",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 0,
+      "function": "strlen",
+      "a0": ["flash", "blob_006", 0],
+      "a1": ["int", 0],
+      "length": 0,
+      "expected": ["int", 16],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "length_16_align_0",
+      "record_offset": 48,
+      "index_in_group": 4,
+      "record_address": "0x1e97644",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 0,
+      "function": "strlen",
+      "a0": ["flash", "blob_007", 1],
+      "a1": ["int", 0],
+      "length": 0,
+      "expected": ["int", 3],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "length_3_align_1",
+      "record_offset": 60,
+      "index_in_group": 5,
+      "record_address": "0x1e97650",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 1,
+      "function": "memset",
+      "a0": ["ram", 4],
+      "a1": ["int", 165],
+      "length": 0,
+      "expected": ["ram", 4],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "fill_d0_n0_A5",
+      "record_offset": 0,
+      "index_in_group": 0,
+      "record_address": "0x1e9765c",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 1,
+      "function": "memset",
+      "a0": ["ram", 5],
+      "a1": ["int", 90],
+      "length": 1,
+      "expected": ["ram", 5],
+      "buffer": "blob_008",
+      "seed": "blob_002",
+      "label": "fill_d1_n1_5A",
+      "record_offset": 12,
+      "index_in_group": 1,
+      "record_address": "0x1e97668",
+      "expected_buffer_hex": "005a02030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 1,
+      "function": "memset",
+      "a0": ["ram", 5],
+      "a1": ["int", 165],
+      "length": 7,
+      "expected": ["ram", 5],
+      "buffer": "blob_009",
+      "seed": "blob_002",
+      "label": "fill_d1_n7_A5",
+      "record_offset": 24,
+      "index_in_group": 2,
+      "record_address": "0x1e97674",
+      "expected_buffer_hex": "00a5a5a5a5a5a5a508090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 1,
+      "function": "memset",
+      "a0": ["ram", 8],
+      "a1": ["int", 0],
+      "length": 16,
+      "expected": ["ram", 8],
+      "buffer": "blob_010",
+      "seed": "blob_002",
+      "label": "fill_d4_n16_0",
+      "record_offset": 36,
+      "index_in_group": 3,
+      "record_address": "0x1e97680",
+      "expected_buffer_hex": "00010203000000000000000000000000000000001415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 1,
+      "function": "memset",
+      "a0": ["ram", 7],
+      "a1": ["int", 511],
+      "length": 17,
+      "expected": ["ram", 7],
+      "buffer": "blob_011",
+      "seed": "blob_002",
+      "label": "fill_d3_n17_1FF",
+      "record_offset": 48,
+      "index_in_group": 4,
+      "record_address": "0x1e9768c",
+      "expected_buffer_hex": "000102ffffffffffffffffffffffffffffffffff1415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 1,
+      "function": "memset",
+      "a0": ["ram", 4],
+      "a1": ["int", 128],
+      "length": 32,
+      "expected": ["ram", 4],
+      "buffer": "blob_012",
+      "seed": "blob_002",
+      "label": "fill_d0_n32_80",
+      "record_offset": 60,
+      "index_in_group": 5,
+      "record_address": "0x1e97698",
+      "expected_buffer_hex": "8080808080808080808080808080808080808080808080808080808080808080"
+    },
+    {
+      "group": 2,
+      "function": "memcpy",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_013", 0],
+      "length": 0,
+      "expected": ["ram", 4],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "copy_d0_s0_n0",
+      "record_offset": 0,
+      "index_in_group": 0,
+      "record_address": "0x1e976a4",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 2,
+      "function": "memcpy",
+      "a0": ["ram", 5],
+      "a1": ["flash", "blob_013", 1],
+      "length": 1,
+      "expected": ["ram", 5],
+      "buffer": "blob_014",
+      "seed": "blob_002",
+      "label": "copy_d1_s1_n1",
+      "record_offset": 12,
+      "index_in_group": 1,
+      "record_address": "0x1e976b0",
+      "expected_buffer_hex": "00a102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 2,
+      "function": "memcpy",
+      "a0": ["ram", 5],
+      "a1": ["flash", "blob_013", 0],
+      "length": 7,
+      "expected": ["ram", 5],
+      "buffer": "blob_015",
+      "seed": "blob_002",
+      "label": "copy_d1_s0_n7",
+      "record_offset": 24,
+      "index_in_group": 2,
+      "record_address": "0x1e976bc",
+      "expected_buffer_hex": "00a0a1a2a3a4a5a608090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 2,
+      "function": "memcpy",
+      "a0": ["ram", 8],
+      "a1": ["flash", "blob_013", 0],
+      "length": 16,
+      "expected": ["ram", 8],
+      "buffer": "blob_016",
+      "seed": "blob_002",
+      "label": "copy_d4_s0_n16",
+      "record_offset": 36,
+      "index_in_group": 3,
+      "record_address": "0x1e976c8",
+      "expected_buffer_hex": "00010203a0a1a2a3a4a5a6a7a8a9aaabacadaeaf1415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 2,
+      "function": "memcpy",
+      "a0": ["ram", 7],
+      "a1": ["flash", "blob_013", 1],
+      "length": 17,
+      "expected": ["ram", 7],
+      "buffer": "blob_017",
+      "seed": "blob_002",
+      "label": "copy_d3_s1_n17",
+      "record_offset": 48,
+      "index_in_group": 4,
+      "record_address": "0x1e976d4",
+      "expected_buffer_hex": "000102a1a2a3a4a5a6a7a8a9aaabacadaeafb0b11415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 2,
+      "function": "memcpy",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_013", 0],
+      "length": 28,
+      "expected": ["ram", 4],
+      "buffer": "blob_018",
+      "seed": "blob_002",
+      "label": "copy_d0_s0_n28",
+      "record_offset": 60,
+      "index_in_group": 5,
+      "record_address": "0x1e976e0",
+      "expected_buffer_hex": "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babb1c1d1e1f"
+    },
+    {
+      "group": 3,
+      "function": "memmove",
+      "a0": ["ram", 12],
+      "a1": ["ram", 4],
+      "length": 0,
+      "expected": ["ram", 12],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "move_d8_s0_n0",
+      "record_offset": 0,
+      "index_in_group": 0,
+      "record_address": "0x1e976ec",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 3,
+      "function": "memmove",
+      "a0": ["ram", 12],
+      "a1": ["ram", 4],
+      "length": 1,
+      "expected": ["ram", 12],
+      "buffer": "blob_019",
+      "seed": "blob_002",
+      "label": "move_d8_s0_n1",
+      "record_offset": 12,
+      "index_in_group": 1,
+      "record_address": "0x1e976f8",
+      "expected_buffer_hex": "000102030405060700090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 3,
+      "function": "memmove",
+      "a0": ["ram", 12],
+      "a1": ["ram", 4],
+      "length": 7,
+      "expected": ["ram", 12],
+      "buffer": "blob_020",
+      "seed": "blob_002",
+      "label": "move_d8_s0_n7",
+      "record_offset": 24,
+      "index_in_group": 2,
+      "record_address": "0x1e97704",
+      "expected_buffer_hex": "0001020304050607000102030405060f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 3,
+      "function": "memmove",
+      "a0": ["ram", 4],
+      "a1": ["ram", 12],
+      "length": 16,
+      "expected": ["ram", 4],
+      "buffer": "blob_021",
+      "seed": "blob_002",
+      "label": "move_d0_s8_n16",
+      "record_offset": 36,
+      "index_in_group": 3,
+      "record_address": "0x1e97710",
+      "expected_buffer_hex": "08090a0b0c0d0e0f1011121314151617101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 3,
+      "function": "memmove",
+      "a0": ["ram", 7],
+      "a1": ["ram", 4],
+      "length": 13,
+      "expected": ["ram", 7],
+      "buffer": "blob_022",
+      "seed": "blob_002",
+      "label": "move_d3_s0_n13",
+      "record_offset": 48,
+      "index_in_group": 4,
+      "record_address": "0x1e9771c",
+      "expected_buffer_hex": "000102000102030405060708090a0b0c101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 3,
+      "function": "memmove",
+      "a0": ["ram", 4],
+      "a1": ["ram", 7],
+      "length": 13,
+      "expected": ["ram", 4],
+      "buffer": "blob_023",
+      "seed": "blob_002",
+      "label": "move_d0_s3_n13",
+      "record_offset": 60,
+      "index_in_group": 5,
+      "record_address": "0x1e97728",
+      "expected_buffer_hex": "030405060708090a0b0c0d0e0f0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 3,
+      "function": "memmove",
+      "a0": ["ram", 5],
+      "a1": ["ram", 5],
+      "length": 15,
+      "expected": ["ram", 5],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "move_d1_s1_n15",
+      "record_offset": 72,
+      "index_in_group": 6,
+      "record_address": "0x1e97734",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 3,
+      "function": "memmove",
+      "a0": ["ram", 5],
+      "a1": ["ram", 4],
+      "length": 31,
+      "expected": ["ram", 5],
+      "buffer": "blob_024",
+      "seed": "blob_002",
+      "label": "move_d1_s0_n31",
+      "record_offset": 84,
+      "index_in_group": 7,
+      "record_address": "0x1e97740",
+      "expected_buffer_hex": "00000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e"
+    },
+    {
+      "group": 4,
+      "function": "memcmp",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_025", 0],
+      "length": 0,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "compare_0",
+      "record_offset": 0,
+      "index_in_group": 0,
+      "record_address": "0x1e9774c",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 4,
+      "function": "memcmp",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_025", 0],
+      "length": 32,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "compare_1",
+      "record_offset": 12,
+      "index_in_group": 1,
+      "record_address": "0x1e97758",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 4,
+      "function": "memcmp",
+      "a0": ["ram", 5],
+      "a1": ["flash", "blob_025", 1],
+      "length": 15,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "compare_2",
+      "record_offset": 24,
+      "index_in_group": 2,
+      "record_address": "0x1e97764",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 4,
+      "function": "memcmp",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_026", 0],
+      "length": 32,
+      "expected": ["int", -128],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "compare_3",
+      "record_offset": 36,
+      "index_in_group": 3,
+      "record_address": "0x1e97770",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 4,
+      "function": "memcmp",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_027", 0],
+      "length": 32,
+      "expected": ["int", 31],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "compare_4",
+      "record_offset": 48,
+      "index_in_group": 4,
+      "record_address": "0x1e9777c",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 4,
+      "function": "memcmp",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_028", 0],
+      "length": 32,
+      "expected": ["int", -1],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "compare_5",
+      "record_offset": 60,
+      "index_in_group": 5,
+      "record_address": "0x1e97788",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 5,
+      "function": "strcmp",
+      "a0": ["flash", "blob_000", 0],
+      "a1": ["flash", "blob_029", 1],
+      "length": 0,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strcmp_0",
+      "record_offset": 0,
+      "index_in_group": 0,
+      "record_address": "0x1e97794",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 5,
+      "function": "strcmp",
+      "a0": ["flash", "blob_030", 1],
+      "a1": ["flash", "blob_031", 2],
+      "length": 0,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strcmp_1",
+      "record_offset": 12,
+      "index_in_group": 1,
+      "record_address": "0x1e977a0",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 5,
+      "function": "strcmp",
+      "a0": ["flash", "blob_032", 2],
+      "a1": ["flash", "blob_033", 3],
+      "length": 0,
+      "expected": ["int", -68],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strcmp_2",
+      "record_offset": 24,
+      "index_in_group": 2,
+      "record_address": "0x1e977ac",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 5,
+      "function": "strcmp",
+      "a0": ["flash", "blob_033", 3],
+      "a1": ["flash", "blob_034", 0],
+      "length": 0,
+      "expected": ["int", 68],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strcmp_3",
+      "record_offset": 36,
+      "index_in_group": 3,
+      "record_address": "0x1e977b8",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 5,
+      "function": "strcmp",
+      "a0": ["flash", "blob_035", 0],
+      "a1": ["flash", "blob_036", 1],
+      "length": 0,
+      "expected": ["int", -1],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strcmp_4",
+      "record_offset": 48,
+      "index_in_group": 4,
+      "record_address": "0x1e977c4",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 5,
+      "function": "strcmp",
+      "a0": ["flash", "blob_037", 1],
+      "a1": ["flash", "blob_038", 2],
+      "length": 0,
+      "expected": ["int", 1],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strcmp_5",
+      "record_offset": 60,
+      "index_in_group": 5,
+      "record_address": "0x1e977d0",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 6,
+      "function": "strcpy",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_000", 0],
+      "length": 0,
+      "expected": ["ram", 4],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strcpy_0",
+      "record_offset": 0,
+      "index_in_group": 0,
+      "record_address": "0x1e977dc",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 6,
+      "function": "strcpy",
+      "a0": ["ram", 5],
+      "a1": ["flash", "blob_003", 1],
+      "length": 0,
+      "expected": ["ram", 5],
+      "buffer": "blob_039",
+      "seed": "blob_002",
+      "label": "strcpy_1",
+      "record_offset": 12,
+      "index_in_group": 1,
+      "record_address": "0x1e977e8",
+      "expected_buffer_hex": "004100030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 6,
+      "function": "strcpy",
+      "a0": ["ram", 8],
+      "a1": ["flash", "blob_004", 2],
+      "length": 0,
+      "expected": ["ram", 8],
+      "buffer": "blob_040",
+      "seed": "blob_002",
+      "label": "strcpy_2",
+      "record_offset": 24,
+      "index_in_group": 2,
+      "record_address": "0x1e977f4",
+      "expected_buffer_hex": "000102034257313530000a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 6,
+      "function": "strcpy",
+      "a0": ["ram", 7],
+      "a1": ["flash", "blob_005", 3],
+      "length": 0,
+      "expected": ["ram", 7],
+      "buffer": "blob_041",
+      "seed": "blob_002",
+      "label": "strcpy_3",
+      "record_offset": 36,
+      "index_in_group": 3,
+      "record_address": "0x1e97800",
+      "expected_buffer_hex": "00010241544f524348000a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 6,
+      "function": "strcpy",
+      "a0": ["ram", 4],
+      "a1": ["flash", "blob_006", 0],
+      "length": 0,
+      "expected": ["ram", 4],
+      "buffer": "blob_042",
+      "seed": "blob_002",
+      "label": "strcpy_4",
+      "record_offset": 48,
+      "index_in_group": 4,
+      "record_address": "0x1e9780c",
+      "expected_buffer_hex": "30313233343536373839414243444546001112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 6,
+      "function": "strcpy",
+      "a0": ["ram", 9],
+      "a1": ["flash", "blob_007", 1],
+      "length": 0,
+      "expected": ["ram", 9],
+      "buffer": "blob_043",
+      "seed": "blob_002",
+      "label": "strcpy_5",
+      "record_offset": 60,
+      "index_in_group": 5,
+      "record_address": "0x1e97818",
+      "expected_buffer_hex": "000102030480ff4100090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 7,
+      "function": "strncmp",
+      "a0": ["flash", "blob_034", 0],
+      "a1": ["flash", "blob_044", 2],
+      "length": 0,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strncmp_0",
+      "record_offset": 0,
+      "index_in_group": 0,
+      "record_address": "0x1e97824",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 7,
+      "function": "strncmp",
+      "a0": ["flash", "blob_045", 1],
+      "a1": ["flash", "blob_046", 3],
+      "length": 3,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strncmp_1",
+      "record_offset": 12,
+      "index_in_group": 1,
+      "record_address": "0x1e97830",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 7,
+      "function": "strncmp",
+      "a0": ["flash", "blob_047", 2],
+      "a1": ["flash", "blob_048", 0],
+      "length": 4,
+      "expected": ["int", -1],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strncmp_2",
+      "record_offset": 24,
+      "index_in_group": 2,
+      "record_address": "0x1e9783c",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 7,
+      "function": "strncmp",
+      "a0": ["flash", "blob_049", 3],
+      "a1": ["flash", "blob_050", 1],
+      "length": 32,
+      "expected": ["int", 0],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strncmp_3",
+      "record_offset": 36,
+      "index_in_group": 3,
+      "record_address": "0x1e97848",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 7,
+      "function": "strncmp",
+      "a0": ["flash", "blob_051", 0],
+      "a1": ["flash", "blob_032", 2],
+      "length": 3,
+      "expected": ["int", -67],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strncmp_4",
+      "record_offset": 48,
+      "index_in_group": 4,
+      "record_address": "0x1e97854",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    },
+    {
+      "group": 7,
+      "function": "strncmp",
+      "a0": ["flash", "blob_052", 1],
+      "a1": ["flash", "blob_053", 3],
+      "length": 2,
+      "expected": ["int", 127],
+      "buffer": "blob_001",
+      "seed": "blob_002",
+      "label": "strncmp_5",
+      "record_offset": 60,
+      "index_in_group": 5,
+      "record_address": "0x1e97860",
+      "expected_buffer_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+    }
+  ],
+  "vector_count": 50,
+  "result_assertions_per_run": 400,
+  "assertion_roles": [
+    "callee_r6",
+    "callee_r4",
+    "callee_r5",
+    "callee_r7",
+    "return_value",
+    "head_guard",
+    "tail_guard",
+    "complete_buffer"
+  ],
+  "layout": {
+    "app_growth_bytes": 3200,
+    "app_size": 621464,
+    "code_bytes": 462,
+    "used_extension_bytes": 3124,
+    "result_table_bytes": 1024,
+    "remaining_ff_tail_bytes": 90,
+    "payload_end": "0x9cfa6",
+    "config_and_P11_shift": 3200,
+    "same_geometry_as_accepted_BATCH8": true,
+    "other_member_bytes_unchanged": true,
+    "original_app_changes": [
+      {
+        "offset": "0x369aa",
+        "before": "C8",
+        "after": "C3"
+      },
+      {
+        "offset": "0x369ab",
+        "before": "FF",
+        "after": "F3"
+      },
+      {
+        "offset": "0x369ac",
+        "before": "65",
+        "after": "B5"
+      },
+      {
+        "offset": "0x369ad",
+        "before": "41",
+        "after": "02"
+      },
+      {
+        "offset": "0x369ae",
+        "before": "E5",
+        "after": "00"
+      },
+      {
+        "offset": "0x369af",
+        "before": "01",
+        "after": "00"
+      },
+      {
+        "offset": "0x3f2e0",
+        "before": "9C",
+        "after": "20"
+      },
+      {
+        "offset": "0x3f2e1",
+        "before": "40",
+        "after": "72"
+      }
+    ]
+  },
+  "addresses": {
+    "hook": "0x1e36aca",
+    "entry": "0x1e97038",
+    "continuation": "0x1e36ad0",
+    "code_end": "0x1e97206",
+    "flash_pc_high": "0x1e97220",
+    "result_table": "0x1e9786c",
+    "pass_text": "0x1e97c68"
+  },
+  "original_display_branch_checks": [
+    {
+      "branch": "text_label_branch",
+      "seed": "0x0",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x1",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0xffffffff",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0xa5a5a5a5",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x80000000",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x7fffffff",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x55555555",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x1020304",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x0",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x1",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0xffffffff",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0xa5a5a5a5",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x80000000",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x7fffffff",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x55555555",
+      "output": ["BW150", "RFF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x1020304",
+      "output": ["BW150", "RFF"]
+    }
+  ],
+  "pc_limit_setup": {
+    "write_count": 8,
+    "models_agree": true,
+    "selected_instructions": [
+      {
+        "address": "0x1e3f3cc",
+        "bytes": "c0ff17000080",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r0, #0x80000017",
+        "pcode": ["IMARK ram[1e3f3cc:6]", "r0 = 0x80000017"]
+      },
+      {
+        "address": "0x1e3f3d2",
+        "bytes": "c1ffc0e11b00",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r1, #0x1be1c0",
+        "pcode": ["IMARK ram[1e3f3d2:6]", "r1 = 0x1be1c0"]
+      },
+      {
+        "address": "0x1e3f3d8",
+        "bytes": "0843",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r0, [r1 + 0x40]",
+        "pcode": [
+          "IMARK ram[1e3f3d8:2]",
+          "unique[f400:4] = r1 + 0x40",
+          "*[ram]unique[f400:4] = r0"
+        ]
+      },
+      {
+        "address": "0x1e3f3da",
+        "bytes": "c0f40119",
+        "length": 4,
+        "mnemonic": "mem.set",
+        "operands": "0x1, [r1 + 0x0]",
+        "pcode": [
+          "IMARK ram[1e3f3da:4]",
+          "unique[1a00:4] = 0x1",
+          "unique[7f00:4] = r1 + 0x0",
+          "*[ram]unique[7f00:4] = unique[1a00:4]"
+        ]
+      },
+      {
+        "address": "0x1e3f3de",
+        "bytes": "dbf4101b",
+        "length": 4,
+        "mnemonic": "mem.set",
+        "operands": "0x100000, [r1 + 0x6c]",
+        "pcode": [
+          "IMARK ram[1e3f3de:4]",
+          "unique[1c00:4] = 0x100000",
+          "unique[7f00:4] = r1 + 0x6c",
+          "*[ram]unique[7f00:4] = unique[1c00:4]"
+        ]
+      },
+      {
+        "address": "0x1e3f3e2",
+        "bytes": "daf4111b",
+        "length": 4,
+        "mnemonic": "mem.set",
+        "operands": "0x110000, [r1 + 0x68]",
+        "pcode": [
+          "IMARK ram[1e3f3e2:4]",
+          "unique[1c00:4] = 0x110000",
+          "unique[7f00:4] = r1 + 0x68",
+          "*[ram]unique[7f00:4] = unique[1c00:4]"
+        ]
+      },
+      {
+        "address": "0x1e3f3e6",
+        "bytes": "c4ff607b0000",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r4, #0x7b60",
+        "pcode": ["IMARK ram[1e3f3e6:6]", "r4 = 0x7b60"]
+      },
+      {
+        "address": "0x1e3f3ec",
+        "bytes": "9c43",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r4, [r1 + 0x64]",
+        "pcode": [
+          "IMARK ram[1e3f3ec:2]",
+          "unique[f400:4] = r1 + 0x64",
+          "*[ram]unique[f400:4] = r4"
+        ]
+      },
+      {
+        "address": "0x1e3f3ee",
+        "bytes": "c6ffa8a00000",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r6, #0xa0a8",
+        "pcode": ["IMARK ram[1e3f3ee:6]", "r6 = 0xa0a8"]
+      },
+      {
+        "address": "0x1e3f3f4",
+        "bytes": "8e43",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r6, [r1 + 0x60]",
+        "pcode": [
+          "IMARK ram[1e3f3f4:2]",
+          "unique[f400:4] = r1 + 0x60",
+          "*[ram]unique[f400:4] = r6"
+        ]
+      },
+      {
+        "address": "0x1e3f3f6",
+        "bytes": "c0ff2001e001",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r0, #0x1e00120",
+        "pcode": ["IMARK ram[1e3f3f6:6]", "r0 = 0x1e00120"]
+      },
+      {
+        "address": "0x1e3f3fc",
+        "bytes": "7843",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r0, [r1 + 0x5c]",
+        "pcode": [
+          "IMARK ram[1e3f3fc:2]",
+          "unique[f400:4] = r1 + 0x5c",
+          "*[ram]unique[f400:4] = r0"
+        ]
+      },
+      {
+        "address": "0x1e3f3fe",
+        "bytes": "c0ff2072e901",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r0, #0x1e97220",
+        "pcode": ["IMARK ram[1e3f3fe:6]", "r0 = 0x1e97220"]
+      },
+      {
+        "address": "0x1e3f404",
+        "bytes": "6843",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r0, [r1 + 0x58]",
+        "pcode": [
+          "IMARK ram[1e3f404:2]",
+          "unique[f400:4] = r1 + 0x58",
+          "*[ram]unique[f400:4] = r0"
+        ]
+      }
+    ],
+    "register_values": {
+      "EMU_CON": {
+        "mmio_address": "0x1be200",
+        "value": "0x80000017"
+      },
+      "LIM_PC0_L": {
+        "mmio_address": "0x1be21c",
+        "value": "0x1e00120"
+      },
+      "LIM_PC0_H": {
+        "mmio_address": "0x1be218",
+        "value": "0x1e97220"
+      },
+      "LIM_PC1_L": {
+        "mmio_address": "0x1be224",
+        "value": "0x7b60"
+      },
+      "LIM_PC1_H": {
+        "mmio_address": "0x1be220",
+        "value": "0xa0a8"
+      },
+      "LIM_PC2_L": {
+        "mmio_address": "0x1be22c",
+        "value": "0x100000"
+      },
+      "LIM_PC2_H": {
+        "mmio_address": "0x1be228",
+        "value": "0x110000"
+      }
+    },
+    "other_write": {
+      "mmio_address": "0x1be1c0",
+      "value": "0x1"
+    },
+    "scope": "Bounded setup writes in memory models; not live MMIO or an exception trace."
+  },
+  "third_party_cross_check": {
+    "matched_files": 5,
+    "decoded_container_identical": true,
+    "chipkey": "0x8d07",
+    "entry_point": "0x1e00120"
+  },
+  "negative_parser_controls_memory_only": [
+    {
+      "case": "flash_header_crc",
+      "rejected": true,
+      "reason": "Flash header CRC"
+    },
+    {
+      "case": "top_entry_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x20"
+    },
+    {
+      "case": "inner_header_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x4020"
+    },
+    {
+      "case": "app_payload_crc",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "outer_data_crc",
+      "rejected": true,
+      "reason": "Outer data CRC: app_area_head"
+    },
+    {
+      "case": "truncated_file",
+      "rejected": true,
+      "reason": "Truncated BANKCB"
+    },
+    {
+      "case": "new_code_corruption_without_crc_update",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    }
+  ],
+  "roundtrip": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "size": 643072,
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical_rebuild": true,
+    "reverse_to_original_identical": true
+  },
+  "limitations": [
+    "Official reference ROM bytes/exports and seven pinned APP call encodings are used; the physical device ROM has not been read back.",
+    "New calls use absolute export pointers; the low-25-bit relation in original relative-call listings is not a general PC-width or wrapping proof.",
+    "SLEIGH omits CALL RETS updates and multi-register stack operations. Explicit adapters supply these assumptions; matched models do not independently prove hardware stack order or full ABI.",
+    "Only the selected pure-memory ROM paths, r4/r5/r6/r7 preservation, return values and bounded buffer effects are exercised. Hardware PSR, interrupts/cache and complete UI are unmodeled.",
+    "The stack bound is 132 bytes and package growth 3200 bytes, matching BATCH8; actual stack headroom and ROM version interoperability require this hardware acceptance.",
+    "Register/guard perturbations are in-process model injections. They are distinct from the actual in-memory table-byte corruptions; neither is emitted or flashed.",
+    "Expected buffers are compressed as a 32-bit difference mask plus changed bytes; every original 32-byte buffer position and both four-byte guards are still compared.",
+    "A hardware exception/reset can prevent a result bitmap. No exception recovery handler, persistent writes, peripheral control or standalone replacement startup is added."
+  ],
+  "execution_checks": {
+    "initial_states": 64,
+    "steps_total": 2304320,
+    "steps_per_run": 36005,
+    "checks_by_group": {
+      "0": 48,
+      "1": 48,
+      "2": 48,
+      "3": 64,
+      "4": 48,
+      "5": 48,
+      "6": 48,
+      "7": 48
+    },
+    "calls_per_run": {
+      "call16": 258,
+      "callreg": 50
+    },
+    "rom_calls_per_run": {
+      "strlen": 6,
+      "memset": 6,
+      "memcpy": 6,
+      "memmove": 8,
+      "memcmp": 6,
+      "strcmp": 6,
+      "strcpy": 6,
+      "strncmp": 6
+    },
+    "maximum_additional_stack_bytes": 132,
+    "same_stack_bound_as_accepted_BATCH8": true,
+    "all_results": ["RFF"],
+    "wrapper_registers_and_SP_RETS_restored": true,
+    "stack_sentinels_unchanged": true,
+    "reference_ROM_data_writes_confined_to_private_buffer": true
+  },
+  "reference_rom": {
+    "primary_sources": {
+      "rom.lst": {
+        "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-AC63_BT_SDK/fdc018de81629e21e594d677cf05f87d288be0f0/cpu/bd19/tools/rom.lst",
+        "sha256": "77a567a419308f7389ea7c3b69ef0f4834e11cba2233c01aa9228771c9e8878e"
+      },
+      "bd19-csfr.h": {
+        "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-AC63_BT_SDK/fdc018de81629e21e594d677cf05f87d288be0f0/include_lib/driver/cpu/bd19/asm/csfr.h",
+        "sha256": "3976d0f7981eb506392166583c142ed53b5f597ef0fc6690800ae112d47f0fa3"
+      }
+    },
+    "selected_instruction_count": 256,
+    "ranges": [
+      ["0x100004", "0x100146"],
+      ["0x10016e", "0x1001c4"],
+      ["0x1001da", "0x100336"],
+      ["0x106ee4", "0x106f04"]
+    ],
+    "all_selected_instructions_inside_configured_ROM_PC_range": true,
+    "original_APP_call_evidence": {
+      "records": [
+        {
+          "name": "memcpy",
+          "address": "0x1e008dc",
+          "bytes": "98f30233",
+          "sleigh_unmasked_destination": "0x2106ee4",
+          "destination_low_25_bits": "0x106ee4",
+          "reference_export": "0x106ee4"
+        },
+        {
+          "name": "memcmp",
+          "address": "0x1e0412c",
+          "bytes": "98f3de16",
+          "sleigh_unmasked_destination": "0x2106eec",
+          "destination_low_25_bits": "0x106eec",
+          "reference_export": "0x106eec"
+        },
+        {
+          "name": "memset",
+          "address": "0x1e00d6e",
+          "bytes": "98f3bf30",
+          "sleigh_unmasked_destination": "0x2106ef0",
+          "destination_low_25_bits": "0x106ef0",
+          "reference_export": "0x106ef0"
+        },
+        {
+          "name": "strcmp",
+          "address": "0x1e4cb8e",
+          "bytes": "95f3b1d1",
+          "sleigh_unmasked_destination": "0x2106ef4",
+          "destination_low_25_bits": "0x106ef4",
+          "reference_export": "0x106ef4"
+        },
+        {
+          "name": "strcpy",
+          "address": "0x1e04a70",
+          "bytes": "98f34212",
+          "sleigh_unmasked_destination": "0x2106ef8",
+          "destination_low_25_bits": "0x106ef8",
+          "reference_export": "0x106ef8"
+        },
+        {
+          "name": "strlen",
+          "address": "0x1e04122",
+          "bytes": "98f3eb16",
+          "sleigh_unmasked_destination": "0x2106efc",
+          "destination_low_25_bits": "0x106efc",
+          "reference_export": "0x106efc"
+        },
+        {
+          "name": "strncmp",
+          "address": "0x1e03acc",
+          "bytes": "98f3181a",
+          "sleigh_unmasked_destination": "0x2106f00",
+          "destination_low_25_bits": "0x106f00",
+          "reference_export": "0x106f00"
+        }
+      ],
+      "scope": "Seven pinned APP call encodings match official export addresses in their low 25 bits. This is not a complete call graph, runtime call trace, hardware PC-width proof or physical ROM readback. New code uses absolute register CALLs and does not rely on unnormalized SLEIGH relative destinations.",
+      "memmove": "No pinned direct APP site; official memcpy and memmove stubs both branch to 0x100040."
+    },
+    "physical_ROM_readback": false
+  },
+  "failure_checks": {
+    "combined_group_failures": 255,
+    "actual_table_byte_corruptions_in_memory": 100,
+    "runtime_model_perturbations": 300,
+    "all_passed": true,
+    "emitted_as_firmware": false
+  },
+  "local_evidence": {
+    "directory": "artifacts/firmware-rom-test-20261115",
+    "analysis_sha256": "5d812ae4187eec4a2b8b0299fed5d4b286978be3bbfc15ec1b0daf6d1e9ae830",
+    "manifest_sha256": "566a4eb7d750c03b7449772a8b6c8f96d5b9e53aa5ce4be9799b3e4b60e563aa",
+    "manifest": {
+      "hardware_tested": false,
+      "files": {
+        "analysis.json": {
+          "size": 1016181,
+          "sha256": "5d812ae4187eec4a2b8b0299fed5d4b286978be3bbfc15ec1b0daf6d1e9ae830"
+        },
+        "BW150-V1.1.0-ROM8-EXPERIMENTAL.bin": {
+          "size": 643072,
+          "sha256": "804e540eac2a71a8fb5144bd8a7ef1611afaab1421d911fdf8d30c97b9f70070"
+        },
+        "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin": {
+          "size": 643072,
+          "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+        },
+        "new-code-listing.txt": {
+          "size": 7205,
+          "sha256": "783375e1f635ab4c6251cdeeb9b5a637a6806e1919dfaf756e23b282d8c54e67"
+        },
+        "reference-rom-listing.txt": {
+          "size": 12681,
+          "sha256": "73e1b95766757bab8d4d75a7b4b7fe943cf8fc3a4440cbaa464b200a82d05865"
+        }
+      }
+    },
+    "git_ignored": true
+  },
+  "offline_protocol_rehearsal": {
+    "hardware_tested": false,
+    "image_count": 2,
+    "phase": "Complete",
+    "blocks_per_image": 11088,
+    "last_block_bytes": 26,
+    "log": "artifacts/firmware-rom8-protocol-20261115.txt",
+    "log_sha256": "ad2c57c4859d5896016aeac87c23dd7d857433b5808d0ab0bb70e8ee41359e31",
+    "scope": "Mock replies only; no device transport."
+  },
+  "offline_build_status": "offline_rom8_interoperability_checks_passed_hardware_not_tested",
+  "offline_build_limitations": [
+    "New ROM8 has not been flashed, cold-started or restored. Previous BATCH8 user acceptance is not new hardware evidence.",
+    "Official reference ROM bytes/exports and seven pinned APP call encodings are used; the physical device ROM has not been read back.",
+    "New calls use absolute export pointers; the low-25-bit relation in original relative-call listings is not a general PC-width or wrapping proof.",
+    "SLEIGH omits CALL RETS updates and multi-register stack operations. Explicit adapters supply these assumptions; matched models do not independently prove hardware stack order or full ABI.",
+    "Only the selected pure-memory ROM paths, r4/r5/r6/r7 preservation, return values and bounded buffer effects are exercised. Hardware PSR, interrupts/cache and complete UI are unmodeled.",
+    "The stack bound is 132 bytes and package growth 3200 bytes, matching BATCH8; actual stack headroom and ROM version interoperability require this hardware acceptance.",
+    "Register/guard perturbations are in-process model injections. They are distinct from the actual in-memory table-byte corruptions; neither is emitted or flashed.",
+    "Expected buffers are compressed as a 32-bit difference mask plus changed bytes; every original 32-byte buffer position and both four-byte guards are still compared.",
+    "A hardware exception/reset can prevent a result bitmap. No exception recovery handler, persistent writes, peripheral control or standalone replacement startup is added."
+  ],
+  "automated_hardware_tested": false,
+  "hardware_experiment": {
+    "report_date_local": "2026-11-15",
+    "timezone": "Asia/Shanghai",
+    "evidence_source": "user_report_only",
+    "user_quote": "全部通过无异常，继续新一轮",
+    "candidate_sha256": "804e540eac2a71a8fb5144bd8a7ef1611afaab1421d911fdf8d30c97b9f70070",
+    "expected_result": "RFF",
+    "reported_result": null,
+    "result_code_individually_requoted": false,
+    "all_eight_groups_reported_passed": true,
+    "agreed_acceptance_reported_passed": [
+      "about_result",
+      "reentry_and_used_functions",
+      "complete_power_off_cold_start",
+      "original_restore"
+    ],
+    "exact_reentry_count": null,
+    "duration": null,
+    "scope": "Overall pass under the agreed four-step ROM8 acceptance. No new assistant device action, independent observation, capture or physical ROM readback. The user did not separately repeat the result code."
+  },
+  "special_register_validation_correction": {
+    "date": "2026-11-15",
+    "report": "docs/firmware-runtime-rt1c-failure-20261115.md",
+    "topic": "Vendor 0xFB29 write-special field order contradicts the shared assembler/field/SLEIGH definition",
+    "affected_claim": "Prior offline RETS restoration checks containing these writes are invalid. Raw arithmetic, package checks and user hardware reports are not changed.",
+    "user_hardware_result_changed": false
+  }
+}

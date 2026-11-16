@@ -1,0 +1,742 @@
+{
+  "status": "current_condition_hardware_checks_passed_with_retained_observations",
+  "date": "2026-11-16",
+  "timezone": "Asia/Shanghai",
+  "hardware_tested": true,
+  "hardware_access": true,
+  "prior_acceptance": {
+    "candidate": "RT1G",
+    "hardware_report": "docs/firmware-runtime-usb-hardware-20261116.md",
+    "complete_pairs": 395,
+    "scope": "Near-zero source reads, powered replug, cold start and user original restore with USB readback; CPU timing and first-open timeouts retained."
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-RT1H-PEAKS-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "2ca2db1107b9f3c6e431359eaf208a29df17cecaf974f97be6c6269d253fb142",
+    "app_sha256": "194b011546f3841c67225f8f004f7eb867992f83d384b19f0d99db781940db21"
+  },
+  "artifact_directory": "artifacts/firmware-runtime-peaks-20261116",
+  "manifest_sha256": "6cc7e47837a3085039bc2538e23a343d3512861457e3c794c27b6563e87f4e16",
+  "manifest_files": 7,
+  "analysis_sha256": "5136dd01a95e46c1e7279fb81974200ab0234fbd1cdd03623544ea1a5c2e66c2",
+  "source": "tools/firmware_runtime_peaks.py",
+  "source_sha256": "cc1818b8ce25b79655d1c5cf895ad1dd0ee299afec22bbabdbe9db7c2b85ef3f",
+  "verifier": "tools/verify_firmware_runtime_peaks.py",
+  "verifier_sha256": "171266d523449da449fdaeafdec394f1fcedbf74c04a4587aff015408cf0ff95",
+  "layout": {
+    "entry": "0x1e97038",
+    "code_end": "0x1e975c4",
+    "new_instruction_bytes": 1420,
+    "new_instructions": 515,
+    "pc_high": "0x1e975e0",
+    "constant_data_begin": "0x1e975e0",
+    "extension_used": 2912,
+    "extension_reserved": 3200,
+    "task_stack_words": 288,
+    "task_stack_bytes": 1152,
+    "permanent_state_bytes": 64,
+    "state_offset": 1084,
+    "tail_bytes": 90,
+    "new_pc_interval_hardware_pending_at_build": true,
+    "normal_periodic_usb_and_about_paths_observed_on_hardware": true,
+    "complete_branch_irq_and_stack_margin_coverage": false
+  },
+  "function": {
+    "kind": "per_boot_sampled_minimum_and_maximum",
+    "sources": [
+      {
+        "name": "voltage_v",
+        "address": "0x41a4"
+      },
+      {
+        "name": "current_a",
+        "address": "0x41b0"
+      },
+      {
+        "name": "power_w",
+        "address": "0x41bc"
+      }
+    ],
+    "payload_fields": [
+      "voltage_min_v",
+      "voltage_max_v",
+      "current_min_a",
+      "current_max_a",
+      "power_min_w",
+      "power_max_w"
+    ],
+    "sampling_period_os_ticks": 100,
+    "first_sample_initializes_both_bounds": true,
+    "sample_count_wrap_does_not_reset_bounds": true,
+    "signed_zero_canonicalized": true,
+    "float_or_os_api_for_comparison": false,
+    "reset": "full reboot only; no reset/write USB command",
+    "temperature_fields_not_exported_by_H": true
+  },
+  "usb": {
+    "command": 83,
+    "token": "46480100",
+    "signature": "H",
+    "schema": 1,
+    "frame_bytes": 64,
+    "legacy_commands_03_through_51_original_dispatch": true,
+    "old_G_query_52_not_supported": true,
+    "original_reply_buffer": [
+      48,
+      112
+    ],
+    "original_function_frame_bytes": 176,
+    "additional_usb_local_frame_bytes_modeled": 4,
+    "tcb_reads_or_new_apis": 0
+  },
+  "execution_checks": {
+    "hardware_access": false,
+    "finite_boundary_pairs": 144,
+    "finite_boundary_source_observations": 864,
+    "random_finite_updates": 256,
+    "scripted_voltage_load_sign_updates": 6,
+    "nonfinite_source_cases_rejected": 9,
+    "unused_temperature_sources_not_used": 3,
+    "about_immutable_texts_checked": 256,
+    "about_execution_counts_checked": 8,
+    "periodic_calls_for_decimation": 513,
+    "expected_sample_count": 6,
+    "unsampled_transients_excluded": true,
+    "wrap_cases": [
+      {
+        "tick_before": 12345,
+        "count_after": 1,
+        "extrema_preserved": true
+      },
+      {
+        "tick_before": 4294967264,
+        "count_after": 1,
+        "extrema_preserved": true
+      }
+    ],
+    "invalid_token_cases": 1020,
+    "rom_byte_mismatch_cases": 268,
+    "callback_context_faults": 4,
+    "state_header_faults": 3,
+    "publication_race_cases": 2,
+    "selected_field_corruption_cases": 11,
+    "cold_initialization_clears_extrema": true,
+    "callback_registration_reset_recovered": true,
+    "original_usb_only_dispatch_bytes_changed": true,
+    "usb_state_and_tcb_read_only": true,
+    "new_usb_task_or_os_api_calls": 0,
+    "state_bytes": 64,
+    "task_words": 288,
+    "host_self_test": {
+      "status": "host_only_passed",
+      "hardware_access": false,
+      "malformed_and_invalid_peak_controls": 105,
+      "non_read_commands_rejected": 253,
+      "error_payloads_hidden": 4,
+      "monotonic_peak_and_counter_controls": 3,
+      "emitted_firmware_fixtures": [
+        {
+          "case": "normal_first_extrema",
+          "status": 0,
+          "ready": true
+        },
+        {
+          "case": "scripted_5_12_15_20_v_signed_current",
+          "status": 0,
+          "ready": true
+        },
+        {
+          "case": "rom_mismatch",
+          "status": 1,
+          "ready": false
+        },
+        {
+          "case": "context_unavailable",
+          "status": 2,
+          "ready": false
+        },
+        {
+          "case": "state_mismatch",
+          "status": 3,
+          "ready": false
+        },
+        {
+          "case": "busy",
+          "status": 4,
+          "ready": false
+        },
+        {
+          "case": "unpublished",
+          "status": 0,
+          "ready": false
+        }
+      ]
+    }
+  },
+  "initial_page_boundary_seeds": 64,
+  "command_dispatch_cases": 256,
+  "actual_emitted_reply_fixtures": 7,
+  "frozen_previous_evidence": {
+    "artifacts/firmware-minimal-test-20261115/manifest.json": {
+      "sha256": "d3862fd853920ea685e6b532822bd364e591f0635e0be3a96026974ab2e59906",
+      "covered_files_verified": 9
+    },
+    "artifacts/firmware-instruction-test-20261115/manifest.json": {
+      "sha256": "3d5ec6334166ba1a141f2b45ce8e347e0272edaf35a10a19c23f4e133b98db82",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-sequence-test-20261115/manifest.json": {
+      "sha256": "f14f7545931f0da4101443346b33e73aba343642d5b6f7b2bd209c7b7a785520",
+      "covered_files_verified": 8
+    },
+    "artifacts/firmware-trampoline-test-20261115/manifest.json": {
+      "sha256": "b75a7d86eb8150f0fe2d268d87bf7a9ef7a7dc3cd8c18d8ba354de3a3f5f9316",
+      "covered_files_verified": 7
+    },
+    "artifacts/firmware-pc-limit-test-20261115/manifest.json": {
+      "sha256": "b1115147e818eee7e122323bc807f73e05035e5fc7a82846bed8037f82ba036c",
+      "covered_files_verified": 5
+    },
+    "artifacts/firmware-suite-test-20261115/manifest.json": {
+      "sha256": "73baee8e7fee431390806d56143c374377e6f4dfaf3bc71791046755cf9aba21",
+      "covered_files_verified": 4
+    },
+    "artifacts/firmware-batch-test-20261115/manifest.json": {
+      "sha256": "e7da807fffe12b2632d0da0fe88f1647370848d39de0657051f64547d01fa10d",
+      "covered_files_verified": 4
+    },
+    "artifacts/firmware-rom-test-20261115/manifest.json": {
+      "sha256": "566a4eb7d750c03b7449772a8b6c8f96d5b9e53aa5ce4be9799b3e4b60e563aa",
+      "covered_files_verified": 5
+    },
+    "artifacts/firmware-numeric-test-20261115/manifest.json": {
+      "sha256": "e09dc49a769fbe31f410fd9138f3ad0c765450869ecc45ea00e3205ed7bfb526",
+      "covered_files_verified": 5
+    },
+    "artifacts/firmware-runtime-suite-20261115/manifest.json": {
+      "sha256": "7e4406e2f42f8f9a27d1f3d8651b5e7cd66d62dfe1a98330fdc262e4f2b9c9a5",
+      "covered_files_verified": 16
+    },
+    "artifacts/firmware-runtime-rt1-failure-20261115/manifest.json": {
+      "sha256": "366265bc2df426e2c4ac03bfef7df1fedb0bf0ea2b115664be5fea792614e92c",
+      "covered_files_verified": 2
+    },
+    "artifacts/firmware-runtime-isolation-20261115/manifest.json": {
+      "sha256": "8dc43897f4cd03025e26d7286864e4ad6b3aec0983cfff639b20346d5aae069a",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-stack-20261115/manifest.json": {
+      "sha256": "37e73a7d11ed104d4fb3eeb926dbf74be2a0029873bf29f304170be333c39d88",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-rt1c-failure-20261115/manifest.json": {
+      "sha256": "5407febdbc60237e5e6bd2d12f46ce9523da7488f4df2c903302a863247aba59",
+      "covered_files_verified": 2
+    },
+    "artifacts/firmware-runtime-return-20261115/manifest.json": {
+      "sha256": "56a3b1d7d7206ffdf565e4ef2e6c32f44ebc753db44f9922d102fc2556085a9b",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-entry-20261115/manifest.json": {
+      "sha256": "7c6492ee66805ed7e540152ab47876ef4789bc3439d70aee4669b45535afe5f5",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-state-20261115/manifest.json": {
+      "sha256": "d9cfca5556b9e594790d6d29807c8d34242c05336b1ab9d12403b215b49ffcc6",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-runtime-usb-20261116/manifest.json": {
+      "sha256": "46009f4dc8b69e00841233fdd874289ecc2cef8a06f8de82538687622395d824",
+      "covered_files_verified": 7
+    },
+    "artifacts/firmware-runtime-usb-primary-20261116/manifest.json": {
+      "sha256": "38f4d63bf218607c6be80fec036d06fad9b0b4e98b7c80129e8d1f0789a8bcb9",
+      "covered_files_verified": 2
+    },
+    "artifacts/firmware-runtime-usb-host-20261116/manifest.json": {
+      "sha256": "8084cc34daa00be8aa1e263e01f51619057031bf954662dcb1e2a2b21250c13d",
+      "covered_files_verified": 23
+    },
+    "artifacts/firmware-runtime-RT1G-validation-20261116/manifest.json": {
+      "sha256": "d81ceed7a429d49dc8f0562d61e751e9da6dda5e60094484f985e80ec44f809b",
+      "covered_files_verified": 49
+    }
+  },
+  "protocol_rehearsal": {
+    "path": "artifacts/firmware-runtime-peaks-protocol-20261116.txt",
+    "sha256": "948f705a93b673f4cf5e96c516f94a779075c383080452e1d58575cea911f1e2",
+    "offline": true,
+    "hardware_transmission": false,
+    "files": 2,
+    "phase": "Complete",
+    "blocks_each": 11088,
+    "last_block_bytes": 26,
+    "AA": "AA 07 50 2B 1A A2 46"
+  },
+  "host_transport_integration": {
+    "path": "artifacts/firmware-runtime-peaks-host-20261116/analysis.json",
+    "analysis_sha256": "697bcd7a1235c867c27a4a8c597e9e61dd43c9374b4a97177b1fc8e5a7ea8a02",
+    "manifest_sha256": "1d84d9655aa12a6b46e33a2be3fdaf9b3027e1b28ad46631f5b920f2073f9030",
+    "covered_files": 41,
+    "status": "offline_injected_transport_checks_passed",
+    "cases": 13,
+    "hardware_access": false,
+    "simulated_transport": true
+  },
+  "test_conditions_user_report": {
+    "quote": "5 12 15 20V，0-5A",
+    "source": "user_report_only",
+    "date_recorded": "2026-11-16",
+    "voltages_v": [
+      5,
+      12,
+      15,
+      20
+    ],
+    "available_current_a": [
+      0,
+      5
+    ]
+  },
+  "proposed_manual_test": {
+    "mode": "CC",
+    "target_current_a": 0.1,
+    "maximum_nominal_power_w": 2,
+    "main_record_seconds": 600,
+    "replug_record_seconds": 30,
+    "cold_boot_record_seconds": 30,
+    "independent_power_retained_for_usb_replug": true,
+    "cold_poweroff_includes_measured_input": true
+  },
+  "physical_acceptance": {
+    "normal_boot_and_two_Hxx_about_values": "user_reported_normal; H63 H6A; exact initial manual 60 s not timed",
+    "four_nonzero_voltages_idle_and_0_1_a": "completed_600_pairs_with_retained_transition_readings_and_per_stage_transient_misses",
+    "USB_H_peak_records_and_legacy_03_05": "665_complete_pairs; four_initial_03_timeouts_recovered; all_H_valid",
+    "powered_usb_replug_preserves_extrema": "user_physical_report_plus_USB_passed; 1247_to_1350_to_1378; six_extrema_bit_identical",
+    "cold_start_5v_clears_prior_20v_peak": "user_complete_poweroff_report_plus_USB_passed; samples_33_to_62; Vmax_4.994443893432617",
+    "final_original_restore": "Not performed by the agent in the RT1H capture round. Subsequent stock-firmware CSV supplied by user; current device not independently read in this update.",
+    "load_start_stop_transient_behavior": "Stock reference CSV reproduces the same reading pattern under user-reported original firmware; no new RT1H regression attribution. Physical reverse current not established."
+  },
+  "original_identical_recovery": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical": true
+  },
+  "third_party_cross_check": {
+    "matched_files": 5,
+    "decoded_container_identical": true,
+    "chipkey": "0x8d07",
+    "entry_point": "0x1e00120"
+  },
+  "negative_container_controls_memory_only": [
+    {
+      "case": "flash_header_crc",
+      "rejected": true,
+      "reason": "Flash header CRC"
+    },
+    {
+      "case": "top_entry_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x20"
+    },
+    {
+      "case": "inner_header_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x4020"
+    },
+    {
+      "case": "app_payload_crc",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "outer_data_crc",
+      "rejected": true,
+      "reason": "Outer data CRC: app_area_head"
+    },
+    {
+      "case": "truncated_file",
+      "rejected": true,
+      "reason": "Truncated BANKCB"
+    }
+  ],
+  "limitations": [
+    "665 actual H/legacy pairs now cover the current four-voltage CC 0.1 A, powered replug and 5 V cold-start conditions. User manually flashed and controlled hardware; tools only read 03/05/53. Earlier offline build flags describe build time.",
+    "Owned 64-byte state and 0x120-word stack retained. New normal periodic/USB paths and About display observed; no full instruction-branch, IRQ/MMU/CSYNC or physical stack-margin coverage is established.",
+    "Selected instructions are dual-executed with pinned SLEIGH, explicit CALL/RETS and OS API fixtures. Full scheduler/IRQ/MMU/CSYNC ordering and physical stack margin are not emulated.",
+    "Extrema describe finite samples at least 100 OS ticks apart. Short transients may be missed. Volatile per boot; no on-device Flash logging or peak reset command.",
+    "Selected-field salted XOR has cancelling collisions, including equal pairs; not cryptographic CRC or complete memory integrity. Sequence/loop/header fields are not all covered.",
+    "Actual nonzero input and signed telemetry bounds are recorded. Per-stage startup transients can be missed, with 5/12 V misses explicitly retained. No calibrated accuracy, BLE, high load/protection, endurance or all-hardware acceptance is implied.",
+    "No control/protection/calibration/persistent settings writes or production firmware whitelist changes. Old RT1/RT1C failed, old RT2/RT3 remain on hold."
+  ],
+  "canonical_test_guide": "docs/firmware-runtime-peaks-20261116.md",
+  "frozen_readme_retained_at_build": true,
+  "canonical_post_build_clarifications": [
+    "Disconnect measured input too for complete poweroff",
+    "Initial zero input belongs to per-boot extrema",
+    "Explicit H wire format",
+    "User-provided stock CSV reproduces startup overshoot and stopping positive telemetry; RT1H low-rate transient misses remain separate."
+  ],
+  "final_integrity": {
+    "status": "passed",
+    "record": "docs/analysis/firmware-runtime-peaks-20261116.integrity.json",
+    "record_sha256": "b0004e0009be8452c08b0902aaaa2be5ce925a4b6a4032a12514db3f61500538",
+    "manifests_verified": 23,
+    "covered_files_verified": 232,
+    "source_snapshots_match": true,
+    "original_recovery_byte_identical": true,
+    "hardware_access": false,
+    "scope": "Offline evidence integrity and format checks; RT1H hardware tests pending."
+  },
+  "canonical_hardware_report": "docs/firmware-runtime-peaks-hardware-20261116.md",
+  "hardware_evidence": {
+    "report": "docs/firmware-runtime-peaks-hardware-20261116.md",
+    "directory": "artifacts/firmware-runtime-RT1H-validation-v2-20261116",
+    "manifest_sha256": "190194ae330ff3b8a1acc7108113b630ae2ad78d611fda5efec0dcb89e09bc9e",
+    "manifest_files": 28,
+    "analysis_sha256": "184ee331d56579b6a307cffba9f93e6992be903e81921c2d0d6ddf98ca44fda1",
+    "complete_pairs": 665,
+    "running_pairs": 89,
+    "requests": 1342,
+    "replies": 1338,
+    "initial_03_timeouts": 4,
+    "capture_directories": {
+      "baseline": "firmware-runtime-RT1H-hardware-20261116-baseline-01",
+      "four_voltages": "firmware-runtime-RT1H-hardware-20261116-four-voltages-01",
+      "powered_replug": "firmware-runtime-RT1H-hardware-20261116-powered-replug-01",
+      "cold_5v": "firmware-runtime-RT1H-hardware-20261116-cold-5v-01"
+    },
+    "per_stage_envelope_misses_retained": [
+      "5 V current/power startup",
+      "12 V current/power startup"
+    ],
+    "final_main_envelope": {
+      "voltage_v": {
+        "device_sampled_extrema": [
+          0.0,
+          19.991710662841797
+        ],
+        "original_observed": {
+          "minimum": 4.986,
+          "maximum": 19.987,
+          "median": 12.047
+        },
+        "comparison_tolerance": 0.025,
+        "covers_observed_original_with_tolerance": true
+      },
+      "current_a": {
+        "device_sampled_extrema": [
+          -0.3687860667705536,
+          0.10034943372011185
+        ],
+        "original_observed": {
+          "minimum": -0.35,
+          "maximum": 0.102,
+          "median": 0.0
+        },
+        "comparison_tolerance": 0.025,
+        "covers_observed_original_with_tolerance": true
+      },
+      "power_w": {
+        "device_sampled_extrema": [
+          0.0,
+          7.3565592765808105
+        ],
+        "original_observed": {
+          "minimum": 0.0,
+          "maximum": 5.785,
+          "median": 0.002
+        },
+        "comparison_tolerance": 0.15,
+        "covers_observed_original_with_tolerance": true
+      }
+    },
+    "powered_replug": {
+      "status": "passed_with_user_physical_action_report",
+      "user_quote": "已重连，屏幕始终亮着",
+      "previous_last_samples": 1247,
+      "first_samples": 1350,
+      "last_samples": 1378,
+      "six_extrema_bit_identical": true,
+      "settings_readback_unchanged": true
+    },
+    "cold_start": {
+      "status": "passed_with_user_poweroff_report",
+      "user_quote": "已完全断电并以 5 V 重新上电，显示和按键正常",
+      "previous_last_samples": 1378,
+      "first_samples": 33,
+      "last_samples": 62,
+      "old_20_v_peak_cleared": true,
+      "new_voltage_max_v": 4.994443893432617,
+      "last_extrema": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 4.994443893432617,
+        "current_min_a": -0.000563864887226373,
+        "current_max_a": 0.0005028904997743666,
+        "power_min_w": 0.0,
+        "power_max_w": 0.002814843785017729
+      },
+      "running_pairs": 0
+    },
+    "cold_target_behavior": {
+      "before_a": 0.09999992698431015,
+      "after_a": 1.0,
+      "all_other_settings_reply_bytes_identical": true,
+      "comparison_to_original_source": "user_confirmation_only; no same-session stock-firmware cold boot measurement",
+      "user_quote": "原厂固件也是这样",
+      "classification": "user_confirmed_existing_stock_behavior_not_new_RT1H_regression"
+    },
+    "about_user_report": {
+      "quote": "H63 H6A",
+      "first_hex": "63",
+      "second_hex": "6A",
+      "modulo_256_gain": 7,
+      "independently_synchronized_with_usb": false
+    },
+    "retained_observations": [
+      "Four initial 03 requests timed out in baseline/main; each recovered on the third same-handle attempt. Replug/cold had no timeouts. Root cause remains unconfirmed.",
+      "Legacy running current is signed negative; descriptive settled magnitudes are near 0.099 A. Larger values occur in initial running observations and positive residual values in some first off observations. Physical polarity/accuracy is not independently calibrated.",
+      "At 5 and 12 V, per-stage H sample bounds miss some asynchronous original startup extrema beyond the fixed comparison tolerances. Later larger bounds cover the entire main record; this is not continuous peak capture and no threshold was enlarged.",
+      "Cold target returns to 1 A with load off. User confirms stock firmware has the same behavior; stock comparison is user-reported, not a new stock flash measurement."
+    ],
+    "candidate_retained": true,
+    "original_restore_this_round": false,
+    "last_verified_input_v": 5,
+    "last_verified_load_running": false,
+    "report_revision": 2,
+    "metadata_correction": {
+      "removed_field": "cold_target_behavior.annotation_id",
+      "reason": "The user's plain-text stock-behavior confirmation provides no annotation identifier. Remove the generated unsupported identifier and retain the exact quotation with user-report attribution.",
+      "raw_hardware_evidence_unchanged": true,
+      "supersedes": "artifacts/firmware-runtime-RT1H-validation-20261116/analysis.json",
+      "superseded_analysis_sha256": "581d60ce935463761aef65451ac8f3a5cda9d8d39a245bb0b5bec9f3e853e7aa"
+    },
+    "canonical_builder": "artifacts/firmware-runtime-RT1H-validation-v2-20261116/freeze-evidence.py",
+    "capture_end_state_note": "candidate_retained and original_restore_this_round describe the prior RT1H capture end, not the current device after the later user-provided stock CSV."
+  },
+  "hardware_integrity": {
+    "record": "docs/analysis/firmware-runtime-peaks-20261116.hardware-integrity.json",
+    "record_sha256": "1108d68663c5569c413deaf2bdead3cc9d9033fa7c2c603b84e80b66c030a8e4",
+    "status": "passed",
+    "verifier_device_access": false,
+    "hardware_access_in_source_captures": true,
+    "previous_manifests_verified": 23,
+    "previous_covered_files_verified": 232,
+    "actual_round_manifests_verified": 2,
+    "actual_round_covered_files_verified": 28,
+    "total_manifests_verified": 24,
+    "total_covered_file_entries_verified": 256,
+    "actual_round_manifest": "artifacts/firmware-runtime-RT1H-validation-20261116/manifest.json",
+    "manifest_sha256": "30f77b195dc149a6a9a7086a35610ba0e8edce97686c697b18d07cf61467daae",
+    "analysis_sha256": "581d60ce935463761aef65451ac8f3a5cda9d8d39a245bb0b5bec9f3e853e7aa",
+    "actual_hardware_complete_pairs": 665,
+    "requests": 1342,
+    "replies": 1338,
+    "initial_03_timeouts": 4,
+    "all_old_frozen_records_unchanged": true,
+    "analyzer_self_test": {
+      "status": "offline_analyzer_controls_passed",
+      "device_access": false,
+      "rejection_controls": 271
+    },
+    "scope": "Local-file integrity of actual captures and previous frozen evidence; does not add unperformed hardware checks.",
+    "original_round_covered_files": 24,
+    "canonical_round_covered_files": 28,
+    "canonical_manifest_sha256": "190194ae330ff3b8a1acc7108113b630ae2ad78d611fda5efec0dcb89e09bc9e",
+    "report_metadata_revision": 2,
+    "raw_hardware_evidence_unchanged": true
+  },
+  "report_metadata_revision": 2,
+  "report_metadata_correction": {
+    "removed_field": "cold_target_behavior.annotation_id",
+    "reason": "The user's plain-text stock-behavior confirmation provides no annotation identifier. Remove the generated unsupported identifier and retain the exact quotation with user-report attribution.",
+    "raw_hardware_evidence_unchanged": true,
+    "supersedes": "artifacts/firmware-runtime-RT1H-validation-20261116/analysis.json",
+    "superseded_analysis_sha256": "581d60ce935463761aef65451ac8f3a5cda9d8d39a245bb0b5bec9f3e853e7aa"
+  },
+  "stock_transient_reference": {
+    "classification": "Same startup overshoot and stopping positive telemetry appear in the user-provided stock-firmware reference; do not classify the pattern itself as a new RT1H regression.",
+    "source": {
+      "original_path": "D:\\Desktop\\Atorch_1794817304028.csv",
+      "byte_size": 16412,
+      "sha256": "fcbd3527a63bd0abd72056e5937820b392c9e6cbb74201d265830e07b1088913",
+      "data_rows": 167,
+      "columns": [
+        "DATE",
+        "VOLTAGE(V)",
+        "CURRENT(A)",
+        "POWER(W)",
+        "RESISTANCE(Ω)",
+        "E_QUANTITY(Wh)",
+        "E_CAPACITY(mAh)",
+        "NTC_TEMP(℃)",
+        "CPU_TEMP(℃)",
+        "MOS_TEMP(℃)",
+        "FAN_SPEED(RPM)",
+        "ELAPSED_MS",
+        "SEGMENT_ID"
+      ],
+      "original_preserved_byte_for_byte": true,
+      "all_rows_and_all_columns_present": true,
+      "firmware_identity_source": "user statement; no firmware field in CSV",
+      "user_statement": "原厂固件在小电流启动时也会过冲，停止时也会出现正向电流读数，",
+      "target_current_setting_in_csv": false,
+      "output_state_field_in_csv": false
+    },
+    "artifact_directory": "artifacts/firmware-stock-transient-reference-20261116",
+    "manifest_sha256": "e6c8e3246c5294a32c0abe2c205de08100e2014b03936bbba7dc74dfe8d2acef",
+    "analysis_sha256": "0f3b2b6729d371b3b36c35760fc2048e91d54a2563bbc97dbcf7e72ec622014c",
+    "startup_most_negative": {
+      "csv_line": 9,
+      "source_date_utc": "2026-11-16T08:21:05.325Z",
+      "local_time": "2026-11-16T16:21:05.325+08:00",
+      "wall_relative_s": 0.615,
+      "elapsed_ms": 614,
+      "segment_id": 0,
+      "voltage_v": 19.951,
+      "current_a": -0.357,
+      "power_w": 7.143
+    },
+    "highest_power": {
+      "csv_line": 9,
+      "source_date_utc": "2026-11-16T08:21:05.325Z",
+      "local_time": "2026-11-16T16:21:05.325+08:00",
+      "wall_relative_s": 0.615,
+      "elapsed_ms": 614,
+      "segment_id": 0,
+      "voltage_v": 19.951,
+      "current_a": -0.357,
+      "power_w": 7.143
+    },
+    "descriptive_steady_window": {
+      "selection": "Negative readings at least 5 s after first negative sample and at least 0.5 s before last negative sample",
+      "points": 100,
+      "current_a": {
+        "minimum": -0.1,
+        "maximum": -0.098,
+        "median": -0.099
+      },
+      "voltage_median_v": 19.974
+    },
+    "stopping": {
+      "last_negative": {
+        "csv_line": 160,
+        "source_date_utc": "2026-11-16T08:21:20.426Z",
+        "local_time": "2026-11-16T16:21:20.426+08:00",
+        "wall_relative_s": 15.716,
+        "elapsed_ms": 15715,
+        "segment_id": 0,
+        "voltage_v": 19.977,
+        "current_a": -0.1,
+        "power_w": 2.008
+      },
+      "positive_observations": [
+        {
+          "csv_line": 161,
+          "source_date_utc": "2026-11-16T08:21:20.722Z",
+          "local_time": "2026-11-16T16:21:20.722+08:00",
+          "wall_relative_s": 16.012,
+          "elapsed_ms": 15894,
+          "segment_id": 1,
+          "voltage_v": 19.978,
+          "current_a": 0.035,
+          "power_w": 0.703
+        },
+        {
+          "csv_line": 162,
+          "source_date_utc": "2026-11-16T08:21:20.813Z",
+          "local_time": "2026-11-16T16:21:20.813+08:00",
+          "wall_relative_s": 16.103,
+          "elapsed_ms": 15985,
+          "segment_id": 1,
+          "voltage_v": 19.983,
+          "current_a": 0.035,
+          "power_w": 0.703
+        },
+        {
+          "csv_line": 163,
+          "source_date_utc": "2026-11-16T08:21:20.922Z",
+          "local_time": "2026-11-16T16:21:20.922+08:00",
+          "wall_relative_s": 16.212,
+          "elapsed_ms": 16094,
+          "segment_id": 1,
+          "voltage_v": 19.983,
+          "current_a": 0.099,
+          "power_w": 1.97
+        },
+        {
+          "csv_line": 164,
+          "source_date_utc": "2026-11-16T08:21:21.016Z",
+          "local_time": "2026-11-16T16:21:21.016+08:00",
+          "wall_relative_s": 16.306,
+          "elapsed_ms": 16188,
+          "segment_id": 1,
+          "voltage_v": 19.986,
+          "current_a": 0.099,
+          "power_w": 1.97
+        },
+        {
+          "csv_line": 165,
+          "source_date_utc": "2026-11-16T08:21:21.125Z",
+          "local_time": "2026-11-16T16:21:21.125+08:00",
+          "wall_relative_s": 16.415,
+          "elapsed_ms": 16297,
+          "segment_id": 1,
+          "voltage_v": 19.986,
+          "current_a": 0.101,
+          "power_w": 2.028
+        }
+      ],
+      "most_positive": {
+        "csv_line": 165,
+        "source_date_utc": "2026-11-16T08:21:21.125Z",
+        "local_time": "2026-11-16T16:21:21.125+08:00",
+        "wall_relative_s": 16.415,
+        "elapsed_ms": 16297,
+        "segment_id": 1,
+        "voltage_v": 19.986,
+        "current_a": 0.101,
+        "power_w": 2.028
+      },
+      "first_zero_after_positive": {
+        "csv_line": 166,
+        "source_date_utc": "2026-11-16T08:21:21.217Z",
+        "local_time": "2026-11-16T16:21:21.217+08:00",
+        "wall_relative_s": 16.507,
+        "elapsed_ms": 16389,
+        "segment_id": 1,
+        "voltage_v": 19.985,
+        "current_a": 0.0,
+        "power_w": 0.006
+      },
+      "positive_point_count": 5,
+      "positive_points_span_s": 0.403,
+      "first_positive_to_next_zero_s": 0.495,
+      "interpretation": "Positive telemetry readings in the user-labelled stopping vicinity; not independent proof of physical reverse current"
+    },
+    "hardware_access_this_update": false,
+    "previous_RT1H_raw_captures_unchanged": true,
+    "H_low_rate_transient_miss_issue_resolved": false,
+    "initial_USB_timeout_issue_resolved": false,
+    "integrity_record": "docs/analysis/firmware-runtime-peaks-20261116.stock-reference-integrity.json",
+    "integrity_record_sha256": "fb11ffc211b7ca2b54c7738fa774295eae429b31a4fd422dc4f926c3f4363ec6"
+  },
+  "current_device_state": {
+    "last_agent_verified_capture_end": {
+      "candidate": "RT1H",
+      "input_v": 5,
+      "running": false,
+      "target_a": 1,
+      "local_time": "2026-11-16T16:01:57.489920+08:00"
+    },
+    "subsequent_user_provided_reference": {
+      "firmware_context": "stock, user-provided",
+      "file": "D:\\Desktop\\Atorch_1794817304028.csv",
+      "first_local_time": "2026-11-16T16:21:04.710+08:00",
+      "last_local_time": "2026-11-16T16:21:21.420+08:00"
+    },
+    "device_access_this_update": false,
+    "current_firmware_independently_read_this_update": false
+  }
+}

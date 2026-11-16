@@ -1,0 +1,442 @@
+{
+  "status": "user_reported_rt1f_agreed_acceptance_passed",
+  "date": "2026-11-15",
+  "timezone": "Asia/Shanghai",
+  "hardware_tested": true,
+  "hardware_access": false,
+  "automated_hardware_tested": false,
+  "prior_user_acceptance": {
+    "candidate": "RT1E",
+    "quote": "通过，下一轮",
+    "source": "user_report_only",
+    "independently_observed": false,
+    "separately_reported_about_code": null,
+    "duration": null,
+    "old_rt1_rt1c_failures_unchanged": true,
+    "old_rt2_rt3": "on_hold"
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-RT1F-STATE-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "4f73ad945b89f5491bedabfc9801b7427cd32819f323960db5b6dcc6db460558",
+    "app_sha256": "74aa7d913870d2cc2f3ee3a8effbf3f11863b1e6e3ab2427856633d09678b9d7"
+  },
+  "artifact_directory": "artifacts/firmware-runtime-state-20261115",
+  "manifest_sha256": "d9cfca5556b9e594790d6d29807c8d34242c05336b1ab9d12403b215b49ffcc6",
+  "manifest_files": 6,
+  "analysis_sha256": "e976a96276977ceaaaa7ef92b3336286e9341db453633260ff0724b76196083d",
+  "source": "tools/firmware_runtime_state.py",
+  "source_sha256": "2be1321b4b82d86d0dcc4bf1b995a00573a79eed7f78fb47e58b9d5cf9446bef",
+  "previous_helper_sha256": "9662b11f3b08b0b73cb5d6f7f452edcfe78600a66fd6e5191fad6b640a9943c7",
+  "layout": {
+    "entry": "0x1e97038",
+    "code_end": "0x1e9738a",
+    "pc_high": "0x1e97400",
+    "pc_high_same_as_user_accepted_batch8": true,
+    "code_end_within_accepted_batch8_executed_interval": true,
+    "new_instruction_bytes": 850,
+    "new_instructions": 326,
+    "constant_data_begin": "0x1e973a0",
+    "extension_used": 2336,
+    "extension_reserved": 3200,
+    "tail_bytes": 90
+  },
+  "ownership": {
+    "original_task_stack_words": 256,
+    "new_task_stack_words": 288,
+    "allocation_added_bytes": 128,
+    "permanent_frame_bytes": 64,
+    "state_bytes": 64,
+    "state_offset_from_tcb_stack_base": 1084,
+    "state_address_in_task": "entry_SP - 64; periodic_SP + 36 + 16",
+    "entry_extra_stack_bytes": 100,
+    "first_delay_depth_from_entry_sp": 116,
+    "periodic_temporary_stack_bytes": 36,
+    "about_temporary_stack_bytes": 56,
+    "additional_working_bytes_after_permanent_frame_vs_original": 64,
+    "headroom_arithmetic_is_not_physical_measurement": true,
+    "physical_heap_end_changed": false,
+    "allocator_callback_changed": false,
+    "initial_context_restore_changed": false,
+    "new_fixed_ram_reservation": false,
+    "task_application_tag_changed": false
+  },
+  "snapshot": {
+    "period_os_ticks": 100,
+    "tick_frequency_assumed": false,
+    "first_snapshot_immediate": true,
+    "six_sources": [
+      {
+        "name": "voltage_v",
+        "address": "0x41a4",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "current_a",
+        "address": "0x41b0",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "power_w",
+        "address": "0x41bc",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "mos_c",
+        "address": "0x419c",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "ntc_c",
+        "address": "0x4198",
+        "representation": "IEEE binary32 raw word"
+      },
+      {
+        "name": "cpu_c",
+        "address": "0x8fc",
+        "representation": "IEEE binary32 raw word"
+      }
+    ],
+    "counter_bits": 32,
+    "visible_counter_bits": 8,
+    "sequence_bits": 32,
+    "checksum": "XOR with SALT over the selected ten fields; diagnostic, not a cryptographic CRC",
+    "checksum_offsets": [16, 20, 24, 32, 36, 40, 44, 48, 52, 56],
+    "state_words": {
+      "0": "HEAD",
+      "4": "MAGIC",
+      "8": "odd/even sequence",
+      "12": "loop count (not in checksum)",
+      "16": "snapshot count",
+      "20": "snapshot tick",
+      "24": "sticky flags: 02 nonfinite, 04 integrity",
+      "28": "selected-field XOR",
+      "32..52": "six raw source words",
+      "56": "independent READY",
+      "60": "TAIL"
+    },
+    "about_increments_counter": false,
+    "about_writes_state": false,
+    "maximum_read_retries": 3
+  },
+  "about": {
+    "normal": "F00..FFF (F plus low eight bits as two hexadecimal digits)",
+    "errors": {
+      "F:ROM": "ROM byte contract mismatch; task query not called",
+      "F:NONE": "task handle not found",
+      "F:MEM": "wrong task fields/header",
+      "F:WAIT": "initialized, no first publication",
+      "F:CRC": "selected-field XOR mismatch or sticky integrity flag",
+      "F:NUM": "sticky nonfinite source flag",
+      "F:BUS": "three bounded attempts failed to obtain an even unchanged sequence"
+    },
+    "source": "Real background snapshot count; not a synthetic About-only result mask."
+  },
+  "new_task_query": {
+    "address": "0x2106e3c",
+    "name": "cl24_data_t",
+    "only_in_about": true,
+    "all_rom_bytes_gated_before_call": 268,
+    "model": "Explicit live-TCB/volatile-r0..r3 API fixture; kernel list/scheduler side effects and internal stack not executed."
+  },
+  "hooks": [
+    {
+      "address": "0x1e3f3fe",
+      "before": "c0ff9c40e901",
+      "after": "c0ff0074e901"
+    },
+    {
+      "address": "0x1e06b00",
+      "before": "98f35a01",
+      "after": "84f3d482"
+    },
+    {
+      "address": "0x1e36aca",
+      "before": "c8ff6541e501",
+      "after": "c3f3a1030000"
+    },
+    {
+      "address": "0x1e04906",
+      "before": "c0ffde6ae001",
+      "after": "c0ff3870e901"
+    },
+    {
+      "address": "0x1e04910",
+      "before": "03fb0001",
+      "after": "03fb2001"
+    }
+  ],
+  "offline_checks": {
+    "initial_states_each_path": 64,
+    "first_page_cases": 128,
+    "repeated_periodic_calls": 513,
+    "decimated_snapshots": 6,
+    "immutable_count_texts": 256,
+    "original_draw_paths": 512,
+    "counter_and_tick_wrap_cases": [
+      {
+        "count_before": 255,
+        "count_after": 256,
+        "tick_before": 12345,
+        "tick_after": 12445
+      },
+      {
+        "count_before": 4294967295,
+        "count_after": 0,
+        "tick_before": 12345,
+        "tick_after": 12445
+      },
+      {
+        "count_before": 9,
+        "count_after": 10,
+        "tick_before": 4294967280,
+        "tick_after": 84
+      }
+    ],
+    "sequence_wrap_checked": true,
+    "special_register_vendor_records": 23,
+    "rom_byte_mismatch_cases": 268,
+    "nonfinite_source_cases": 18,
+    "random_finite_source_cases": 128,
+    "checksum_fault_offsets": [16, 20, 24, 32, 36, 40, 44, 48, 52, 56, 28],
+    "zero_counter_and_ready_fault_cases": 2,
+    "header_fault_offsets": [0, 4, 60],
+    "task_field_faults": [
+      {
+        "field": 4,
+        "value": "0x100"
+      },
+      {
+        "field": 4,
+        "value": "0x130"
+      },
+      {
+        "field": 64,
+        "value": "0x0"
+      },
+      {
+        "field": 64,
+        "value": "0x220004"
+      }
+    ],
+    "missing_and_unaligned_handle_cases": 2,
+    "concurrent_read_cases": [
+      "one_publish_retry",
+      "continuous_publish_busy",
+      "odd_sequence_busy_writer_stopped"
+    ],
+    "page_negative_controls": [
+      {
+        "address": "0x2203fc",
+        "unmapped_read_rejected": true
+      },
+      {
+        "address": "0x220480",
+        "unmapped_read_rejected": true
+      }
+    ],
+    "missing_first_page_rejected": true,
+    "allocation_contract": {
+      "words": 288,
+      "requested_bytes": 1152,
+      "size_remainder_128": 0,
+      "reserved_page_count": 9,
+      "bitmap_reserved_bytes": 1152,
+      "reserved_size_shortfall": 0,
+      "premap_requested_offset": 1024,
+      "premap_length": 128,
+      "materialized_relative_range": [1024, 1152],
+      "initial_context_start_relative": 1072,
+      "initial_restore_end_relative": 1148,
+      "initial_restore_bytes_beyond_premap": 0,
+      "aligned_page_contract": true,
+      "initial_context_within_materialized_page": true
+    },
+    "entry_sp_relative": 1148,
+    "entry_low_relative": 1048,
+    "first_delay_low_relative": 1032,
+    "state_relative": 1084,
+    "alignment_word_values_checked": 481,
+    "rejected_rt1c_bad_write": true,
+    "preserved_original_regions": [
+      {
+        "name": "registration_before_task_function",
+        "begin": "0x1e048f0",
+        "end_exclusive": "0x1e04906",
+        "byte_identical": true
+      },
+      {
+        "name": "task_argument_and_priority",
+        "begin": "0x1e0490c",
+        "end_exclusive": "0x1e04910",
+        "byte_identical": true
+      },
+      {
+        "name": "registration_after_task_depth",
+        "begin": "0x1e04914",
+        "end_exclusive": "0x1e0491a",
+        "byte_identical": true
+      },
+      {
+        "name": "task_body_prefix",
+        "begin": "0x1e06ade",
+        "end_exclusive": "0x1e06b00",
+        "byte_identical": true
+      },
+      {
+        "name": "stack_allocator_callback",
+        "begin": "0x1e4efe6",
+        "end_exclusive": "0x1e4f0e2",
+        "byte_identical": true
+      },
+      {
+        "name": "initial_context_restore",
+        "begin": "0x1e95018",
+        "end_exclusive": "0x1e95026",
+        "byte_identical": true
+      },
+      {
+        "name": "task_create_wrapper",
+        "begin": "0x1e4e216",
+        "end_exclusive": "0x1e4e246",
+        "byte_identical": true
+      },
+      {
+        "name": "early_initialization",
+        "begin": "0x1e3f404",
+        "end_exclusive": "0x1e3f414",
+        "byte_identical": true
+      },
+      {
+        "name": "physical_allocator_initialization",
+        "begin": "0x1e3f462",
+        "end_exclusive": "0x1e3f496",
+        "byte_identical": true
+      },
+      {
+        "name": "usb_receive_entire_function",
+        "begin": "0x1e014b6",
+        "end_exclusive": "0x1e0200c",
+        "byte_identical": true
+      }
+    ],
+    "pc_interval_controls": [
+      {
+        "high": "0x1e9409c",
+        "all_selected_instructions_inside": false
+      },
+      {
+        "high": "0x1e9703e",
+        "all_selected_instructions_inside": false
+      },
+      {
+        "high": "0x1e97400",
+        "all_selected_instructions_inside": true
+      }
+    ],
+    "previous_manifests_verified": 16,
+    "previous_files_verified": 97,
+    "independent_container": {
+      "matched_files": 5,
+      "decoded_container_identical": true,
+      "chipkey": "0x8d07",
+      "entry_point": "0x1e00120"
+    },
+    "negative_container_controls": [
+      {
+        "case": "flash_header_crc",
+        "rejected": true,
+        "reason": "Flash header CRC"
+      },
+      {
+        "case": "top_entry_crc",
+        "rejected": true,
+        "reason": "Directory header CRC at 0x20"
+      },
+      {
+        "case": "inner_header_crc",
+        "rejected": true,
+        "reason": "Directory header CRC at 0x4020"
+      },
+      {
+        "case": "app_payload_crc",
+        "rejected": true,
+        "reason": "Inner data CRC: app.bin"
+      },
+      {
+        "case": "outer_data_crc",
+        "rejected": true,
+        "reason": "Outer data CRC: app_area_head"
+      },
+      {
+        "case": "truncated_file",
+        "rejected": true,
+        "reason": "Truncated BANKCB"
+      }
+    ]
+  },
+  "additional_readonly_depth_verification": {
+    "actual_instruction": "03fb2001",
+    "register": "r3",
+    "words": 288,
+    "initial_register_states": 64,
+    "compared_with_sleigh": true,
+    "output_firmware_unchanged": true
+  },
+  "protocol_rehearsal": {
+    "log": "artifacts/firmware-runtime-state-protocol-20261115.txt",
+    "sha256": "c2f1aa1483cf6fc2270faa85a2bd3c3c7ad73a065c32a96d9bbba51632faee95",
+    "offline": true,
+    "hardware_transmission": false,
+    "files": 2,
+    "phase": "Complete",
+    "blocks_each": 11088,
+    "last_block_bytes": 26,
+    "AA": "AA 07 50 2B 1A A2 46"
+  },
+  "original_identical_recovery": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical": true
+  },
+  "physical_acceptance": {
+    "boot_without_about": "user_reported_agreed_checklist_overall_pass_not_individually_reported",
+    "background_count_changes": "user_reported_agreed_checklist_overall_pass_not_individually_reported",
+    "about_reentries": "user_reported_agreed_checklist_overall_pass_not_individually_reported",
+    "original_function_regression": "user_reported_agreed_checklist_overall_pass_not_individually_reported",
+    "five_minute_observation": "user_reported_agreed_checklist_overall_pass_not_individually_reported",
+    "cold_start_count_restarts": "user_reported_agreed_checklist_overall_pass_not_individually_reported",
+    "final_original_restore": "user_reported_agreed_checklist_overall_pass_not_individually_reported"
+  },
+  "limitations": [
+    "Build was offline; the user subsequently reported the agreed RT1F checklist passed overall. Not independently observed and not a confirmed unique RT1C fix.",
+    "Original page-allocation bytes and context contract are pinned; first task use maps only its actual initial last page. Physical MMU growth, complete scheduler/interrupts, PSR behavior and stack headroom are not emulated or measured.",
+    "Exact POP RETS uses the explicit primary-source adapter accepted in RT1D/RT1E. CALL/RETS adaptation and sequential fields/SLEIGH comparison are not a general ISA/C ABI proof. CSYNC hardware memory ordering is not modeled.",
+    "About's new xTaskGetHandle is byte-gated, but the host uses an explicit API/TCB fixture and does not emulate its complete kernel behavior or stack use.",
+    "Six source words are raw finite binary32 snapshots, not calibrated measurement/units/accuracy acceptance; they are not added to USB exports in this round.",
+    "The XOR detects selected-field single-word faults and has collisions; it is not an integrity guarantee against arbitrary corruption. The sequence/loop/header fields are not all covered by the selected XOR.",
+    "Old RT1/RT1C stay failed, old RT2/RT3 stay on hold. No production whitelist, load/output/protection/calibration implementation or persistent Flash settings are changed."
+  ],
+  "user_acceptance": {
+    "date_recorded": "2026-11-16",
+    "quote": "通过，下一轮",
+    "source": "user_report_only",
+    "scope": "RT1F agreed acceptance checklist overall pass",
+    "independently_observed": false,
+    "separately_reported_about_codes": null,
+    "duration": null,
+    "measurement_values": null,
+    "old_rt1_rt1c_failures_unchanged": true,
+    "old_rt2_rt3": "on_hold"
+  },
+  "current_successor_candidate": {
+    "name": "RT1G",
+    "report": "docs/firmware-runtime-usb-20261116.md",
+    "summary": "docs/analysis/firmware-runtime-usb-20261116.summary.json",
+    "hardware_status": "pending",
+    "status": "offline_rt1g_usb_checks_passed_hardware_pending",
+    "file": "BW150-V1.1.0-RT1G-USB-EXPERIMENTAL.bin",
+    "sha256": "8a17dbf252f0d1f1de85599d44c824d5e256a26f1e98a56ad18560ce98efc319",
+    "scope": "Retained RT1F background snapshot plus conditional original-HID context publication and token/version-gated read-only USB export; new address interval and physical USB behavior pending."
+  }
+}

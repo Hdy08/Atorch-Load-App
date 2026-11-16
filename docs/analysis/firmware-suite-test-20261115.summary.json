@@ -1,0 +1,1098 @@
+{
+  "status": "offline_suite_checks_and_user_reported_acceptance_passed_restore_retry_succeeded",
+  "offline_build_status": "offline_six_group_suite_checks_passed_hardware_not_tested",
+  "hardware_tested": true,
+  "automated_hardware_tested": false,
+  "hardware_experiment": {
+    "report_date_local": "2026-11-15",
+    "timezone": "Asia/Shanghai",
+    "evidence_source": "user_report_only",
+    "candidate": "BW150-V1.1.0-SUITE6-EXPERIMENTAL.bin",
+    "candidate_sha256": "f86fad3fb2dd22f2408dfbf28cc15f6e940544daf474e3edff8f568f308a0e73",
+    "user_quotes": [
+      "S6:3F 稳定 冷启动正常 仅恢复过程中出现一次USB超时",
+      "已重试成功，恢复 V1.1.0"
+    ],
+    "reported_result": "S6:3F",
+    "reported_pass_mask": "0x3F",
+    "all_six_groups_reported_passed": true,
+    "stability": {
+      "reported_passed": true,
+      "exact_reentry_count": null,
+      "duration": null
+    },
+    "cold_start": {
+      "reported_passed": true,
+      "scope": "User reported normal cold start under the agreed full-power-off acceptance procedure."
+    },
+    "original_restore": {
+      "reported_success": true,
+      "retry_required": true,
+      "reported_about_version": "V1.1.0"
+    },
+    "transport_incident": {
+      "kind": "USB_timeout",
+      "phase": "restoring_original_firmware",
+      "reported_timeout_count": 1,
+      "restore_succeeded_after_retry": true,
+      "current_incident_capture_available": false,
+      "failure_progress": null,
+      "failure_block_index": null,
+      "ee_ff_status": null,
+      "cause": "not_established",
+      "scope": "Record separately from the six self-test results. Successful retry does not establish the timeout cause; previous timeout captures are not evidence of this incident."
+    },
+    "scope": "User-reported result code, stability, agreed cold start and successful original restoration. No assistant device operation, independent screen observation, fresh Flash readback, exact reentry count, or itemized full peripheral/accuracy validation."
+  },
+  "prior_hardware_report": {
+    "date": "2026-11-15",
+    "user_quote": "通过，进行下一步，当前每轮测试太少了，需要加快进程，减少刷写次数",
+    "candidate": "BW150-V1.1.0-JUMP4-LIMIT5-EXPERIMENTAL.bin",
+    "candidate_sha256": "a74e132d85397b802639aca2193d41c6c7adb805b4987275a5b376006845f227",
+    "scope": "User-reported pass of the agreed B5 acceptance; no independent observation or new readback."
+  },
+  "source": {
+    "path": "Firmware&Software/BW150-6321-APP-1-1-0-UPP.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "size": 643072
+  },
+  "tool_sha256": "6876ad9a14754e68c7725ccee032fb0646f6f8c985c501a6ba56958cf5367e83",
+  "fifth_helper_sha256": "06f221215590827436c1551e2cebda83327b98788e04b9920cac11229dd6daee",
+  "previous_frozen_evidence_verified": {
+    "artifacts/firmware-minimal-test-20261115/manifest.json": {
+      "sha256": "d3862fd853920ea685e6b532822bd364e591f0635e0be3a96026974ab2e59906",
+      "covered_files_verified": 9
+    },
+    "artifacts/firmware-instruction-test-20261115/manifest.json": {
+      "sha256": "3d5ec6334166ba1a141f2b45ce8e347e0272edaf35a10a19c23f4e133b98db82",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-sequence-test-20261115/manifest.json": {
+      "sha256": "f14f7545931f0da4101443346b33e73aba343642d5b6f7b2bd209c7b7a785520",
+      "covered_files_verified": 8
+    },
+    "artifacts/firmware-trampoline-test-20261115/manifest.json": {
+      "sha256": "b75a7d86eb8150f0fe2d268d87bf7a9ef7a7dc3cd8c18d8ba354de3a3f5f9316",
+      "covered_files_verified": 7
+    },
+    "artifacts/firmware-pc-limit-test-20261115/manifest.json": {
+      "sha256": "b1115147e818eee7e122323bc807f73e05035e5fc7a82846bed8037f82ba036c",
+      "covered_files_verified": 5
+    }
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-SUITE6-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "f86fad3fb2dd22f2408dfbf28cc15f6e940544daf474e3edff8f568f308a0e73",
+    "app_sha256": "ca2d874c4fe6e6d995a3fe1df56daab1b1501c6901b3aa28d4fc5403de11550d",
+    "expected_about_model": "BW150",
+    "expected_about_version": "S6:3F",
+    "expected_usb_product": "ATORCH BW150 V1.1.0"
+  },
+  "groups": [
+    {
+      "bit": 0,
+      "name": "short_call_arguments_return",
+      "expected": 42
+    },
+    {
+      "bit": 1,
+      "name": "long_call_arguments_return",
+      "expected": 42
+    },
+    {
+      "bit": 2,
+      "name": "indirect_function_pointer_call",
+      "expected": 42
+    },
+    {
+      "bit": 3,
+      "name": "nested_calls_stack_spill_restore",
+      "expected": 15
+    },
+    {
+      "bit": 4,
+      "name": "private_stack_word_halfword_byte_io",
+      "expected": 1
+    },
+    {
+      "bit": 5,
+      "name": "flash_table_read_bounded_loop_sum",
+      "expected": 36
+    }
+  ],
+  "addresses": {
+    "hook": "0x1e36aca",
+    "entry": "0x1e97038",
+    "continuation": "0x1e36ad0",
+    "code_end": "0x1e97138",
+    "flash_pc_high": "0x1e97140",
+    "constants": "0x1e97140",
+    "result_table": "0x1e97148",
+    "pass_text": "0x1e972c2"
+  },
+  "layout": {
+    "app_growth_bytes": 1024,
+    "app_size": 619288,
+    "code_bytes": 256,
+    "result_table_bytes": 384,
+    "old_payload_end": "0x9c326",
+    "new_payload_end": "0x9c726",
+    "old_ff_tail_bytes": 3290,
+    "new_ff_tail_bytes": 2266,
+    "config_and_P11_shift": 1024,
+    "other_members_unchanged": true,
+    "original_app_changes": [
+      {
+        "offset": "0x369aa",
+        "before": "C8",
+        "after": "C3"
+      },
+      {
+        "offset": "0x369ab",
+        "before": "FF",
+        "after": "F3"
+      },
+      {
+        "offset": "0x369ac",
+        "before": "65",
+        "after": "B5"
+      },
+      {
+        "offset": "0x369ad",
+        "before": "41",
+        "after": "02"
+      },
+      {
+        "offset": "0x369ae",
+        "before": "E5",
+        "after": "00"
+      },
+      {
+        "offset": "0x369af",
+        "before": "01",
+        "after": "00"
+      },
+      {
+        "offset": "0x3f2e0",
+        "before": "9C",
+        "after": "40"
+      },
+      {
+        "offset": "0x3f2e1",
+        "before": "40",
+        "after": "71"
+      }
+    ],
+    "package_changes_confined_to_declared_ranges": true
+  },
+  "execution_checks": {
+    "initial_state_cases": 256,
+    "selected_steps_total": 36864,
+    "per_case_steps": 144,
+    "per_case_calls": {
+      "call16": 6,
+      "call32": 1,
+      "callreg": 1
+    },
+    "maximum_additional_stack_bytes": 80,
+    "all_other_GPRs_and_SP_RETS_preserved": true,
+    "all_results": ["S6:3F"],
+    "call_RETS_semantics_explicit_adapter": true,
+    "hardware_PSR_or_interrupts_emulated": false
+  },
+  "failure_mask_checks_memory_only": [
+    {
+      "injected_failure_mask": "01",
+      "expected_result": "S6:3E",
+      "actual_result": "S6:3E",
+      "steps": 143,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "02",
+      "expected_result": "S6:3D",
+      "actual_result": "S6:3D",
+      "steps": 143,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "03",
+      "expected_result": "S6:3C",
+      "actual_result": "S6:3C",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "04",
+      "expected_result": "S6:3B",
+      "actual_result": "S6:3B",
+      "steps": 143,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "05",
+      "expected_result": "S6:3A",
+      "actual_result": "S6:3A",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "06",
+      "expected_result": "S6:39",
+      "actual_result": "S6:39",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "07",
+      "expected_result": "S6:38",
+      "actual_result": "S6:38",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "08",
+      "expected_result": "S6:37",
+      "actual_result": "S6:37",
+      "steps": 143,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "09",
+      "expected_result": "S6:36",
+      "actual_result": "S6:36",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "0A",
+      "expected_result": "S6:35",
+      "actual_result": "S6:35",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "0B",
+      "expected_result": "S6:34",
+      "actual_result": "S6:34",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "0C",
+      "expected_result": "S6:33",
+      "actual_result": "S6:33",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "0D",
+      "expected_result": "S6:32",
+      "actual_result": "S6:32",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "0E",
+      "expected_result": "S6:31",
+      "actual_result": "S6:31",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "0F",
+      "expected_result": "S6:30",
+      "actual_result": "S6:30",
+      "steps": 140,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "10",
+      "expected_result": "S6:2F",
+      "actual_result": "S6:2F",
+      "steps": 132,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "11",
+      "expected_result": "S6:2E",
+      "actual_result": "S6:2E",
+      "steps": 131,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "12",
+      "expected_result": "S6:2D",
+      "actual_result": "S6:2D",
+      "steps": 131,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "13",
+      "expected_result": "S6:2C",
+      "actual_result": "S6:2C",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "14",
+      "expected_result": "S6:2B",
+      "actual_result": "S6:2B",
+      "steps": 131,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "15",
+      "expected_result": "S6:2A",
+      "actual_result": "S6:2A",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "16",
+      "expected_result": "S6:29",
+      "actual_result": "S6:29",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "17",
+      "expected_result": "S6:28",
+      "actual_result": "S6:28",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "18",
+      "expected_result": "S6:27",
+      "actual_result": "S6:27",
+      "steps": 131,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "19",
+      "expected_result": "S6:26",
+      "actual_result": "S6:26",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "1A",
+      "expected_result": "S6:25",
+      "actual_result": "S6:25",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "1B",
+      "expected_result": "S6:24",
+      "actual_result": "S6:24",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "1C",
+      "expected_result": "S6:23",
+      "actual_result": "S6:23",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "1D",
+      "expected_result": "S6:22",
+      "actual_result": "S6:22",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "1E",
+      "expected_result": "S6:21",
+      "actual_result": "S6:21",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "1F",
+      "expected_result": "S6:20",
+      "actual_result": "S6:20",
+      "steps": 128,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "20",
+      "expected_result": "S6:1F",
+      "actual_result": "S6:1F",
+      "steps": 143,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "21",
+      "expected_result": "S6:1E",
+      "actual_result": "S6:1E",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "22",
+      "expected_result": "S6:1D",
+      "actual_result": "S6:1D",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "23",
+      "expected_result": "S6:1C",
+      "actual_result": "S6:1C",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "24",
+      "expected_result": "S6:1B",
+      "actual_result": "S6:1B",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "25",
+      "expected_result": "S6:1A",
+      "actual_result": "S6:1A",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "26",
+      "expected_result": "S6:19",
+      "actual_result": "S6:19",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "27",
+      "expected_result": "S6:18",
+      "actual_result": "S6:18",
+      "steps": 140,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "28",
+      "expected_result": "S6:17",
+      "actual_result": "S6:17",
+      "steps": 142,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "29",
+      "expected_result": "S6:16",
+      "actual_result": "S6:16",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "2A",
+      "expected_result": "S6:15",
+      "actual_result": "S6:15",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "2B",
+      "expected_result": "S6:14",
+      "actual_result": "S6:14",
+      "steps": 140,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "2C",
+      "expected_result": "S6:13",
+      "actual_result": "S6:13",
+      "steps": 141,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "2D",
+      "expected_result": "S6:12",
+      "actual_result": "S6:12",
+      "steps": 140,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "2E",
+      "expected_result": "S6:11",
+      "actual_result": "S6:11",
+      "steps": 140,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "2F",
+      "expected_result": "S6:10",
+      "actual_result": "S6:10",
+      "steps": 139,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "30",
+      "expected_result": "S6:0F",
+      "actual_result": "S6:0F",
+      "steps": 131,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "31",
+      "expected_result": "S6:0E",
+      "actual_result": "S6:0E",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "32",
+      "expected_result": "S6:0D",
+      "actual_result": "S6:0D",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "33",
+      "expected_result": "S6:0C",
+      "actual_result": "S6:0C",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "34",
+      "expected_result": "S6:0B",
+      "actual_result": "S6:0B",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "35",
+      "expected_result": "S6:0A",
+      "actual_result": "S6:0A",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "36",
+      "expected_result": "S6:09",
+      "actual_result": "S6:09",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "37",
+      "expected_result": "S6:08",
+      "actual_result": "S6:08",
+      "steps": 128,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "38",
+      "expected_result": "S6:07",
+      "actual_result": "S6:07",
+      "steps": 130,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "39",
+      "expected_result": "S6:06",
+      "actual_result": "S6:06",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "3A",
+      "expected_result": "S6:05",
+      "actual_result": "S6:05",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "3B",
+      "expected_result": "S6:04",
+      "actual_result": "S6:04",
+      "steps": 128,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "3C",
+      "expected_result": "S6:03",
+      "actual_result": "S6:03",
+      "steps": 129,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "3D",
+      "expected_result": "S6:02",
+      "actual_result": "S6:02",
+      "steps": 128,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "3E",
+      "expected_result": "S6:01",
+      "actual_result": "S6:01",
+      "steps": 128,
+      "memory_only": true
+    },
+    {
+      "injected_failure_mask": "3F",
+      "expected_result": "S6:00",
+      "actual_result": "S6:00",
+      "steps": 127,
+      "memory_only": true
+    }
+  ],
+  "original_display_branch_checks": [
+    {
+      "branch": "text_label_branch",
+      "seed": "0x0",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x1",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0xffffffff",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0xa5a5a5a5",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x80000000",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x7fffffff",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x55555555",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x1020304",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x0",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x1",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0xffffffff",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0xa5a5a5a5",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x80000000",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x7fffffff",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x55555555",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x1020304",
+      "outputs": [
+        {
+          "role": "model",
+          "text": "BW150"
+        },
+        {
+          "role": "version",
+          "text": "S6:3F"
+        }
+      ]
+    }
+  ],
+  "pc_limit_setup": {
+    "write_count": 8,
+    "models_agree": true,
+    "register_values": {
+      "EMU_CON": {
+        "mmio_address": "0x1be200",
+        "value": "0x80000017"
+      },
+      "LIM_PC0_L": {
+        "mmio_address": "0x1be21c",
+        "value": "0x1e00120"
+      },
+      "LIM_PC0_H": {
+        "mmio_address": "0x1be218",
+        "value": "0x1e97140"
+      },
+      "LIM_PC1_L": {
+        "mmio_address": "0x1be224",
+        "value": "0x7b60"
+      },
+      "LIM_PC1_H": {
+        "mmio_address": "0x1be220",
+        "value": "0xa0a8"
+      },
+      "LIM_PC2_L": {
+        "mmio_address": "0x1be22c",
+        "value": "0x100000"
+      },
+      "LIM_PC2_H": {
+        "mmio_address": "0x1be228",
+        "value": "0x110000"
+      }
+    },
+    "other_write": {
+      "mmio_address": "0x1be1c0",
+      "value": "0x1"
+    },
+    "scope": "Bounded setup writes in memory models; not live MMIO or an exception trace."
+  },
+  "official_branch_oracle": {
+    "record_count": 527,
+    "counts": {
+      "goto": 159,
+      "call": 368
+    },
+    "mismatches": 0,
+    "scope": "Real vendor ROM encodings and explicit targets; not device execution of the new stub."
+  },
+  "official_stack_return_oracle": {
+    "record_count": 118,
+    "mismatches": 0,
+    "examples": [
+      {
+        "address": "0x1001d8",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x100310",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x100404",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x10041e",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x10042e",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x100440",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x1004d8",
+        "bytes": "3400",
+        "official": "[--sp] = rets"
+      },
+      {
+        "address": "0x100502",
+        "bytes": "3000",
+        "official": "pc = [sp++]"
+      },
+      {
+        "address": "0x10051a",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x10053c",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x1006a2",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x1008d2",
+        "bytes": "3400",
+        "official": "[--sp] = rets"
+      }
+    ],
+    "scope": "Exact vendor encodings for individual push RETS, pop PC and RTS; not a full ABI proof."
+  },
+  "primary_sources": {
+    "rom.lst": {
+      "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-AC63_BT_SDK/fdc018de81629e21e594d677cf05f87d288be0f0/cpu/bd19/tools/rom.lst",
+      "sha256": "77a567a419308f7389ea7c3b69ef0f4834e11cba2233c01aa9228771c9e8878e"
+    },
+    "bd19-csfr.h": {
+      "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-AC63_BT_SDK/fdc018de81629e21e594d677cf05f87d288be0f0/include_lib/driver/cpu/bd19/asm/csfr.h",
+      "sha256": "3976d0f7981eb506392166583c142ed53b5f597ef0fc6690800ae112d47f0fa3"
+    }
+  },
+  "third_party_cross_check": {
+    "matched_files": 5,
+    "decoded_container_identical": true,
+    "chipkey": "0x8d07",
+    "entry_point": "0x1e00120"
+  },
+  "negative_parser_controls_memory_only": [
+    {
+      "case": "flash_header_crc",
+      "rejected": true,
+      "reason": "Flash header CRC"
+    },
+    {
+      "case": "top_entry_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x20"
+    },
+    {
+      "case": "inner_header_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x4020"
+    },
+    {
+      "case": "app_payload_crc",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "outer_data_crc",
+      "rejected": true,
+      "reason": "Outer data CRC: app_area_head"
+    },
+    {
+      "case": "truncated_file",
+      "rejected": true,
+      "reason": "Truncated BANKCB"
+    },
+    {
+      "case": "suite_instruction_changed_without_crc_update",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    }
+  ],
+  "roundtrip": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical_rebuild": true,
+    "reverse_to_original_identical": true
+  },
+  "offline_build_limitations_at_freeze": [
+    "The suite candidate has not been flashed, cold-started or restored by the user or assistant.",
+    "The 1024-byte extension is larger than the accepted 32-byte layout and requires its own combined acceptance.",
+    "Six software test groups share a wrapper. An unrecoverable CALL/stack/instruction failure can reset before the final mask is drawn.",
+    "Only additional stack writes within an 80-byte bounded frame are used; actual task-stack headroom and interrupt interaction are not proven by these memory models.",
+    "The q32s SLEIGH module omits CALL's RETS update. Both models explicitly supply that architectural assumption; hardware tests must verify it.",
+    "No full PSR, interrupt, cache, complete UI or peripheral model is provided. No new persistent data or peripheral writes are added.",
+    "The extended flash PC interval includes preexisting data between the original bound and appended code; other PC limits and EMU_CON remain unchanged.",
+    "New local helper functions do not prove a general C ABI, arbitrary original-firmware function calls or complete custom firmware boot.",
+    "All fault-injected variants stay in memory; only one normal suite candidate and one original-identical image are output."
+  ],
+  "limitations": [
+    "Hardware acceptance is user reported. There is no independent screen observation, new Flash readback or automated hardware test, and no exact reentry count or duration was reported.",
+    "The user reported S6:3F, stability and normal cold start for this 1024-byte extension. This supports the six selected paths under the tested configuration, not a general C ABI or arbitrary original-firmware function interoperability.",
+    "Original restoration timed out once over USB, then succeeded after retry with V1.1.0 confirmed by the user. No capture, failed block index or EE/FF status for this incident is available; the cause is not established.",
+    "Six software test groups share a wrapper. An unrecoverable CALL/stack/instruction failure can reset before the final mask is drawn.",
+    "Only additional stack writes within an 80-byte bounded frame are used. Model results and the reported successful run do not prove task-stack headroom under every interrupt or workload.",
+    "The q32s SLEIGH module omits CALL's RETS update. Both models explicitly supply that architectural assumption; the user-reported pass supplies hardware evidence for the selected call/return paths only.",
+    "No full PSR, interrupt, cache, complete UI or peripheral model is provided. Full peripheral functionality and measurement accuracy were not individually reported as tested.",
+    "The extended flash PC interval includes preexisting data between the original bound and appended code; other PC limits and EMU_CON remain unchanged.",
+    "The local_evidence manifest and analysis preserve their offline build-time hardware_tested=false status and original hashes. Subsequent user reports are stored separately in this summary and the companion document.",
+    "All fault-injected variants stay in memory; only one normal suite candidate and one original-identical image were output."
+  ],
+  "local_evidence": {
+    "directory": "artifacts/firmware-suite-test-20261115",
+    "scope": "frozen_offline_suite6_build_hardware_not_tested",
+    "git_ignored": true,
+    "analysis_sha256": "4b6d0c9cf3ca22e38da3bf29b4bcf13a2ecca937fc31012b7b477621cdd7d746",
+    "manifest_sha256": "73baee8e7fee431390806d56143c374377e6f4dfaf3bc71791046755cf9aba21",
+    "manifest": {
+      "hardware_tested": false,
+      "files": {
+        "analysis.json": {
+          "size": 65129,
+          "sha256": "4b6d0c9cf3ca22e38da3bf29b4bcf13a2ecca937fc31012b7b477621cdd7d746"
+        },
+        "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin": {
+          "size": 643072,
+          "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+        },
+        "BW150-V1.1.0-SUITE6-EXPERIMENTAL.bin": {
+          "size": 643072,
+          "sha256": "f86fad3fb2dd22f2408dfbf28cc15f6e940544daf474e3edff8f568f308a0e73"
+        },
+        "suite-listing.txt": {
+          "size": 4098,
+          "sha256": "7a744e2076f866d32bf3ab37f99dae01327e1a5fec6b9f6b26b88339212c9cc3"
+        }
+      }
+    }
+  }
+}

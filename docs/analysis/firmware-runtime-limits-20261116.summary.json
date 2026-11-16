@@ -1,0 +1,2591 @@
+{
+  "status": "round_completed_with_deferred_and_review_items",
+  "candidate": "RT1I",
+  "candidate_file_sha256": "3a04a6ec8d2a7d8eb723fc31fbec7e099a1ff406a8714fd0009f052e1ad5b9ea",
+  "analyzer_device_access": false,
+  "hardware_access_in_source_captures": true,
+  "total_telemetry_points": 11331,
+  "ordinary_only_cc_points": 6228,
+  "diagnostic_pairs": 5103,
+  "complete_recorded_runs": 6,
+  "user_confirmed_automatic_stops": 4,
+  "user_confirmed_manual_stops": 2,
+  "cv": "deferred: no independent source current limit",
+  "cp_ocp": "automatic trigger unconfirmed; user manually ended; no confirmed stock/RT1I regression attribution",
+  "cc_ocp": "1.10 A sustained manual stop; 1.20/1.30 A user-confirmed automatic stops; 1.30 A short-ramp median screen remains review required",
+  "opp": "two per-run automatic-stop/recovery-off screens passed; manual off-state voltage adjustment and original full-window flag retained",
+  "stock_baseline_executed": false,
+  "stock_vs_rt1i_comparison": "not established; user explicitly skips stock and confirms all three CC captures were RT1I",
+  "firmware_identity_scope": "Human role corrections are stored separately from frozen raw metadata. Current I schema confirms current path only; no physical Flash hash readback or inferred flash timing.",
+  "writes_by_read_command": {
+    "03": 19,
+    "05": 11332,
+    "54": 5104
+  },
+  "replies_by_read_command": {
+    "03": 15,
+    "05": 11334,
+    "54": 5103
+  },
+  "total_requests": 16455,
+  "total_replies": 16452,
+  "unanswered_initial_03_requests": 6,
+  "unanswered_probe_54_requests": 1,
+  "additional_unmatched_probe_ordinary_replies": 4,
+  "diagnostic_status_counts": {
+    "status_0_ready_True": 5103
+  },
+  "original_running_counts": {
+    "false": 8119,
+    "true": 3212
+  },
+  "stages": {
+    "ocp": {
+      "structural_audit": {
+        "status": "incomplete_limits_session_raw_audit_passed_test_not_passed",
+        "analyzer_device_access": false,
+        "capture_status_retained": "failed",
+        "capture_error_retained": "ValueError: Not enough complete on/off cycles",
+        "profile": "ocp",
+        "cycles": 2772,
+        "first_wall_time": "2026-11-16T20:00:07.716258+08:00",
+        "last_wall_time": "2026-11-16T20:04:44.762124+08:00",
+        "settings_readback_unchanged": true,
+        "decoded_settings": {
+          "target": 2.4000024795532227,
+          "temperature_calibration": 1.0,
+          "voltage_calibration": 0.9919446706771851,
+          "current_calibration": 0.9810318350791931,
+          "cutoff_voltage": 2.4999985694885254,
+          "full_voltage": 4.499999523162842,
+          "cutoff_current": 10.0,
+          "over_current": 0.30000001192092896,
+          "over_power": 10.0,
+          "ntc_limit": 100.0,
+          "mos_limit": 100.0,
+          "mode": 3,
+          "mode_name": "CP",
+          "limit_hours": 2,
+          "limit_minutes": 0
+        },
+        "complete_recorded_runs": [
+          {
+            "start_s": 89.00631229999999,
+            "stop_s": 201.40496519999942,
+            "span_s": 112.39865289999943
+          }
+        ],
+        "original_running_counts": {
+          "false": 1648,
+          "true": 1124
+        },
+        "writes_by_read_command": {
+          "03": 2,
+          "05": 2772,
+          "54": 2772
+        },
+        "reply_counts": {
+          "03": 2,
+          "05": 2772,
+          "54": 2772
+        },
+        "I_reply_status_counts": {
+          "status_0_ready_True": 2772
+        },
+        "counter_gains": {
+          "samples": 1629,
+          "loops": 1629,
+          "tick": 27707,
+          "sequence": 3258
+        },
+        "samples_first": 41293,
+        "samples_last": 42922,
+        "observed_snapshot_hz": 5.879892639354285,
+        "all_sequence_flags_ready_and_xor_valid": true,
+        "all_extrema_monotonic": true,
+        "immediate_asynchronous_envelope_misses": {
+          "voltage_v": [],
+          "current_a": [],
+          "power_w": []
+        },
+        "running_above_setting_with_margin": {
+          "channel": "current_magnitude_a",
+          "observed_threshold_including_margin": 0.31000001192092896,
+          "longest_contiguous_span_s": 57.800000100000034,
+          "intervals": [
+            {
+              "start_s": 89.40515379999852,
+              "stop_s": 90.30505849999827,
+              "span_s": 0.8999046999997518
+            },
+            {
+              "start_s": 143.50501749999967,
+              "stop_s": 201.3050175999997,
+              "span_s": 57.800000100000034
+            }
+          ]
+        },
+        "functional_screen": {
+          "profile": "ocp",
+          "status": "limits_telemetry_review_required",
+          "checks": {
+            "expected_mode_and_target": true,
+            "expected_current_and_power_protection": true,
+            "cutoff_2_5_v_limit_two_hours": true,
+            "expected_initial_input": true,
+            "exactly_two_complete_runs": false,
+            "input_without_poweroff_confounds": false,
+            "all_run_checks_passed": false
+          },
+          "runs": [
+            {
+              "start_s": 89.00631229999999,
+              "stop_s": 201.40496519999942,
+              "span_s": 112.39865289999943,
+              "stable_points": 1103,
+              "stable_voltage": {
+                "minimum": 5.601,
+                "median": 7.161,
+                "maximum": 12.019
+              },
+              "stable_power": {
+                "minimum": 2.266,
+                "median": 2.397,
+                "maximum": 2.79
+              },
+              "stable_current_magnitude_median_a": 0.328,
+              "last_on_voltage_v": 5.606,
+              "first_off_voltage_v": 5.605,
+              "last_on_current_magnitude_a": 0.428,
+              "last_on_power_w": 2.403,
+              "observed_off_status_codes": {
+                "0": 758
+              },
+              "trigger_side_off_span_s": 7.300165200002084,
+              "recovered_off_span_s": 66.29902310000034,
+              "trigger_side_voltage_range_v": [
+                5.5,
+                6.5
+              ],
+              "recovered_voltage_range_v": [
+                11.4,
+                12.6
+              ],
+              "checks": {
+                "run_at_least_five_seconds": true,
+                "following_off_at_least_five_seconds": true,
+                "stable_points_present": true,
+                "stable_control_median_within_five_percent": true,
+                "observed_stop_near_predeclared_protection_region": false,
+                "off_at_trigger_side_for_at_least_three_seconds": true,
+                "off_after_recovery_for_at_least_five_seconds": true,
+                "run_no_longer_than_120_seconds": true
+              }
+            }
+          ],
+          "specs": {
+            "mode": "CP",
+            "target": 2.4,
+            "input_v": 12,
+            "over_current": 0.3,
+            "over_power": 10,
+            "voltage_range": [
+              5.5,
+              12.6
+            ]
+          },
+          "all_observed_status_codes": {
+            "0": 2772
+          },
+          "current_plateau_spans_s": null,
+          "scope": "Predeclared low-power own-telemetry regression. Automatic causes, source limits and panel messages need separate user reports; no reference accuracy, all-protection, continuous-peak or high-load claim."
+        },
+        "accepted_automatic_test_cycles": 0,
+        "scope": "Only raw structure, exact settings, observed manual-ended state and failed predefined screen. No automatic-stop success, calibrated threshold, stock/new regression attribution or high-load claim.",
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-ocp-01",
+        "hardware_access_in_source_capture": true,
+        "source_files": {
+          "summary.json": {
+            "size": 3947,
+            "sha256": "48c91097a51096d69a0b667d89a3de533acf9afe1eeca57f0ce06247bc16e58a"
+          },
+          "samples.jsonl": {
+            "size": 3622021,
+            "sha256": "1c4db697a1047b9772a3adb2408095713b4c75d379608eccaea595fb8df188b6"
+          },
+          "raw-usb.jsonl": {
+            "size": 2683685,
+            "sha256": "caac7294d546f60e96d3dcce5a212333cd83cb3899d35c31c7e7c05e4aa302d3"
+          },
+          "ready.json": {
+            "size": 289,
+            "sha256": "cc27211e3fd5c794450c5d5a174c48cc1589e9ca63563f48e625f816e2955101"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "3cd0431a0bca6356c5fa8a6bd8d124a93d10d7469e7283157503d8210298c888"
+          }
+        },
+        "local_controls": {
+          "device_access": false,
+          "raw_files_modified": false,
+          "rejected_summary_mutations": [
+            "cycles",
+            "completed_runs",
+            "off_tail_after_stop_observed_s",
+            "error"
+          ]
+        },
+        "analyzer_sha256": "9471e76648652d46c3b80c8918de2f89e6a86ff990e131f8eed5db551ec857a3"
+      },
+      "result": "automatic_protection_unconfirmed_manual_stop",
+      "automatic_stop_success": false,
+      "confirmed_rt1i_regression": false,
+      "manual_stop_report": "已手动关闭并回到 12 V，没有过流提示",
+      "factory_delay_user_report": "过流后需要等待几秒才触发保护，原厂固件亦如此",
+      "original_failed_status_preserved": true,
+      "original_channels": {
+        "voltage_v": {
+          "minimum": 5.601,
+          "median": 12.019,
+          "maximum": 13.138
+        },
+        "current_a": {
+          "minimum": -0.429,
+          "median": -0.0,
+          "maximum": 0.001
+        },
+        "power_w": {
+          "minimum": 0.0,
+          "median": 0.004,
+          "maximum": 4.728
+        }
+      },
+      "boot_sampled_extrema_at_start": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 25.440629959106445,
+        "current_min_a": -10.001188278198242,
+        "current_max_a": 0.0944519191980362,
+        "power_min_w": 0.0,
+        "power_max_w": 120.5082778930664
+      },
+      "boot_sampled_extrema_at_end": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 25.440629959106445,
+        "current_min_a": -10.001188278198242,
+        "current_max_a": 0.0944519191980362,
+        "power_min_w": 0.0,
+        "power_max_w": 120.5082778930664
+      }
+    },
+    "opp": {
+      "structural_audit": {
+        "status": "capture_audit_passed",
+        "candidate": "RT1I",
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-opp-01",
+        "source_files": {
+          "summary.json": {
+            "size": 5771,
+            "sha256": "0900cd958ce739a59cd00ad0a69da1ef4f6367c144dd3ef985b6bf445980e20e"
+          },
+          "samples.jsonl": {
+            "size": 2978831,
+            "sha256": "fdb3e27b6d515c711d50803c5ba5d3c94c4379ade429edb3baffa721b39a0eea"
+          },
+          "raw-usb.jsonl": {
+            "size": 2208656,
+            "sha256": "1aa37a840f6f953ca98476bf8157fb49b0e95a2c8b8c47c003aab5fffabae458"
+          },
+          "ready.json": {
+            "size": 288,
+            "sha256": "3c5293db765b8ef1b1b5394822aeda9380e5447b20cfd1f4f6130696e7132d7d"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "280053223350edab10819a1e63e2362b67a98c456c4bc8accbb8814da3519c46"
+          }
+        },
+        "analyzer_sha256": "5b912d8397e95aa4e83c5f19d1adb2b0b97dde7fe515d8ecd31806b471bc3c2c",
+        "recorder_sha256": "bf6901b3ec32e54d404080fead968f350574a2ca298c84f767587e4f22d012b3",
+        "cycles": 2281,
+        "seconds_requested": 1200,
+        "first_wall_time": "2026-11-16T20:09:22.690344+08:00",
+        "last_wall_time": "2026-11-16T20:13:10.681147+08:00",
+        "span_s": 227.9908166000023,
+        "counter_gains": {
+          "samples": 1340,
+          "loops": 1340,
+          "tick": 22801,
+          "sequence": 2680
+        },
+        "samples_first": 44556,
+        "samples_last": 45896,
+        "first_peaks": {
+          "voltage_min_v": 0.0,
+          "voltage_max_v": 25.440629959106445,
+          "current_min_a": -10.001188278198242,
+          "current_max_a": 0.0944519191980362,
+          "power_min_w": 0.0,
+          "power_max_w": 120.5082778930664
+        },
+        "last_peaks": {
+          "voltage_min_v": 0.0,
+          "voltage_max_v": 25.440629959106445,
+          "current_min_a": -10.001188278198242,
+          "current_max_a": 0.0944519191980362,
+          "power_min_w": 0.0,
+          "power_max_w": 120.5082778930664
+        },
+        "observed_snapshot_hz": 5.877429713982552,
+        "duplicate_snapshot_reads": 940,
+        "maximum_capture_gap_s": 0.13018219999867142,
+        "all_sequence_flags_ready_and_xor_valid": true,
+        "all_extrema_monotonic": true,
+        "writes_by_read_command": {
+          "03": 2,
+          "05": 2281,
+          "54": 2281
+        },
+        "reply_counts": {
+          "03": 2,
+          "05": 2281,
+          "54": 2281
+        },
+        "unanswered_requests": [],
+        "initial_query_timeouts": [],
+        "I_reply_status_counts": {
+          "status_0_ready_True": 2281
+        },
+        "response_latency": {
+          "03": {
+            "count": 2,
+            "mean_ms": 0.9808999984670663,
+            "p95_ms": 0.9817999998631421,
+            "maximum_ms": 0.9817999998631421
+          },
+          "05": {
+            "count": 2281,
+            "mean_ms": 1.0437574747667655,
+            "p95_ms": 1.1001000020769425,
+            "maximum_ms": 30.7345000001078
+          },
+          "54": {
+            "count": 2281,
+            "mean_ms": 1.01612025425057,
+            "p95_ms": 1.0942999979306478,
+            "maximum_ms": 10.419400001410395
+          }
+        },
+        "settings_readback_unchanged": true,
+        "original_running_counts": {
+          "false": 1823,
+          "true": 458
+        },
+        "limits_session": {
+          "mode": "CC",
+          "target": 0.299999862909317,
+          "expected_input_v": 5.0,
+          "cutoff_voltage": 2.4999985694885254,
+          "limit_hours": 2,
+          "limit_minutes": 0,
+          "over_current": 1.0000001192092896,
+          "over_power": 3.0,
+          "off_only": false,
+          "complete_runs": [
+            {
+              "start_s": 60.7049365999992,
+              "stop_s": 86.20499679999921,
+              "span_s": 25.500060200000007
+            },
+            {
+              "start_s": 127.10502189999897,
+              "stop_s": 147.40515949999826,
+              "span_s": 20.30013759999929
+            }
+          ],
+          "longest_completed_run_s": 25.500060200000007,
+          "final_off_span_s": 80.59987620000175,
+          "off_tail_after_stop_observed_s": 5.004116300002352,
+          "explicit_stop_confirmed": true,
+          "observed_running_channels": {
+            "voltage_v": {
+              "minimum": 4.98,
+              "maximum": 9.901,
+              "median": 4.989
+            },
+            "current_a": {
+              "minimum": -0.437,
+              "maximum": -0.0,
+              "median": -0.299
+            },
+            "power_w": {
+              "minimum": 0.001,
+              "maximum": 2.969,
+              "median": 1.498
+            },
+            "cpu_c": {
+              "minimum": 29.0,
+              "maximum": 31.0,
+              "median": 30.0
+            },
+            "ntc_c": {
+              "minimum": 20.943,
+              "maximum": 21.194,
+              "median": 21.111
+            },
+            "mos_c": {
+              "minimum": 27.377,
+              "maximum": 27.619,
+              "median": 27.619
+            }
+          },
+          "acceptance_scope": "Observed state/duration, mode/target, cutoff/time/current/power protection readback, unchanged settings and USB integrity. Protection causation and user button/automatic-stop evidence are reviewed separately."
+        },
+        "original_envelope_comparison": {
+          "voltage_v": {
+            "device_sampled_extrema": [
+              0.0,
+              25.440629959106445
+            ],
+            "original_observed": {
+              "minimum": 4.59,
+              "maximum": 13.17,
+              "median": 5.005
+            },
+            "comparison_tolerance": 0.025,
+            "covers_observed_original_with_tolerance": true
+          },
+          "current_a": {
+            "device_sampled_extrema": [
+              -10.001188278198242,
+              0.0944519191980362
+            ],
+            "original_observed": {
+              "minimum": -0.437,
+              "maximum": 0.001,
+              "median": -0.0
+            },
+            "comparison_tolerance": 0.025,
+            "covers_observed_original_with_tolerance": true
+          },
+          "power_w": {
+            "device_sampled_extrema": [
+              0.0,
+              120.5082778930664
+            ],
+            "original_observed": {
+              "minimum": 0.0,
+              "maximum": 3.225,
+              "median": 0.001
+            },
+            "comparison_tolerance": 0.15,
+            "covers_observed_original_with_tolerance": true
+          }
+        },
+        "voltage_stage_classification": {
+          "5": {
+            "false": {
+              "points": 1355,
+              "first_wall_time": "2026-11-16T20:09:22.690344+08:00",
+              "last_wall_time": "2026-11-16T20:13:10.681147+08:00",
+              "original": {
+                "voltage_v": {
+                  "minimum": 4.707,
+                  "maximum": 5.175,
+                  "median": 5.004
+                },
+                "current_a": {
+                  "minimum": 0.0,
+                  "maximum": 0.001,
+                  "median": -0.0
+                },
+                "power_w": {
+                  "minimum": 0.0,
+                  "maximum": 0.004,
+                  "median": 0.001
+                }
+              },
+              "absolute_current": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": 0.0
+              }
+            },
+            "true": {
+              "points": 334,
+              "first_wall_time": "2026-11-16T20:10:23.381043+08:00",
+              "last_wall_time": "2026-11-16T20:11:46.781283+08:00",
+              "original": {
+                "voltage_v": {
+                  "minimum": 4.98,
+                  "maximum": 5.244,
+                  "median": 4.988
+                },
+                "current_a": {
+                  "minimum": -0.437,
+                  "maximum": -0.0,
+                  "median": -0.299
+                },
+                "power_w": {
+                  "minimum": 0.001,
+                  "maximum": 2.18,
+                  "median": 1.497
+                }
+              },
+              "absolute_current": {
+                "minimum": 0.0,
+                "maximum": 0.437,
+                "median": 0.299
+              }
+            }
+          },
+          "zero_or_other": {
+            "true": {
+              "points": 124,
+              "first_wall_time": "2026-11-16T20:10:39.682076+08:00",
+              "last_wall_time": "2026-11-16T20:11:49.981006+08:00",
+              "original": {
+                "voltage_v": {
+                  "minimum": 5.368,
+                  "maximum": 9.901,
+                  "median": 7.755
+                },
+                "current_a": {
+                  "minimum": -0.3,
+                  "maximum": -0.298,
+                  "median": -0.299
+                },
+                "power_w": {
+                  "minimum": 1.541,
+                  "maximum": 2.969,
+                  "median": 2.307
+                }
+              },
+              "absolute_current": {
+                "minimum": 0.298,
+                "maximum": 0.3,
+                "median": 0.299
+              }
+            },
+            "false": {
+              "points": 153,
+              "first_wall_time": "2026-11-16T20:10:48.881109+08:00",
+              "last_wall_time": "2026-11-16T20:12:14.680958+08:00",
+              "original": {
+                "voltage_v": {
+                  "minimum": 4.59,
+                  "maximum": 13.17,
+                  "median": 10.788
+                },
+                "current_a": {
+                  "minimum": -0.299,
+                  "maximum": 0.001,
+                  "median": -0.0
+                },
+                "power_w": {
+                  "minimum": 0.0,
+                  "maximum": 3.225,
+                  "median": 0.003
+                }
+              },
+              "absolute_current": {
+                "minimum": 0.0,
+                "maximum": 0.299,
+                "median": 0.0
+              }
+            }
+          },
+          "12": {
+            "false": {
+              "points": 315,
+              "first_wall_time": "2026-11-16T20:10:55.981165+08:00",
+              "last_wall_time": "2026-11-16T20:12:11.680979+08:00",
+              "original": {
+                "voltage_v": {
+                  "minimum": 11.429,
+                  "maximum": 12.531,
+                  "median": 11.985
+                },
+                "current_a": {
+                  "minimum": 0.0,
+                  "maximum": 0.001,
+                  "median": -0.0
+                },
+                "power_w": {
+                  "minimum": 0.0,
+                  "maximum": 0.011,
+                  "median": 0.001
+                }
+              },
+              "absolute_current": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": 0.0
+              }
+            }
+          }
+        },
+        "contiguous_operating_segments": [
+          {
+            "group": [
+              "5",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:09:22.690344+08:00",
+            "first_elapsed_s": 0.014219099997717422,
+            "points": 607,
+            "last_wall_time": "2026-11-16T20:10:23.281058+08:00",
+            "last_elapsed_s": 60.604948299998796,
+            "span_s": 60.59072920000108,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 5.0,
+                "maximum": 5.01,
+                "median": 5.005
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 0.003,
+                "median": 0.001
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "5",
+              "true"
+            ],
+            "first_wall_time": "2026-11-16T20:10:23.381043+08:00",
+            "first_elapsed_s": 60.7049365999992,
+            "points": 163,
+            "last_wall_time": "2026-11-16T20:10:39.581032+08:00",
+            "last_elapsed_s": 76.90492509999967,
+            "span_s": 16.199988500000472,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 4.98,
+                "maximum": 5.141,
+                "median": 4.989
+              },
+              "current_a": {
+                "minimum": -0.437,
+                "maximum": -0.0,
+                "median": -0.299
+              },
+              "power_w": {
+                "minimum": 0.001,
+                "maximum": 2.18,
+                "median": 1.497
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "zero_or_other",
+              "true"
+            ],
+            "first_wall_time": "2026-11-16T20:10:39.682076+08:00",
+            "first_elapsed_s": 77.00596819999919,
+            "points": 92,
+            "last_wall_time": "2026-11-16T20:10:48.781083+08:00",
+            "last_elapsed_s": 86.10497279999981,
+            "span_s": 9.099004600000626,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 5.368,
+                "maximum": 9.542,
+                "median": 7.7105
+              },
+              "current_a": {
+                "minimum": -0.3,
+                "maximum": -0.298,
+                "median": -0.299
+              },
+              "power_w": {
+                "minimum": 1.541,
+                "maximum": 2.86,
+                "median": 2.307
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "zero_or_other",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:10:48.881109+08:00",
+            "first_elapsed_s": 86.20499679999921,
+            "points": 71,
+            "last_wall_time": "2026-11-16T20:10:55.881045+08:00",
+            "last_elapsed_s": 93.20493499999793,
+            "span_s": 6.999938199998724,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 10.039,
+                "maximum": 11.375,
+                "median": 10.788
+              },
+              "current_a": {
+                "minimum": -0.299,
+                "maximum": 0.001,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 3.011,
+                "median": 0.004
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "12",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:10:55.981165+08:00",
+            "first_elapsed_s": 93.30506039999818,
+            "points": 130,
+            "last_wall_time": "2026-11-16T20:11:08.881127+08:00",
+            "last_elapsed_s": 106.20501800000056,
+            "span_s": 12.89995760000238,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 11.586,
+                "maximum": 12.161,
+                "median": 11.985
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": -0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 0.011,
+                "median": 0.001
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "zero_or_other",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:11:08.981012+08:00",
+            "first_elapsed_s": 106.30490839999766,
+            "points": 22,
+            "last_wall_time": "2026-11-16T20:11:11.081162+08:00",
+            "last_elapsed_s": 108.40504869999859,
+            "span_s": 2.1001403000009304,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 5.442,
+                "maximum": 11.168,
+                "median": 7.782
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.0,
+                "median": -0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 0.002,
+                "median": 0.001
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "5",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:11:11.181053+08:00",
+            "first_elapsed_s": 108.50494629999957,
+            "points": 186,
+            "last_wall_time": "2026-11-16T20:11:29.681065+08:00",
+            "last_elapsed_s": 127.00495600000067,
+            "span_s": 18.5000097000011,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 4.998,
+                "maximum": 5.175,
+                "median": 5.004
+              },
+              "current_a": {
+                "minimum": -0.0,
+                "maximum": -0.0,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 0.003,
+                "median": 0.001
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "5",
+              "true"
+            ],
+            "first_wall_time": "2026-11-16T20:11:29.781134+08:00",
+            "first_elapsed_s": 127.10502189999897,
+            "points": 171,
+            "last_wall_time": "2026-11-16T20:11:46.781283+08:00",
+            "last_elapsed_s": 144.10516869999992,
+            "span_s": 17.000146800000948,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 4.98,
+                "maximum": 5.244,
+                "median": 4.987
+              },
+              "current_a": {
+                "minimum": -0.422,
+                "maximum": -0.0,
+                "median": -0.299
+              },
+              "power_w": {
+                "minimum": 0.001,
+                "maximum": 2.106,
+                "median": 1.497
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "zero_or_other",
+              "true"
+            ],
+            "first_wall_time": "2026-11-16T20:11:46.882188+08:00",
+            "first_elapsed_s": 144.2060726999989,
+            "points": 32,
+            "last_wall_time": "2026-11-16T20:11:49.981006+08:00",
+            "last_elapsed_s": 147.30490139999893,
+            "span_s": 3.0988287000000128,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 5.434,
+                "maximum": 9.901,
+                "median": 8.216
+              },
+              "current_a": {
+                "minimum": -0.299,
+                "maximum": -0.299,
+                "median": -0.299
+              },
+              "power_w": {
+                "minimum": 1.573,
+                "maximum": 2.969,
+                "median": 2.3445
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "zero_or_other",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:11:50.081269+08:00",
+            "first_elapsed_s": 147.40515949999826,
+            "points": 17,
+            "last_wall_time": "2026-11-16T20:11:51.682225+08:00",
+            "last_elapsed_s": 149.00611030000073,
+            "span_s": 1.6009508000024653,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 10.767,
+                "maximum": 11.365,
+                "median": 11.342
+              },
+              "current_a": {
+                "minimum": -0.299,
+                "maximum": 0.001,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.001,
+                "maximum": 3.225,
+                "median": 0.006
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "12",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:11:51.781998+08:00",
+            "first_elapsed_s": 149.10589120000077,
+            "points": 2,
+            "last_wall_time": "2026-11-16T20:11:51.881204+08:00",
+            "last_elapsed_s": 149.20509029999812,
+            "span_s": 0.09919909999734955,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 11.429,
+                "maximum": 11.429,
+                "median": 11.429
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": 0.0005
+              },
+              "power_w": {
+                "minimum": 0.005,
+                "maximum": 0.007,
+                "median": 0.006
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "zero_or_other",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:11:51.981985+08:00",
+            "first_elapsed_s": 149.3058792999982,
+            "points": 15,
+            "last_wall_time": "2026-11-16T20:11:53.382064+08:00",
+            "last_elapsed_s": 150.70595639999738,
+            "span_s": 1.40007709999918,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 12.616,
+                "maximum": 13.17,
+                "median": 12.851
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.002,
+                "maximum": 0.007,
+                "median": 0.005
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "12",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:11:53.481258+08:00",
+            "first_elapsed_s": 150.80515399999786,
+            "points": 183,
+            "last_wall_time": "2026-11-16T20:12:11.680979+08:00",
+            "last_elapsed_s": 169.0048691999982,
+            "span_s": 18.199715200000355,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 11.925,
+                "maximum": 12.531,
+                "median": 11.985
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 0.009,
+                "median": 0.002
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "zero_or_other",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:12:11.781150+08:00",
+            "first_elapsed_s": 169.10503519999838,
+            "points": 23,
+            "last_wall_time": "2026-11-16T20:12:13.981014+08:00",
+            "last_elapsed_s": 171.30490830000053,
+            "span_s": 2.1998731000021507,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 5.325,
+                "maximum": 11.209,
+                "median": 8.013
+              },
+              "current_a": {
+                "minimum": -0.0,
+                "maximum": 0.001,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 0.004,
+                "median": 0.002
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "5",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:12:14.081058+08:00",
+            "first_elapsed_s": 171.40494639999815,
+            "points": 2,
+            "last_wall_time": "2026-11-16T20:12:14.181012+08:00",
+            "last_elapsed_s": 171.50490419999915,
+            "span_s": 0.0999578000009933,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 5.062,
+                "maximum": 5.062,
+                "median": 5.062
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.0,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.001,
+                "maximum": 0.001,
+                "median": 0.001
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "zero_or_other",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:12:14.280970+08:00",
+            "first_elapsed_s": 171.6048527999992,
+            "points": 5,
+            "last_wall_time": "2026-11-16T20:12:14.680958+08:00",
+            "last_elapsed_s": 172.00485339999796,
+            "span_s": 0.40000059999874793,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 4.59,
+                "maximum": 4.693,
+                "median": 4.677
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.0,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.001,
+                "maximum": 0.002,
+                "median": 0.001
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          },
+          {
+            "group": [
+              "5",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T20:12:14.781108+08:00",
+            "first_elapsed_s": 172.10499659999914,
+            "points": 560,
+            "last_wall_time": "2026-11-16T20:13:10.681147+08:00",
+            "last_elapsed_s": 228.0050357,
+            "span_s": 55.90003910000087,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 4.707,
+                "maximum": 5.016,
+                "median": 5.003
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": -0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 0.004,
+                "median": 0.001
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 25.440629959106445,
+              "current_min_a": -10.001188278198242,
+              "current_max_a": 0.0944519191980362,
+              "power_min_w": 0.0,
+              "power_max_w": 120.5082778930664
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          }
+        ],
+        "immediate_asynchronous_envelope_misses": {
+          "voltage_v": [],
+          "current_a": [],
+          "power_w": []
+        },
+        "polling": {
+          "interval_ms_requested": 100,
+          "measured_pair_hz": 10.000402796925536,
+          "missed_poll_slots": 0,
+          "pair_duration_s": {
+            "minimum": 0.003313400000479305,
+            "maximum": 0.033733400003256975,
+            "median": 0.00412280000091414
+          },
+          "between_original_receive_and_peak_receive_s": {
+            "minimum": 0.0015270000003511086,
+            "maximum": 0.011426900000515161,
+            "median": 0.0020053000007465016
+          }
+        },
+        "scope": "Actual sampled extrema and asynchronous legacy telemetry. Stage grouping uses voltage bands; panel values, exact wiring, calibration and physical power state need separate evidence."
+      },
+      "functional_screen": {
+        "profile": "opp",
+        "status": "limits_telemetry_review_required",
+        "checks": {
+          "expected_mode_and_target": true,
+          "expected_current_and_power_protection": true,
+          "cutoff_2_5_v_limit_two_hours": true,
+          "expected_initial_input": true,
+          "exactly_two_complete_runs": true,
+          "input_without_poweroff_confounds": false,
+          "all_run_checks_passed": true
+        },
+        "runs": [
+          {
+            "start_s": 60.7049365999992,
+            "stop_s": 86.20499679999921,
+            "span_s": 25.500060200000007,
+            "stable_points": 234,
+            "stable_voltage": {
+              "minimum": 4.985,
+              "median": 4.99,
+              "maximum": 9.542
+            },
+            "stable_power": {
+              "minimum": 1.494,
+              "median": 1.505,
+              "maximum": 2.86
+            },
+            "stable_current_magnitude_median_a": 0.299,
+            "last_on_voltage_v": 9.542,
+            "first_off_voltage_v": 10.039,
+            "last_on_current_magnitude_a": 0.299,
+            "last_on_power_w": 2.86,
+            "observed_off_status_codes": {
+              "0": 409
+            },
+            "trigger_side_off_span_s": 12.89995760000238,
+            "recovered_off_span_s": 18.69997770000191,
+            "trigger_side_voltage_range_v": [
+              11.4,
+              12.6
+            ],
+            "recovered_voltage_range_v": [
+              4.5,
+              5.5
+            ],
+            "checks": {
+              "run_at_least_five_seconds": true,
+              "following_off_at_least_five_seconds": true,
+              "stable_points_present": true,
+              "stable_control_median_within_five_percent": true,
+              "observed_stop_near_predeclared_protection_region": true,
+              "off_at_trigger_side_for_at_least_three_seconds": true,
+              "off_after_recovery_for_at_least_five_seconds": true,
+              "run_no_longer_than_120_seconds": true
+            }
+          },
+          {
+            "start_s": 127.10502189999897,
+            "stop_s": 147.40515949999826,
+            "span_s": 20.30013759999929,
+            "stable_points": 182,
+            "stable_voltage": {
+              "minimum": 4.984,
+              "median": 4.988,
+              "maximum": 9.901
+            },
+            "stable_power": {
+              "minimum": 1.493,
+              "median": 1.497,
+              "maximum": 2.969
+            },
+            "stable_current_magnitude_median_a": 0.299,
+            "last_on_voltage_v": 9.901,
+            "first_off_voltage_v": 10.767,
+            "last_on_current_magnitude_a": 0.299,
+            "last_on_power_w": 2.969,
+            "observed_off_status_codes": {
+              "0": 807
+            },
+            "trigger_side_off_span_s": 18.199715200000355,
+            "recovered_off_span_s": 56.700127399999474,
+            "trigger_side_voltage_range_v": [
+              11.4,
+              12.6
+            ],
+            "recovered_voltage_range_v": [
+              4.5,
+              5.5
+            ],
+            "checks": {
+              "run_at_least_five_seconds": true,
+              "following_off_at_least_five_seconds": true,
+              "stable_points_present": true,
+              "stable_control_median_within_five_percent": true,
+              "observed_stop_near_predeclared_protection_region": true,
+              "off_at_trigger_side_for_at_least_three_seconds": true,
+              "off_after_recovery_for_at_least_five_seconds": true,
+              "run_no_longer_than_120_seconds": true
+            }
+          }
+        ],
+        "specs": {
+          "mode": "CC",
+          "target": 0.3,
+          "input_v": 5,
+          "over_current": 1,
+          "over_power": 3,
+          "voltage_range": [
+            4.5,
+            12.6
+          ]
+        },
+        "all_observed_status_codes": {
+          "0": 2281
+        },
+        "current_plateau_spans_s": null,
+        "scope": "Predeclared low-power own-telemetry regression. Automatic causes, source limits and panel messages need separate user reports; no reference accuracy, all-protection, continuous-peak or high-load claim.",
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-opp-01",
+        "source_files": {
+          "summary.json": {
+            "size": 5771,
+            "sha256": "0900cd958ce739a59cd00ad0a69da1ef4f6367c144dd3ef985b6bf445980e20e"
+          },
+          "samples.jsonl": {
+            "size": 2978831,
+            "sha256": "fdb3e27b6d515c711d50803c5ba5d3c94c4379ade429edb3baffa721b39a0eea"
+          },
+          "raw-usb.jsonl": {
+            "size": 2208656,
+            "sha256": "1aa37a840f6f953ca98476bf8157fb49b0e95a2c8b8c47c003aab5fffabae458"
+          },
+          "ready.json": {
+            "size": 288,
+            "sha256": "3c5293db765b8ef1b1b5394822aeda9380e5447b20cfd1f4f6130696e7132d7d"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "280053223350edab10819a1e63e2362b67a98c456c4bc8accbb8814da3519c46"
+          }
+        },
+        "structural_audit_status": "capture_audit_passed",
+        "cycles": 2281,
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "analyzer_sha256": "52a61bb0050911460a86a8b2a685c54068fe9412d9325ff01028f04aef07c548"
+      },
+      "user_confirmed_automatic_stops": 2,
+      "all_per_run_screens_passed": true,
+      "full_window_reclassified_as_pass": false,
+      "off_state_out_of_range_points": 15,
+      "user_voltage_adjustment": "我自己调的",
+      "voltage_attribution": "User manual adjustment; not attributed to firmware voltage anomaly.",
+      "original_channels": {
+        "voltage_v": {
+          "minimum": 4.59,
+          "median": 5.005,
+          "maximum": 13.17
+        },
+        "current_a": {
+          "minimum": -0.437,
+          "median": -0.0,
+          "maximum": 0.001
+        },
+        "power_w": {
+          "minimum": 0.0,
+          "median": 0.001,
+          "maximum": 3.225
+        }
+      },
+      "boot_sampled_extrema_at_start": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 25.440629959106445,
+        "current_min_a": -10.001188278198242,
+        "current_max_a": 0.0944519191980362,
+        "power_min_w": 0.0,
+        "power_max_w": 120.5082778930664
+      },
+      "boot_sampled_extrema_at_end": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 25.440629959106445,
+        "current_min_a": -10.001188278198242,
+        "current_max_a": 0.0944519191980362,
+        "power_min_w": 0.0,
+        "power_max_w": 120.5082778930664
+      }
+    },
+    "stock-ocp-cc-110": {
+      "structural_audit": {
+        "status": "stock_ocp_capture_raw_audit_passed",
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-stock-ocp-cc-110-01",
+        "source_files": {
+          "summary.json": {
+            "size": 2845,
+            "sha256": "368a6ccdb09c0d54ab689d4dd0a08d04acd2225dbbe7e3906c6d4c88cf492061"
+          },
+          "samples.jsonl": {
+            "size": 2091473,
+            "sha256": "4da46a84ae9407cfa880493de82c920a64f13b2a470177f944c9060353b05ff0"
+          },
+          "raw-usb.jsonl": {
+            "size": 1875431,
+            "sha256": "e269590a0b2142bf505c9428e72f0feb517f9ef8a485bc2231bbfb01a653fcc2"
+          },
+          "ready.json": {
+            "size": 272,
+            "sha256": "0230066c6b895b9236741558316d6f1e346bd585f12bcba88245ca17038ee83d"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "ffc59fd448b0b4b33f31761732117ce6188bed0e27d3331a2cfe401105a577b2"
+          }
+        },
+        "analyzer_sha256": "1d085f5ee30dcc4beb779df36ffc63225ba0fc47779131503bf9b71688381b3e",
+        "recorder_sha256": "ce62673a420fa06982b445b44c0199bc548afe2f303e5a21b5a5d54f07a3d529",
+        "cycles": 3873,
+        "first_wall_time": "2026-11-16T20:43:38.504793+08:00",
+        "last_wall_time": "2026-11-16T20:50:05.704780+08:00",
+        "writes_by_read_command": {
+          "03": 4,
+          "05": 3873
+        },
+        "reply_counts": {
+          "03": 2,
+          "05": 3873
+        },
+        "original_running_counts": {
+          "false": 2378,
+          "true": 1495
+        },
+        "initial_query_timeouts": [
+          {
+            "attempt": 1,
+            "error": "USB read timeout: 03"
+          },
+          {
+            "attempt": 2,
+            "error": "USB read timeout: 03"
+          }
+        ],
+        "settings_readback_unchanged": true,
+        "limits_session": {
+          "mode": "CC",
+          "target": 1.100000023841858,
+          "expected_input_v": 5,
+          "cutoff_voltage": 2.4999985694885254,
+          "over_current": 1.0,
+          "over_power": 10.0,
+          "limit_hours": 2,
+          "limit_minutes": 0,
+          "complete_runs": [
+            {
+              "start_s": 119.8031026000026,
+              "stop_s": 269.3090011000022,
+              "span_s": 149.5058984999996
+            }
+          ]
+        },
+        "scope": "Ordinary telemetry and user-reported stock identity only. No private I diagnostic, device sample-frequency/peak claim, physical Flash hash or automatic-cause inference."
+      },
+      "functional_screen_retained": {
+        "level": "110",
+        "status": "cc_reference_telemetry_screen_passed",
+        "checks": {
+          "mode_and_target": true,
+          "protections_and_limit": true,
+          "one_complete_run": true,
+          "fixed_five_v_input": true,
+          "all_run_checks_passed": true
+        },
+        "runs": [
+          {
+            "start_s": 119.8031026000026,
+            "stop_s": 269.3090011000022,
+            "span_s": 149.5058984999996,
+            "stable_points": 1474,
+            "stable_current_magnitude_median_a": 1.099,
+            "checks": {
+              "expected_observed_span": true,
+              "stable_current_within_five_percent": true
+            }
+          }
+        ],
+        "specs": {
+          "target": 1.1,
+          "span": [
+            60,
+            180
+          ],
+          "exclude_s": 2
+        },
+        "required_user_cause": "manual after sustained run",
+        "scope": "Own-telemetry engineering screens using user-provided reference conditions, not manufacturer delay specifications. Cause needs a separately stored actual user report.",
+        "firmware_role": "stock",
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-stock-ocp-cc-110-01",
+        "source_files": {
+          "summary.json": {
+            "size": 2845,
+            "sha256": "368a6ccdb09c0d54ab689d4dd0a08d04acd2225dbbe7e3906c6d4c88cf492061"
+          },
+          "samples.jsonl": {
+            "size": 2091473,
+            "sha256": "4da46a84ae9407cfa880493de82c920a64f13b2a470177f944c9060353b05ff0"
+          },
+          "raw-usb.jsonl": {
+            "size": 1875431,
+            "sha256": "e269590a0b2142bf505c9428e72f0feb517f9ef8a485bc2231bbfb01a653fcc2"
+          },
+          "ready.json": {
+            "size": 272,
+            "sha256": "0230066c6b895b9236741558316d6f1e346bd585f12bcba88245ca17038ee83d"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "ffc59fd448b0b4b33f31761732117ce6188bed0e27d3331a2cfe401105a577b2"
+          }
+        },
+        "structural_audit_status": "stock_ocp_capture_raw_audit_passed",
+        "cycles": 3873,
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "analyzer_sha256": "07e358415769d5d9fdef24883ad6cab46b58793125bde8b2d56a3b41c5069a39"
+      },
+      "actual_firmware_role": "RT1I_user_confirmed",
+      "identity_confirmation": "三档测试均为 RT1I",
+      "capture_identity_scope": "Ordinary 03/05 only; no diagnostic I proof or physical Flash hash during this capture.",
+      "legacy_path_summary_and_screen_stock_labels": "Historical mistaken expectation metadata retained; not accepted as original-firmware baseline.",
+      "manual_or_automatic_cause_report": "持续运行约 65 秒后已手动关闭，未提前自停，显示和按键正常",
+      "user_confirmed_cause": "manual",
+      "on_state_current_first_a": 0.0,
+      "on_state_current_last_a": -1.101,
+      "on_state_current_magnitude_max_a": 1.101,
+      "raw_span_separate_from_approximate_human_duration": true,
+      "original_channels": {
+        "voltage_v": {
+          "minimum": 4.945,
+          "median": 5.004,
+          "maximum": 5.013
+        },
+        "current_a": {
+          "minimum": -1.101,
+          "median": 0.0,
+          "maximum": 0.1
+        },
+        "power_w": {
+          "minimum": 0.0,
+          "median": 0.002,
+          "maximum": 5.456
+        }
+      }
+    },
+    "stock-ocp-cc-120": {
+      "structural_audit": {
+        "status": "stock_ocp_capture_raw_audit_passed",
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-stock-ocp-cc-120-01",
+        "source_files": {
+          "summary.json": {
+            "size": 2694,
+            "sha256": "90377fe8bc3f12727a486ffdbf5f5a3944e641dfd567bfc1400f5580da87d753"
+          },
+          "samples.jsonl": {
+            "size": 647431,
+            "sha256": "d1861f5d7efef768eca5aa44f40cd1e9904432510bd48e38a296225329eb9f41"
+          },
+          "raw-usb.jsonl": {
+            "size": 581698,
+            "sha256": "ef7927abb47c2fc5b8af4ef3b9e37585d45737c79f4d970a8c36827b1f02117c"
+          },
+          "ready.json": {
+            "size": 273,
+            "sha256": "ce19bfe4651752982f0ed02375e09a3c650937c350a34b390d571f86883b3322"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "a4d3e1100bfc9f5bd7ad4e524e2e5cdbbd6a9e28599af0e49e741285bc6deae8"
+          }
+        },
+        "analyzer_sha256": "1d085f5ee30dcc4beb779df36ffc63225ba0fc47779131503bf9b71688381b3e",
+        "recorder_sha256": "ce62673a420fa06982b445b44c0199bc548afe2f303e5a21b5a5d54f07a3d529",
+        "cycles": 1201,
+        "first_wall_time": "2026-11-16T20:56:41.322090+08:00",
+        "last_wall_time": "2026-11-16T20:58:41.322654+08:00",
+        "writes_by_read_command": {
+          "03": 2,
+          "05": 1201
+        },
+        "reply_counts": {
+          "03": 2,
+          "05": 1201
+        },
+        "original_running_counts": {
+          "false": 1089,
+          "true": 112
+        },
+        "initial_query_timeouts": [],
+        "settings_readback_unchanged": true,
+        "limits_session": {
+          "mode": "CC",
+          "target": 1.2000000476837158,
+          "expected_input_v": 5,
+          "cutoff_voltage": 2.4999985694885254,
+          "over_current": 1.0,
+          "over_power": 10.0,
+          "limit_hours": 2,
+          "limit_minutes": 0,
+          "complete_runs": [
+            {
+              "start_s": 67.50306310000087,
+              "stop_s": 78.70292880000125,
+              "span_s": 11.199865700000373
+            }
+          ]
+        },
+        "scope": "Ordinary telemetry and user-reported stock identity only. No private I diagnostic, device sample-frequency/peak claim, physical Flash hash or automatic-cause inference."
+      },
+      "functional_screen_retained": {
+        "level": "120",
+        "status": "cc_reference_telemetry_screen_passed",
+        "checks": {
+          "mode_and_target": true,
+          "protections_and_limit": true,
+          "one_complete_run": true,
+          "fixed_five_v_input": true,
+          "all_run_checks_passed": true
+        },
+        "runs": [
+          {
+            "start_s": 67.50306310000087,
+            "stop_s": 78.70292880000125,
+            "span_s": 11.199865700000373,
+            "stable_points": 108,
+            "stable_current_magnitude_median_a": 1.198,
+            "checks": {
+              "expected_observed_span": true,
+              "stable_current_within_five_percent": true
+            }
+          }
+        ],
+        "specs": {
+          "target": 1.2,
+          "span": [
+            0.5,
+            15
+          ],
+          "exclude_s": 0.3
+        },
+        "required_user_cause": "automatic stop",
+        "scope": "Own-telemetry engineering screens using user-provided reference conditions, not manufacturer delay specifications. Cause needs a separately stored actual user report.",
+        "firmware_role": "stock",
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-stock-ocp-cc-120-01",
+        "source_files": {
+          "summary.json": {
+            "size": 2694,
+            "sha256": "90377fe8bc3f12727a486ffdbf5f5a3944e641dfd567bfc1400f5580da87d753"
+          },
+          "samples.jsonl": {
+            "size": 647431,
+            "sha256": "d1861f5d7efef768eca5aa44f40cd1e9904432510bd48e38a296225329eb9f41"
+          },
+          "raw-usb.jsonl": {
+            "size": 581698,
+            "sha256": "ef7927abb47c2fc5b8af4ef3b9e37585d45737c79f4d970a8c36827b1f02117c"
+          },
+          "ready.json": {
+            "size": 273,
+            "sha256": "ce19bfe4651752982f0ed02375e09a3c650937c350a34b390d571f86883b3322"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "a4d3e1100bfc9f5bd7ad4e524e2e5cdbbd6a9e28599af0e49e741285bc6deae8"
+          }
+        },
+        "structural_audit_status": "stock_ocp_capture_raw_audit_passed",
+        "cycles": 1201,
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "analyzer_sha256": "07e358415769d5d9fdef24883ad6cab46b58793125bde8b2d56a3b41c5069a39"
+      },
+      "actual_firmware_role": "RT1I_user_confirmed",
+      "identity_confirmation": "三档测试均为 RT1I",
+      "capture_identity_scope": "Ordinary 03/05 only; no diagnostic I proof or physical Flash hash during this capture.",
+      "legacy_path_summary_and_screen_stock_labels": "Historical mistaken expectation metadata retained; not accepted as original-firmware baseline.",
+      "manual_or_automatic_cause_report": "已自行停机，显示和按键正常",
+      "user_confirmed_cause": "automatic",
+      "on_state_current_first_a": -0.0,
+      "on_state_current_last_a": -1.199,
+      "on_state_current_magnitude_max_a": 1.2,
+      "raw_span_separate_from_approximate_human_duration": true,
+      "original_channels": {
+        "voltage_v": {
+          "minimum": 4.938,
+          "median": 5.007,
+          "maximum": 5.012
+        },
+        "current_a": {
+          "minimum": -1.2,
+          "median": -0.0,
+          "maximum": 0.001
+        },
+        "power_w": {
+          "minimum": 0.0,
+          "median": 0.001,
+          "maximum": 5.936
+        }
+      }
+    },
+    "stock-ocp-cc-130": {
+      "structural_audit": {
+        "status": "stock_ocp_capture_raw_audit_passed",
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-stock-ocp-cc-130-01",
+        "source_files": {
+          "summary.json": {
+            "size": 2845,
+            "sha256": "5ecb3255bf16207b8da865941d92d96bf0054bbfe7a07e9379a0948f5125b2ef"
+          },
+          "samples.jsonl": {
+            "size": 621918,
+            "sha256": "47a4b647a5968e83cd424cbee7d74a374de9ae7127c4f7ae3937188376c929dd"
+          },
+          "raw-usb.jsonl": {
+            "size": 559411,
+            "sha256": "6488763a06cfb02ad8bcde79d5ccf4389e08c1170eb6dd361e61729773164782"
+          },
+          "ready.json": {
+            "size": 273,
+            "sha256": "c74fbde528546fd0a1f9f85ca2fe8b153514d646578712ebfee6dbbac8ec765b"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "3f6897050731fb617e08ec392b9397a99bbbe02e7401cf001aa1d1d2f1271a5d"
+          }
+        },
+        "analyzer_sha256": "1d085f5ee30dcc4beb779df36ffc63225ba0fc47779131503bf9b71688381b3e",
+        "recorder_sha256": "ce62673a420fa06982b445b44c0199bc548afe2f303e5a21b5a5d54f07a3d529",
+        "cycles": 1154,
+        "first_wall_time": "2026-11-16T21:00:27.565604+08:00",
+        "last_wall_time": "2026-11-16T21:02:22.866570+08:00",
+        "writes_by_read_command": {
+          "03": 4,
+          "05": 1154
+        },
+        "reply_counts": {
+          "03": 2,
+          "05": 1154
+        },
+        "original_running_counts": {
+          "false": 1131,
+          "true": 23
+        },
+        "initial_query_timeouts": [
+          {
+            "attempt": 1,
+            "error": "USB read timeout: 03"
+          },
+          {
+            "attempt": 2,
+            "error": "USB read timeout: 03"
+          }
+        ],
+        "settings_readback_unchanged": true,
+        "limits_session": {
+          "mode": "CC",
+          "target": 1.3000000715255737,
+          "expected_input_v": 5,
+          "cutoff_voltage": 2.4999985694885254,
+          "over_current": 1.0,
+          "over_power": 10.0,
+          "limit_hours": 2,
+          "limit_minutes": 0,
+          "complete_runs": [
+            {
+              "start_s": 66.50292679999984,
+              "stop_s": 68.80297339999743,
+              "span_s": 2.300046599997586
+            }
+          ]
+        },
+        "scope": "Ordinary telemetry and user-reported stock identity only. No private I diagnostic, device sample-frequency/peak claim, physical Flash hash or automatic-cause inference."
+      },
+      "functional_screen_retained": {
+        "level": "130",
+        "status": "cc_reference_telemetry_review_required",
+        "checks": {
+          "mode_and_target": true,
+          "protections_and_limit": true,
+          "one_complete_run": true,
+          "fixed_five_v_input": true,
+          "all_run_checks_passed": false
+        },
+        "runs": [
+          {
+            "start_s": 66.50292679999984,
+            "stop_s": 68.80297339999743,
+            "span_s": 2.300046599997586,
+            "stable_points": 19,
+            "stable_current_magnitude_median_a": 1.137,
+            "checks": {
+              "expected_observed_span": true,
+              "stable_current_within_five_percent": false
+            }
+          }
+        ],
+        "specs": {
+          "target": 1.3,
+          "span": [
+            0.2,
+            10
+          ],
+          "exclude_s": 0.3
+        },
+        "required_user_cause": "automatic stop",
+        "scope": "Own-telemetry engineering screens using user-provided reference conditions, not manufacturer delay specifications. Cause needs a separately stored actual user report.",
+        "firmware_role": "stock",
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-stock-ocp-cc-130-01",
+        "source_files": {
+          "summary.json": {
+            "size": 2845,
+            "sha256": "5ecb3255bf16207b8da865941d92d96bf0054bbfe7a07e9379a0948f5125b2ef"
+          },
+          "samples.jsonl": {
+            "size": 621918,
+            "sha256": "47a4b647a5968e83cd424cbee7d74a374de9ae7127c4f7ae3937188376c929dd"
+          },
+          "raw-usb.jsonl": {
+            "size": 559411,
+            "sha256": "6488763a06cfb02ad8bcde79d5ccf4389e08c1170eb6dd361e61729773164782"
+          },
+          "ready.json": {
+            "size": 273,
+            "sha256": "c74fbde528546fd0a1f9f85ca2fe8b153514d646578712ebfee6dbbac8ec765b"
+          },
+          "stop-request.json": {
+            "size": 158,
+            "sha256": "3f6897050731fb617e08ec392b9397a99bbbe02e7401cf001aa1d1d2f1271a5d"
+          }
+        },
+        "structural_audit_status": "stock_ocp_capture_raw_audit_passed",
+        "cycles": 1154,
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "analyzer_sha256": "07e358415769d5d9fdef24883ad6cab46b58793125bde8b2d56a3b41c5069a39"
+      },
+      "actual_firmware_role": "RT1I_user_confirmed",
+      "identity_confirmation": "三档测试均为 RT1I",
+      "capture_identity_scope": "Ordinary 03/05 only; no diagnostic I proof or physical Flash hash during this capture.",
+      "legacy_path_summary_and_screen_stock_labels": "Historical mistaken expectation metadata retained; not accepted as original-firmware baseline.",
+      "manual_or_automatic_cause_report": "已自行停机，显示和按键正常",
+      "user_confirmed_cause": "automatic",
+      "on_state_current_first_a": 0.0,
+      "on_state_current_last_a": -1.247,
+      "on_state_current_magnitude_max_a": 1.247,
+      "raw_span_separate_from_approximate_human_duration": true,
+      "original_channels": {
+        "voltage_v": {
+          "minimum": 4.939,
+          "median": 5.007,
+          "maximum": 5.012
+        },
+        "current_a": {
+          "minimum": -1.264,
+          "median": -0.0,
+          "maximum": 0.001
+        },
+        "power_w": {
+          "minimum": 0.0,
+          "median": 0.001,
+          "maximum": 6.247
+        }
+      }
+    },
+    "identity-check": {
+      "structural_audit": {
+        "status": "capture_audit_passed",
+        "candidate": "RT1I",
+        "analyzer_device_access": false,
+        "hardware_access_in_source_capture": true,
+        "simulated_transport": false,
+        "source_directory": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116-identity-check-01",
+        "source_files": {
+          "summary.json": {
+            "size": 3559,
+            "sha256": "54339784da40b30d4481bfd467a31e6d6338ad4c5e823826582bf90fec36feeb"
+          },
+          "samples.jsonl": {
+            "size": 65126,
+            "sha256": "7689f569d55ca87c8a579afe3b59abd208aeeb9de31423424e02061eee652f12"
+          },
+          "raw-usb.jsonl": {
+            "size": 49737,
+            "sha256": "725d0a3471725d9133e95f4d443b3d97fc99161fd6c9421c8afb5a1e59503497"
+          }
+        },
+        "analyzer_sha256": "a969bbd2be47272d3859b66dc72f9afe0fa5e85fb25c66e6e576995df7f929d3",
+        "recorder_sha256": "f8999f9a34eb4c0b9db8ca42b5c239c62b29db3ca0c0e4c0640bc6296d5382e6",
+        "cycles": 50,
+        "seconds_requested": 5,
+        "first_wall_time": "2026-11-16T21:08:21.187804+08:00",
+        "last_wall_time": "2026-11-16T21:08:26.087631+08:00",
+        "span_s": 4.899843499999406,
+        "counter_gains": {
+          "samples": 29,
+          "loops": 29,
+          "tick": 493,
+          "sequence": 58
+        },
+        "samples_first": 12190,
+        "samples_last": 12219,
+        "first_peaks": {
+          "voltage_min_v": 0.0,
+          "voltage_max_v": 5.015613555908203,
+          "current_min_a": -1.2647075653076172,
+          "current_max_a": 0.10019703954458237,
+          "power_min_w": 0.0,
+          "power_max_w": 6.246570110321045
+        },
+        "last_peaks": {
+          "voltage_min_v": 0.0,
+          "voltage_max_v": 5.015613555908203,
+          "current_min_a": -1.2647075653076172,
+          "current_max_a": 0.10019703954458237,
+          "power_min_w": 0.0,
+          "power_max_w": 6.246570110321045
+        },
+        "observed_snapshot_hz": 5.918556378383006,
+        "duplicate_snapshot_reads": 20,
+        "maximum_capture_gap_s": 0.10110010000062175,
+        "all_sequence_flags_ready_and_xor_valid": true,
+        "all_extrema_monotonic": true,
+        "writes_by_read_command": {
+          "03": 4,
+          "05": 50,
+          "54": 50
+        },
+        "reply_counts": {
+          "03": 2,
+          "05": 50,
+          "54": 50
+        },
+        "unanswered_requests": [
+          {
+            "command": "03",
+            "elapsed_s": 0.015563200002361555,
+            "wall_time": "2026-11-16T21:08:17.028522+08:00"
+          },
+          {
+            "command": "03",
+            "elapsed_s": 2.0885409000002255,
+            "wall_time": "2026-11-16T21:08:19.101498+08:00"
+          }
+        ],
+        "initial_query_timeouts": [
+          {
+            "attempt": 1,
+            "error": "USB read timeout: 03"
+          },
+          {
+            "attempt": 2,
+            "error": "USB read timeout: 03"
+          }
+        ],
+        "I_reply_status_counts": {
+          "status_0_ready_True": 50
+        },
+        "response_latency": {
+          "03": {
+            "count": 2,
+            "mean_ms": 5.885999997190083,
+            "p95_ms": 10.758999997051433,
+            "maximum_ms": 10.758999997051433
+          },
+          "05": {
+            "count": 50,
+            "mean_ms": 0.9792139998899074,
+            "p95_ms": 1.0413000018161256,
+            "maximum_ms": 1.2171999987913296
+          },
+          "54": {
+            "count": 50,
+            "mean_ms": 0.9854439997434383,
+            "p95_ms": 1.0690000017348211,
+            "maximum_ms": 1.1148999983561225
+          }
+        },
+        "settings_readback_unchanged": true,
+        "original_running_counts": {
+          "false": 50
+        },
+        "original_envelope_comparison": {
+          "voltage_v": {
+            "device_sampled_extrema": [
+              0.0,
+              5.015613555908203
+            ],
+            "original_observed": {
+              "minimum": 5.003,
+              "maximum": 5.007,
+              "median": 5.005
+            },
+            "comparison_tolerance": 0.025,
+            "covers_observed_original_with_tolerance": true
+          },
+          "current_a": {
+            "device_sampled_extrema": [
+              -1.2647075653076172,
+              0.10019703954458237
+            ],
+            "original_observed": {
+              "minimum": 0.0,
+              "maximum": 0.001,
+              "median": 0.0
+            },
+            "comparison_tolerance": 0.025,
+            "covers_observed_original_with_tolerance": true
+          },
+          "power_w": {
+            "device_sampled_extrema": [
+              0.0,
+              6.246570110321045
+            ],
+            "original_observed": {
+              "minimum": 0.0,
+              "maximum": 0.005,
+              "median": 0.002
+            },
+            "comparison_tolerance": 0.15,
+            "covers_observed_original_with_tolerance": true
+          }
+        },
+        "voltage_stage_classification": {
+          "5": {
+            "false": {
+              "points": 50,
+              "first_wall_time": "2026-11-16T21:08:21.187804+08:00",
+              "last_wall_time": "2026-11-16T21:08:26.087631+08:00",
+              "original": {
+                "voltage_v": {
+                  "minimum": 5.003,
+                  "maximum": 5.007,
+                  "median": 5.005
+                },
+                "current_a": {
+                  "minimum": 0.0,
+                  "maximum": 0.001,
+                  "median": 0.0
+                },
+                "power_w": {
+                  "minimum": 0.0,
+                  "maximum": 0.005,
+                  "median": 0.002
+                }
+              },
+              "absolute_current": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": 0.0
+              }
+            }
+          }
+        },
+        "contiguous_operating_segments": [
+          {
+            "group": [
+              "5",
+              "false"
+            ],
+            "first_wall_time": "2026-11-16T21:08:21.187804+08:00",
+            "first_elapsed_s": 0.004371200000605313,
+            "points": 50,
+            "last_wall_time": "2026-11-16T21:08:26.087631+08:00",
+            "last_elapsed_s": 4.904214700000011,
+            "span_s": 4.899843499999406,
+            "original_observed": {
+              "voltage_v": {
+                "minimum": 5.003,
+                "maximum": 5.007,
+                "median": 5.005
+              },
+              "current_a": {
+                "minimum": 0.0,
+                "maximum": 0.001,
+                "median": 0.0
+              },
+              "power_w": {
+                "minimum": 0.0,
+                "maximum": 0.005,
+                "median": 0.002
+              }
+            },
+            "bounds_at_start": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 5.015613555908203,
+              "current_min_a": -1.2647075653076172,
+              "current_max_a": 0.10019703954458237,
+              "power_min_w": 0.0,
+              "power_max_w": 6.246570110321045
+            },
+            "bounds_at_end": {
+              "voltage_min_v": 0.0,
+              "voltage_max_v": 5.015613555908203,
+              "current_min_a": -1.2647075653076172,
+              "current_max_a": 0.10019703954458237,
+              "power_min_w": 0.0,
+              "power_max_w": 6.246570110321045
+            },
+            "end_bounds_cover_observed_with_original_tolerance": {
+              "voltage_v": true,
+              "current_a": true,
+              "power_w": true
+            },
+            "scope": "Per-boot bounds are not reset at segment start; prior extremes can mask new misses."
+          }
+        ],
+        "immediate_asynchronous_envelope_misses": {
+          "voltage_v": [],
+          "current_a": [],
+          "power_w": []
+        },
+        "polling": {
+          "interval_ms_requested": 100,
+          "measured_pair_hz": 10.000319397957494,
+          "missed_poll_slots": 0,
+          "pair_duration_s": {
+            "minimum": 0.003465199999482138,
+            "maximum": 0.004537800003163284,
+            "median": 0.0040258999997604406
+          },
+          "between_original_receive_and_peak_receive_s": {
+            "minimum": 0.0018376000007265247,
+            "maximum": 0.0022466000009444542,
+            "median": 0.0020172000004095025
+          }
+        },
+        "scope": "Actual sampled extrema and asynchronous legacy telemetry. Stage grouping uses voltage bands; panel values, exact wiring, calibration and physical power state need separate evidence."
+      },
+      "result": "current_diagnostic_path_and_final_retained_state_readback",
+      "identity_scope": "Current I schema plus user report; does not retroactively supply missing diagnostic frames for prior CC captures.",
+      "original_channels": {
+        "voltage_v": {
+          "minimum": 5.003,
+          "median": 5.005,
+          "maximum": 5.007
+        },
+        "current_a": {
+          "minimum": 0.0,
+          "median": 0.0,
+          "maximum": 0.001
+        },
+        "power_w": {
+          "minimum": 0.0,
+          "median": 0.002,
+          "maximum": 0.005
+        }
+      },
+      "boot_sampled_extrema_at_start": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 5.015613555908203,
+        "current_min_a": -1.2647075653076172,
+        "current_max_a": 0.10019703954458237,
+        "power_min_w": 0.0,
+        "power_max_w": 6.246570110321045
+      },
+      "boot_sampled_extrema_at_end": {
+        "voltage_min_v": 0.0,
+        "voltage_max_v": 5.015613555908203,
+        "current_min_a": -1.2647075653076172,
+        "current_max_a": 0.10019703954458237,
+        "power_min_w": 0.0,
+        "power_max_w": 6.246570110321045
+      }
+    }
+  },
+  "aborted_identity_probe": {
+    "status": "zero_pair_private_query_timeout_preserved",
+    "writes_by_read_command": {
+      "03": 1,
+      "05": 1,
+      "54": 1
+    },
+    "reply_counts": {
+      "03": 3,
+      "05": 3
+    },
+    "cycles": 0,
+    "paired_request_replies": {
+      "03": 1,
+      "05": 1,
+      "54": 0
+    },
+    "additional_ordinary_replies_while_waiting_for_54": {
+      "03": 2,
+      "05": 2
+    },
+    "additional_reply_origin": "Not determined; raw stream retained, not discarded or counted as completed pairs.",
+    "error": "TimeoutError: USB read timeout: 54",
+    "handle_closed": true,
+    "identity_scope": "User then reported stock restore; later correction explicitly applies to the three subsequent CC captures. No exact intervening flash timing or physical Flash hash is known.",
+    "unsupported_query_not_treated_as_confirmed_rt1i_regression": true
+  },
+  "cross_stage_checks": [
+    {
+      "next_stage": "ocp",
+      "previous_samples": 32879,
+      "next_samples": 41293,
+      "counters_and_extrema_progress": true,
+      "unobserved_gap_not_filled": true
+    },
+    {
+      "next_stage": "opp",
+      "previous_samples": 42922,
+      "next_samples": 44556,
+      "counters_and_extrema_progress": true,
+      "unobserved_gap_not_filled": true
+    }
+  ],
+  "diagnostic_continuity_across_identity_boundary_claimed": false,
+  "unchanged_parameter_checks": {
+    "calibration_fields": true,
+    "temperature_limits": true,
+    "language_brightness_and_standby": true,
+    "only_target_changed_between_ordinary_cc_captures": true
+  },
+  "final_state": {
+    "firmware": "RT1I_user_report_and_current_I_schema",
+    "mode": "CC",
+    "target_a": 1.3000000715255737,
+    "cutoff_v": 2.4999985694885254,
+    "over_current_a": 1.0,
+    "over_power_w": 10.0,
+    "time_limit_hours": 2,
+    "time_limit_minutes": 0,
+    "actual_input_voltage_v": {
+      "minimum": 5.003,
+      "median": 5.005,
+      "maximum": 5.007
+    },
+    "load_running": false,
+    "last_read_wall_time": "2026-11-16T21:08:26.087631+08:00",
+    "readback_finished_at": "2026-11-16T21:08:26.185668+08:00",
+    "USB_handles_closed": true,
+    "normal_parameter_restoration": "deferred at user direction: 先不调整",
+    "restored_to_12v_cc_01a": false
+  },
+  "verified_nested_host_files": 169,
+  "new_firmware_build": false,
+  "agent_control_or_flash_writes": false,
+  "human_flash_timing": "Not fully observed. Earlier stock-restore report and later RT1I correction retained; proposed extra comparison reflash cancelled.",
+  "sampled_extrema_scope": "Old OCP first frame already contains 25.44 V / -10.00 A / 120.51 W. Formation is outside observation and unchanged in the old two captures. Not assigned to observed runs or treated as continuous peak capture. Later I window belongs to a separate identity/boot boundary.",
+  "scope": "Selected low-power behavior and read-only transport evidence; not complete protection, CV, high-load, calibrated accuracy, BLE or full stack/IRQ qualification.",
+  "evidence_integrity": {
+    "manifest": "D:\\Documents\\Code\\Atorch-Load-App\\artifacts\\firmware-runtime-limits-20261116\\manifest.json",
+    "sha256": "23eca2bc8e0b02efb1abbcd6377b014b59616dbae0e54e213545f899476b5533",
+    "files": 81,
+    "recompute": "python -X utf8 -B artifacts/firmware-runtime-limits-20261116/freeze-evidence.py",
+    "nested_host_files": 169,
+    "prior_manifest_files": 39
+  }
+}

@@ -1,0 +1,2183 @@
+{
+  "scope": "2026-11-15 static evidence reproduction; no device access; not factory authentication",
+  "status": "scoped_reproduction_checks_passed",
+  "references": {
+    "rom.image": {
+      "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-Bootloader/ff3b9299d1b94d834b995fd858b3f75e2faa9840/user_boot/cpu/bd19/output/rom.image",
+      "size": 28672,
+      "sha256": "d56d4b502e2fe05c337822daa87b153a38d5949c53cca6e75b5739b7276b93a8"
+    },
+    "rom.lst": {
+      "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-AC63_BT_SDK/fdc018de81629e21e594d677cf05f87d288be0f0/cpu/bd19/tools/rom.lst",
+      "size": 749560,
+      "sha256": "77a567a419308f7389ea7c3b69ef0f4834e11cba2233c01aa9228771c9e8878e"
+    },
+    "uboot.a": {
+      "url": "https://raw.githubusercontent.com/Jieli-Tech/fw-Bootloader/ff3b9299d1b94d834b995fd858b3f75e2faa9840/user_boot/include_lib/liba/bd19/uboot.a",
+      "size": 275728,
+      "sha256": "c70f261fcfcf9c80f57cfd12028253453afa5f9b407c146c1b8a6b18964c2802"
+    }
+  },
+  "archives": [
+    {
+      "path": "Firmware&Software/02-BW150_PC_Application_V1.0.5.zip",
+      "size": 22406174,
+      "sha256": "695d91e4fdc8b7dbb1cd04020bbfa6d4063b5dde95841fe6b42bd9c0f6b438dc"
+    },
+    {
+      "path": "Firmware&Software/02-BW600_PC_Application_V1.0.8.zip",
+      "size": 32620114,
+      "sha256": "c2f521ca264d3b10f7bda3cc325f3da9998e16ad1b71a5cfc98ca29368d6d9d6"
+    },
+    {
+      "path": "Firmware&Software/10-DL24负载使用说明以及手机蓝牙APP软件等各种资料.zip",
+      "size": 32119078,
+      "sha256": "cf0d7905bef947f182536cf2ec6f1462c03506c4b42dcb59d34b8b9934b8fa3f"
+    },
+    {
+      "path": "Firmware&Software/10-DL24负载使用说明以及手机蓝牙APP软件等各种资料.zip::10-DL24负载使用说明以及手机蓝牙APP软件等各种资料/DL24（电脑蓝牙APP）V1.0.1.zip",
+      "size": 22717299,
+      "sha256": "adb39c4516a2c411877f3ea999b02ff82871bd8ad71d3525b562cb91b60fcd67"
+    },
+    {
+      "path": "Firmware&Software/10-DL24负载使用说明以及手机蓝牙APP软件等各种资料.zip::10-DL24负载使用说明以及手机蓝牙APP软件等各种资料/app-release.apk",
+      "size": 3436053,
+      "sha256": "ac2b424d83115f5d8b013afd33a10ffba5d4574ba05a33ed657d4b4a6448c9fa"
+    },
+    {
+      "path": "Firmware&Software/BW150-6321-APP-1-0-9.zip",
+      "size": 615931,
+      "sha256": "f4489e83e3397ceb3ff82311bbf33445b6fd760ee6c71a1a78f7f2c190f1fee5"
+    },
+    {
+      "path": "Firmware&Software/BW150固件升级-防过充.zip",
+      "size": 623256,
+      "sha256": "3777d40191d9c41d56370ee44551b18a8ad80e85e1324a97ec3146cd0b0357e9"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-0-9(客户定制：1000W).zip",
+      "size": 581798,
+      "sha256": "b3085ceaa4e30e84a4c86f94d880a4d707220a75eba6a44b5e20742d35ae2135"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-0-9.zip",
+      "size": 575875,
+      "sha256": "f2f5d26c2a9b7f75c9f26092c94f455eed4da209b7263f89e397b7f7676b57ba"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-1-0(___)-放电电压截止设置.zip",
+      "size": 582367,
+      "sha256": "7ccb924b3024a9d2a3aec7b646f8eb6e10c813ccfd38a1ec5e6e249991cbf886"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-1-0(___).zip",
+      "size": 582283,
+      "sha256": "df22adfb3e70dea8ccaab5ca16a3fca705de63b2dacc6ea95ff9c2134eca0d25"
+    },
+    {
+      "path": "artifacts/vendor-ble/meter.apk",
+      "size": 2743552,
+      "sha256": "9d93c1e7dc4f4d3a205f4b4bfeecf11b786244820dbf5ea9c2c7f6c23fa7ec61"
+    }
+  ],
+  "firmware_instances": [
+    {
+      "path": "Firmware&Software/BW150-6321-APP-1-0-9.zip::BW150-6321-APP-1-0-9.bin",
+      "size": 634880,
+      "sha256": "7f45aed8f9a725924b4da738394a99a9ff2633edca88b6a76f77fad5e0207c79"
+    },
+    {
+      "path": "Firmware&Software/BW150-6321-APP-1-1-0-UPP.bin",
+      "size": 643072,
+      "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+    },
+    {
+      "path": "Firmware&Software/BW150固件升级-防过充.zip::BW150固件升级-防过充/BW150-6321-APP-1-1-0-UPP.bin",
+      "size": 643072,
+      "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+    },
+    {
+      "path": "Firmware&Software/BW600-6321-APP-2-0-3.bin",
+      "size": 704512,
+      "sha256": "d43e0579240562f69ffdc731986935851e7d6ef7438cc8eec52e62887b7ab2cb"
+    },
+    {
+      "path": "Firmware&Software/BW600-6321-APP-2-0-5-UP.bin",
+      "size": 712704,
+      "sha256": "9b2f048759d558fd5d83d4a783d2add3f7af2af6edb3a9aca8fb5d86af5767a2"
+    },
+    {
+      "path": "Firmware&Software/BW600-APP-2-0-5(定制取消长按+和-).bin",
+      "size": 712704,
+      "sha256": "3dc1c03d4d124b09a9b5f7a20cf910f3cd3c07a04221ac4adab148c5a7be4d70"
+    },
+    {
+      "path": "Firmware&Software/CW20-24-6321-APP-1-0-5-UP.bin",
+      "size": 544768,
+      "sha256": "d80611d34280683c273a11e870fc4f5a4428cf4f6db55e10871078a180d9101e"
+    },
+    {
+      "path": "Firmware&Software/CW24-6321-APP-1-0-2.bin",
+      "size": 536576,
+      "sha256": "7e0cbd1253eeea4fd4f5b11fc4ffd788a55a745cf431e823612310082eae1d37"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-0-9(客户定制：1000W).zip::DL24-6321-APP-1-0-9(客户定制：1000W).bin",
+      "size": 598016,
+      "sha256": "2adc9625672549f55575a159c0be42b99591f24c35bb8fe0ded323f3bf99de63"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-0-9.zip::DL24-6321-APP-1-0-9.bin",
+      "size": 593920,
+      "sha256": "f6f8dda91ae68e4c817647bc24dd2c99e48ab08b9aee90b2337ff94da79dc1c3"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-1-0(___)-放电电压截止设置.zip::DL24-6321-APP-1-1-0(最新)-放电电压截止设置.bin",
+      "size": 598016,
+      "sha256": "fa6377b954ac052477552167047295e482e4e9d86bb02448efdbcd37e44b590b"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-1-0(___).zip::DL24-6321-APP-1-1-0(最新).bin",
+      "size": 598016,
+      "sha256": "fa6377b954ac052477552167047295e482e4e9d86bb02448efdbcd37e44b590b"
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-1-0(最新)-放电电压截止设置.bin",
+      "size": 598016,
+      "sha256": "fa6377b954ac052477552167047295e482e4e9d86bb02448efdbcd37e44b590b"
+    },
+    {
+      "path": "Firmware&Software/DL24EW-573-V1.0.6_app.bin",
+      "size": 315764,
+      "sha256": "527dc807772a4268f7151edefa8d916cd2009c5b22f4934c435b4e42fd08c553"
+    },
+    {
+      "path": "Firmware&Software/DL24EW-573-V1.1.0_app.bin",
+      "size": 324236,
+      "sha256": "1fbf40551b364954dcfaa31f9d9c68f216598c5a6214d02f5b0c99e7ed3be931"
+    }
+  ],
+  "extra_signature_or_boot_candidates": [],
+  "local_analysis_dependencies": {
+    "parser": {
+      "path": ".local/jl-misctools/firmware/fwunpack_newfw.py",
+      "sha256": "2daf8da2aba6e19981f55e8c6d221ff102c987fe31677056a5bf49c41601103a"
+    },
+    "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "apk_signing_material": [
+    {
+      "apk": "Firmware&Software/10-DL24负载使用说明以及手机蓝牙APP软件等各种资料.zip::10-DL24负载使用说明以及手机蓝牙APP软件等各种资料/app-release.apk",
+      "apk_sha256": "ac2b424d83115f5d8b013afd33a10ffba5d4574ba05a33ed657d4b4a6448c9fa",
+      "entry": "META-INF/CERT.RSA",
+      "subject": "CN=tang",
+      "issuer": "CN=tang",
+      "certificate_sha256": "96937b4c1db15483b45370944340ce5eaa70bcdf0073e1b184cb7c8df6fc98cb",
+      "key_type": "RSAPublicKey",
+      "key_bits": 2048,
+      "spki_sha256": "e39b0b465b2a7aab9fec3dcf91f0ca8215da6873fd8187c92b5011d91a89a2b7",
+      "certificate_self_signature_valid": true,
+      "firmware_key_byte_matches": [],
+      "limitation": "Parsed APK signing material; does not verify the whole APK or any firmware signature."
+    },
+    {
+      "apk": "artifacts/vendor-ble/meter.apk",
+      "apk_sha256": "9d93c1e7dc4f4d3a205f4b4bfeecf11b786244820dbf5ea9c2c7f6c23fa7ec61",
+      "entry": "META-INF/CERT.RSA",
+      "subject": "CN=tang",
+      "issuer": "CN=tang",
+      "certificate_sha256": "96937b4c1db15483b45370944340ce5eaa70bcdf0073e1b184cb7c8df6fc98cb",
+      "key_type": "RSAPublicKey",
+      "key_bits": 2048,
+      "spki_sha256": "e39b0b465b2a7aab9fec3dcf91f0ca8215da6873fd8187c92b5011d91a89a2b7",
+      "certificate_self_signature_valid": true,
+      "firmware_key_byte_matches": [],
+      "limitation": "Parsed APK signing material; does not verify the whole APK or any firmware signature."
+    }
+  ],
+  "limitations": [
+    "A matching public ROM is not a dump of the physical chip.",
+    "No physical OTP/eFuse, key_mac contents, or resident-IAP dump is available.",
+    "DER/marker scans cannot exclude custom raw signatures or transformed keys.",
+    "Linear disassembly includes data and inferred encodings; this is not a formal all-path proof.",
+    "No new flashing, malformed-packet experiment, or hardware acceptance test was performed."
+  ],
+  "full_evidence": {
+    "path": "artifacts/firmware-auth-audit-20261115.json",
+    "size": 1809308,
+    "sha256": "9f0ed82721f6245b42c02e67273112dfd4a1d5467a30b68b43a9e53691adb514",
+    "tracked": false
+  },
+  "reproducer": {
+    "path": "docs/analysis/firmware-auth-audit-20261115.py",
+    "sha256": "c0c959c88b8f241249f84ee361c1bac9d50a6526b1b3542231ce842b729bd116"
+  },
+  "unique_firmware": [
+    {
+      "path": "Firmware&Software/BW150-6321-APP-1-0-9.zip::BW150-6321-APP-1-0-9.bin",
+      "size": 634880,
+      "sha256": "7f45aed8f9a725924b4da738394a99a9ff2633edca88b6a76f77fad5e0207c79",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15612,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d9c",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "A",
+      "boot_sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x701d",
+      "usb_product_strings": ["ATORCH BW150 V1.0.2"],
+      "payload_end": "0x9a686",
+      "tail_bytes": 2426,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 634880,
+          "sha256": "7f45aed8f9a725924b4da738394a99a9ff2633edca88b6a76f77fad5e0207c79",
+          "DER_candidates": 266,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20896,
+          "sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+          "DER_candidates": 24,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15612,
+          "sha256": "f0d1d1d9f7eb970ecba7a6755007e214874498baa28b69e3642a06cb48bc0515",
+          "DER_candidates": 18,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 610936,
+          "sha256": "6a6bd63c55bdfc919cab2f69a98fd4c3cf1e4830a1b44bae685b7046ce0883ad",
+          "DER_candidates": 589,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "7e86423c6b46962b16c09a0a0d8fce4bbcadf82167f140ca6126478044163631",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/BW150-6321-APP-1-1-0-UPP.bin",
+      "size": 643072,
+      "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15612,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d9c",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "A",
+      "boot_sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x701d",
+      "usb_product_strings": ["ATORCH BW150 V1.0.2"],
+      "payload_end": "0x9c326",
+      "tail_bytes": 3290,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 643072,
+          "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+          "DER_candidates": 231,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20896,
+          "sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+          "DER_candidates": 24,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15612,
+          "sha256": "f0d1d1d9f7eb970ecba7a6755007e214874498baa28b69e3642a06cb48bc0515",
+          "DER_candidates": 18,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 618264,
+          "sha256": "afe464c4f358787bcaca409223e9c327926845b89e1f2d6dc3ada3181dab87cf",
+          "DER_candidates": 642,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "7e86423c6b46962b16c09a0a0d8fce4bbcadf82167f140ca6126478044163631",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/BW600-6321-APP-2-0-3.bin",
+      "size": 704512,
+      "sha256": "d43e0579240562f69ffdc731986935851e7d6ef7438cc8eec52e62887b7ab2cb",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15495,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d27",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "B",
+      "boot_sha256": "df9624d0b6a5b9cdc700bb27fd14324bad5fc7f5f693f01bdf8e9e2264d0bad4",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x6fc7",
+      "usb_product_strings": ["ATORCH BW600 V1.0.3"],
+      "payload_end": "0xab6a6",
+      "tail_bytes": 2394,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 704512,
+          "sha256": "d43e0579240562f69ffdc731986935851e7d6ef7438cc8eec52e62887b7ab2cb",
+          "DER_candidates": 325,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20832,
+          "sha256": "df9624d0b6a5b9cdc700bb27fd14324bad5fc7f5f693f01bdf8e9e2264d0bad4",
+          "DER_candidates": 23,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15495,
+          "sha256": "7d9b732f4285ad84d622e90abe6e9e239931205d3d7a827d33c80f78c53abe21",
+          "DER_candidates": 18,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 680600,
+          "sha256": "e4a7fd0124377042d4725d6f35bb91ef0574084788e16f15dc3c3f277d0f6ad3",
+          "DER_candidates": 680,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "9911119fff8ebaf8fcf98938e08a3b5b02d6987e06832fe9afa561702daf5036",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/BW600-6321-APP-2-0-5-UP.bin",
+      "size": 712704,
+      "sha256": "9b2f048759d558fd5d83d4a783d2add3f7af2af6edb3a9aca8fb5d86af5767a2",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15495,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d27",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "B",
+      "boot_sha256": "df9624d0b6a5b9cdc700bb27fd14324bad5fc7f5f693f01bdf8e9e2264d0bad4",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x6fc7",
+      "usb_product_strings": ["ATORCH BW600 V1.0.3"],
+      "payload_end": "0xad3e6",
+      "tail_bytes": 3098,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 712704,
+          "sha256": "9b2f048759d558fd5d83d4a783d2add3f7af2af6edb3a9aca8fb5d86af5767a2",
+          "DER_candidates": 285,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20832,
+          "sha256": "df9624d0b6a5b9cdc700bb27fd14324bad5fc7f5f693f01bdf8e9e2264d0bad4",
+          "DER_candidates": 23,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15495,
+          "sha256": "7d9b732f4285ad84d622e90abe6e9e239931205d3d7a827d33c80f78c53abe21",
+          "DER_candidates": 18,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 688088,
+          "sha256": "362bd10a3c988627474397f7011f4f8b8069226e34a442e1bdac26c800fc9e5c",
+          "DER_candidates": 692,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "9911119fff8ebaf8fcf98938e08a3b5b02d6987e06832fe9afa561702daf5036",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/BW600-APP-2-0-5(定制取消长按+和-).bin",
+      "size": 712704,
+      "sha256": "3dc1c03d4d124b09a9b5f7a20cf910f3cd3c07a04221ac4adab148c5a7be4d70",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15495,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d27",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "B",
+      "boot_sha256": "df9624d0b6a5b9cdc700bb27fd14324bad5fc7f5f693f01bdf8e9e2264d0bad4",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x6fc7",
+      "usb_product_strings": ["ATORCH BW600 V1.0.3"],
+      "payload_end": "0xad4e6",
+      "tail_bytes": 2842,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 712704,
+          "sha256": "3dc1c03d4d124b09a9b5f7a20cf910f3cd3c07a04221ac4adab148c5a7be4d70",
+          "DER_candidates": 306,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20832,
+          "sha256": "df9624d0b6a5b9cdc700bb27fd14324bad5fc7f5f693f01bdf8e9e2264d0bad4",
+          "DER_candidates": 23,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15495,
+          "sha256": "7d9b732f4285ad84d622e90abe6e9e239931205d3d7a827d33c80f78c53abe21",
+          "DER_candidates": 18,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 688344,
+          "sha256": "df3981ad39eb7bfd631437a99ca8b44e075e2d3b654335e83013b6a269d047ba",
+          "DER_candidates": 692,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "9911119fff8ebaf8fcf98938e08a3b5b02d6987e06832fe9afa561702daf5036",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/CW20-24-6321-APP-1-0-5-UP.bin",
+      "size": 544768,
+      "sha256": "d80611d34280683c273a11e870fc4f5a4428cf4f6db55e10871078a180d9101e",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15461,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d05",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "C",
+      "boot_sha256": "e69585815be66ba8a0be951e759d2e55e4f40299c87a99888110068afa629c03",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x6f77",
+      "usb_product_strings": ["ATORCH CW24 V1.0.2", "ATORCH CW20 V1.0.2"],
+      "payload_end": "0x848f2",
+      "tail_bytes": 1806,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 544768,
+          "sha256": "d80611d34280683c273a11e870fc4f5a4428cf4f6db55e10871078a180d9101e",
+          "DER_candidates": 248,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20768,
+          "sha256": "e69585815be66ba8a0be951e759d2e55e4f40299c87a99888110068afa629c03",
+          "DER_candidates": 26,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15461,
+          "sha256": "27e98b565902fde38282295ad5c004fcd9b53da3ef7ce8fcb1836785d0c90ce6",
+          "DER_candidates": 21,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 521444,
+          "sha256": "25531e4cbd984f4833d9d26b1da0f069e661369161e16ce98598c8a1dc994da6",
+          "DER_candidates": 440,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "13ff97d8e743de413a3b30661b41a25b6d98ec6b63b413468d021fb8ae4ce105",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/CW24-6321-APP-1-0-2.bin",
+      "size": 536576,
+      "sha256": "7e0cbd1253eeea4fd4f5b11fc4ffd788a55a745cf431e823612310082eae1d37",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15461,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d05",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "C",
+      "boot_sha256": "e69585815be66ba8a0be951e759d2e55e4f40299c87a99888110068afa629c03",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x6f77",
+      "usb_product_strings": ["ATORCH CW24 V1.0.2", "ATORCH CW20 V1.0.2"],
+      "payload_end": "0x82912",
+      "tail_bytes": 1774,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 536576,
+          "sha256": "7e0cbd1253eeea4fd4f5b11fc4ffd788a55a745cf431e823612310082eae1d37",
+          "DER_candidates": 225,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20768,
+          "sha256": "e69585815be66ba8a0be951e759d2e55e4f40299c87a99888110068afa629c03",
+          "DER_candidates": 26,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15461,
+          "sha256": "27e98b565902fde38282295ad5c004fcd9b53da3ef7ce8fcb1836785d0c90ce6",
+          "DER_candidates": 21,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 513284,
+          "sha256": "9350e669a38ca6a24a973203ecd337a0e1a39a2447c8808ef2e2c7212cdf02cb",
+          "DER_candidates": 445,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "13ff97d8e743de413a3b30661b41a25b6d98ec6b63b413468d021fb8ae4ce105",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-0-9(客户定制：1000W).zip::DL24-6321-APP-1-0-9(客户定制：1000W).bin",
+      "size": 598016,
+      "sha256": "2adc9625672549f55575a159c0be42b99591f24c35bb8fe0ded323f3bf99de63",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15612,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d9c",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "A",
+      "boot_sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x701d",
+      "usb_product_strings": ["ATORCH BW150 V1.0.2"],
+      "payload_end": "0x91aa6",
+      "tail_bytes": 1370,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 598016,
+          "sha256": "2adc9625672549f55575a159c0be42b99591f24c35bb8fe0ded323f3bf99de63",
+          "DER_candidates": 272,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20896,
+          "sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+          "DER_candidates": 24,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15612,
+          "sha256": "f0d1d1d9f7eb970ecba7a6755007e214874498baa28b69e3642a06cb48bc0515",
+          "DER_candidates": 18,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 575128,
+          "sha256": "949cff4cea04936d32c83b8006f7be88542c3d58732b35806fb5ba91a1a4f757",
+          "DER_candidates": 581,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "0ae6bd05e7dfc64d8467e88d756133bb72ae663a8d4e369c8d7ffc65da837608",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-0-9.zip::DL24-6321-APP-1-0-9.bin",
+      "size": 593920,
+      "sha256": "f6f8dda91ae68e4c817647bc24dd2c99e48ab08b9aee90b2337ff94da79dc1c3",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15612,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d9c",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "A",
+      "boot_sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x701d",
+      "usb_product_strings": ["ATORCH BW150 V1.0.2"],
+      "payload_end": "0x902e6",
+      "tail_bytes": 3354,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 593920,
+          "sha256": "f6f8dda91ae68e4c817647bc24dd2c99e48ab08b9aee90b2337ff94da79dc1c3",
+          "DER_candidates": 257,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20896,
+          "sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+          "DER_candidates": 24,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15612,
+          "sha256": "f0d1d1d9f7eb970ecba7a6755007e214874498baa28b69e3642a06cb48bc0515",
+          "DER_candidates": 18,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 569048,
+          "sha256": "6bf0543175065949ad3eec8b19c481ff3362b2f75e5bab26d7c72537a331ec04",
+          "DER_candidates": 529,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "0ae6bd05e7dfc64d8467e88d756133bb72ae663a8d4e369c8d7ffc65da837608",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/DL24-6321-APP-1-1-0(___)-放电电压截止设置.zip::DL24-6321-APP-1-1-0(最新)-放电电压截止设置.bin",
+      "size": 598016,
+      "sha256": "fa6377b954ac052477552167047295e482e4e9d86bb02448efdbcd37e44b590b",
+      "format": "AC632N",
+      "header_crc_valid": true,
+      "top_entries": [
+        {
+          "name": "uboot.boot",
+          "offset": "0xa0",
+          "size": 15612,
+          "flags": "0x40",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "isd_config.ini",
+          "offset": "0x3d9c",
+          "size": 122,
+          "flags": "0x2",
+          "contained_in_package": true,
+          "payload_crc_valid": true
+        },
+        {
+          "name": "app_dir_head",
+          "offset": "0x4000",
+          "size": 4294967295,
+          "flags": "0x81",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        },
+        {
+          "name": "key_mac",
+          "offset": "0xff000",
+          "size": 4096,
+          "flags": "0x12",
+          "contained_in_package": false,
+          "payload_crc_valid": null
+        }
+      ],
+      "chipkey": "0x8d07",
+      "boot_family": "A",
+      "boot_sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+      "BANKCB": {
+        "header_crc_valid": true,
+        "data_crc_valid": true,
+        "load": "0x2000",
+        "dictionary_size": 28672,
+        "dictionary_address": "0x100000",
+        "temporary_address": "0xa000"
+      },
+      "iap_descriptor_address": "0x701d",
+      "usb_product_strings": ["ATORCH BW150 V1.0.2"],
+      "payload_end": "0x91ce6",
+      "tail_bytes": 794,
+      "tail_all_ff": true,
+      "files": {
+        "raw": {
+          "size": 598016,
+          "sha256": "fa6377b954ac052477552167047295e482e4e9d86bb02448efdbcd37e44b590b",
+          "DER_candidates": 232,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "boot-uncompressed": {
+          "size": 20896,
+          "sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+          "DER_candidates": 24,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/uboot.boot": {
+          "size": 15612,
+          "sha256": "f0d1d1d9f7eb970ecba7a6755007e214874498baa28b69e3642a06cb48bc0515",
+          "DER_candidates": 18,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/top/isd_config.ini": {
+          "size": 122,
+          "sha256": "45c32b0fe5286976924ea5188475cd50995a4ef913f30decd5d48a1541242aea",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/app.bin": {
+          "size": 575704,
+          "sha256": "0a271a0b7b1b3d8d55f747764b8abc6d9c958dc4165a7f9e4d944c4043bb399a",
+          "DER_candidates": 587,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/cfg_tool.bin": {
+          "size": 718,
+          "sha256": "0ae6bd05e7dfc64d8467e88d756133bb72ae663a8d4e369c8d7ffc65da837608",
+          "DER_candidates": 0,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        },
+        "/files/p11_code.bin": {
+          "size": 4096,
+          "sha256": "d37e34cc8200cae2a372c1a83f46c1f65db756984e2470b7437734e7b5c5fc4c",
+          "DER_candidates": 3,
+          "X509_certificates": 0,
+          "DER_public_keys": 0,
+          "markers": {}
+        }
+      }
+    },
+    {
+      "path": "Firmware&Software/DL24EW-573-V1.0.6_app.bin",
+      "size": 315764,
+      "sha256": "527dc807772a4268f7151edefa8d916cd2009c5b22f4934c435b4e42fd08c553",
+      "format": "not-AC632N",
+      "first_RV32IC_instruction": [
+        {
+          "address": "0x0",
+          "mnemonic": "j",
+          "operands": "0x2bb8"
+        }
+      ],
+      "containers": {
+        "markers": {},
+        "der_candidates": 95,
+        "x509_certificates": [],
+        "der_public_keys": []
+      }
+    },
+    {
+      "path": "Firmware&Software/DL24EW-573-V1.1.0_app.bin",
+      "size": 324236,
+      "sha256": "1fbf40551b364954dcfaa31f9d9c68f216598c5a6214d02f5b0c99e7ed3be931",
+      "format": "not-AC632N",
+      "first_RV32IC_instruction": [
+        {
+          "address": "0x0",
+          "mnemonic": "j",
+          "operands": "0x2b68"
+        }
+      ],
+      "containers": {
+        "markers": {},
+        "der_candidates": 98,
+        "x509_certificates": [],
+        "der_public_keys": []
+      }
+    }
+  ],
+  "boot_families": {
+    "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0": {
+      "family": "A",
+      "size": 20896,
+      "sha256": "6b3bc026105594afeddc78d43fbaba2c055253103a6f18ca8f2e7ac22a7563a0",
+      "linear_records_including_data": 5342,
+      "supplemented_records": 75,
+      "unknown_records": [
+        {
+          "address": "0x4dda",
+          "bytes": "0f00",
+          "mnemonic": ".short",
+          "operands": "0f00",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4ddc",
+          "bytes": "3100",
+          "mnemonic": ".short",
+          "operands": "3100",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4df6",
+          "bytes": "2501",
+          "mnemonic": ".short",
+          "operands": "2501",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x57ce",
+          "bytes": "1f00",
+          "mnemonic": ".short",
+          "operands": "1f00",
+          "decoder": "unknown",
+          "known_table_data": true
+        }
+      ],
+      "direct_rom_targets": [
+        "0x10517a",
+        "0x106d98",
+        "0x106d9c",
+        "0x106ee4",
+        "0x106eec",
+        "0x106ef0",
+        "0x106ef4",
+        "0x106efc",
+        "0x106f0c",
+        "0x106f10",
+        "0x106f30",
+        "0x106f38",
+        "0x106f3c",
+        "0x106f44",
+        "0x106f4c",
+        "0x106f50"
+      ],
+      "indirect_sites": [
+        {
+          "address": "0x2f5c",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": false
+        },
+        {
+          "address": "0x4636",
+          "mnemonic": "call",
+          "operands": "r8",
+          "known_table_data": false
+        },
+        {
+          "address": "0x4dde",
+          "mnemonic": "call",
+          "operands": "r0",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4de0",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4de2",
+          "mnemonic": "call",
+          "operands": "r6",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4de4",
+          "mnemonic": "call",
+          "operands": "r10",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4de6",
+          "mnemonic": "call",
+          "operands": "r14",
+          "known_table_data": true
+        },
+        {
+          "address": "0x5720",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x573e",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x5752",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x5776",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x583e",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x586a",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": true
+        },
+        {
+          "address": "0x586e",
+          "mnemonic": "goto",
+          "operands": "r7",
+          "known_table_data": true
+        },
+        {
+          "address": "0x58a4",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x58fc",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        }
+      ]
+    },
+    "df9624d0b6a5b9cdc700bb27fd14324bad5fc7f5f693f01bdf8e9e2264d0bad4": {
+      "family": "B",
+      "size": 20832,
+      "sha256": "df9624d0b6a5b9cdc700bb27fd14324bad5fc7f5f693f01bdf8e9e2264d0bad4",
+      "linear_records_including_data": 5298,
+      "supplemented_records": 75,
+      "unknown_records": [
+        {
+          "address": "0x4d96",
+          "bytes": "0f00",
+          "mnemonic": ".short",
+          "operands": "0f00",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d98",
+          "bytes": "3100",
+          "mnemonic": ".short",
+          "operands": "3100",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4db2",
+          "bytes": "2501",
+          "mnemonic": ".short",
+          "operands": "2501",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x578a",
+          "bytes": "1f00",
+          "mnemonic": ".short",
+          "operands": "1f00",
+          "decoder": "unknown",
+          "known_table_data": true
+        }
+      ],
+      "direct_rom_targets": [
+        "0x10517a",
+        "0x106d98",
+        "0x106d9c",
+        "0x106ee4",
+        "0x106eec",
+        "0x106ef0",
+        "0x106ef4",
+        "0x106efc",
+        "0x106f0c",
+        "0x106f10",
+        "0x106f30",
+        "0x106f38",
+        "0x106f3c",
+        "0x106f44",
+        "0x106f4c",
+        "0x106f50"
+      ],
+      "indirect_sites": [
+        {
+          "address": "0x2f0a",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": false
+        },
+        {
+          "address": "0x45ee",
+          "mnemonic": "call",
+          "operands": "r11",
+          "known_table_data": false
+        },
+        {
+          "address": "0x4d9a",
+          "mnemonic": "call",
+          "operands": "r0",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d9c",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d9e",
+          "mnemonic": "call",
+          "operands": "r6",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4da0",
+          "mnemonic": "call",
+          "operands": "r10",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4da2",
+          "mnemonic": "call",
+          "operands": "r14",
+          "known_table_data": true
+        },
+        {
+          "address": "0x56dc",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x56fa",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x570e",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x5732",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x57fa",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x5826",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": true
+        },
+        {
+          "address": "0x582a",
+          "mnemonic": "goto",
+          "operands": "r7",
+          "known_table_data": true
+        },
+        {
+          "address": "0x5860",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x58b8",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        }
+      ]
+    },
+    "e69585815be66ba8a0be951e759d2e55e4f40299c87a99888110068afa629c03": {
+      "family": "C",
+      "size": 20768,
+      "sha256": "e69585815be66ba8a0be951e759d2e55e4f40299c87a99888110068afa629c03",
+      "linear_records_including_data": 5289,
+      "supplemented_records": 75,
+      "unknown_records": [
+        {
+          "address": "0x4d42",
+          "bytes": "0f00",
+          "mnemonic": ".short",
+          "operands": "0f00",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d44",
+          "bytes": "3100",
+          "mnemonic": ".short",
+          "operands": "3100",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d5e",
+          "bytes": "2501",
+          "mnemonic": ".short",
+          "operands": "2501",
+          "decoder": "unknown",
+          "known_table_data": true
+        },
+        {
+          "address": "0x5736",
+          "bytes": "1f00",
+          "mnemonic": ".short",
+          "operands": "1f00",
+          "decoder": "unknown",
+          "known_table_data": true
+        }
+      ],
+      "direct_rom_targets": [
+        "0x10517a",
+        "0x106d98",
+        "0x106d9c",
+        "0x106ee4",
+        "0x106eec",
+        "0x106ef0",
+        "0x106ef4",
+        "0x106efc",
+        "0x106f0c",
+        "0x106f10",
+        "0x106f30",
+        "0x106f38",
+        "0x106f3c",
+        "0x106f44",
+        "0x106f4c",
+        "0x106f50"
+      ],
+      "indirect_sites": [
+        {
+          "address": "0x2f24",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": false
+        },
+        {
+          "address": "0x4574",
+          "mnemonic": "call",
+          "operands": "r8",
+          "known_table_data": false
+        },
+        {
+          "address": "0x4d46",
+          "mnemonic": "call",
+          "operands": "r0",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d48",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d4a",
+          "mnemonic": "call",
+          "operands": "r6",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d4c",
+          "mnemonic": "call",
+          "operands": "r10",
+          "known_table_data": true
+        },
+        {
+          "address": "0x4d4e",
+          "mnemonic": "call",
+          "operands": "r14",
+          "known_table_data": true
+        },
+        {
+          "address": "0x5688",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x56a6",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x56ba",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x56de",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x57a6",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x57dc",
+          "mnemonic": "call",
+          "operands": "r3",
+          "known_table_data": true
+        },
+        {
+          "address": "0x57de",
+          "mnemonic": "goto",
+          "operands": "r1",
+          "known_table_data": true
+        },
+        {
+          "address": "0x580c",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        },
+        {
+          "address": "0x5864",
+          "mnemonic": "call",
+          "operands": "r2",
+          "known_table_data": false
+        }
+      ]
+    }
+  },
+  "ROM": {
+    "image_bytes_covered_and_equal": 28672,
+    "direct_graph": {
+      "roots": {
+        "0x100000": "_start",
+        "0x10505c": "_user_mode",
+        "0x105e2c": "Run_App",
+        "0x10605c": "main",
+        "0x10657c": "norflash_read"
+      },
+      "reachable_function_count": 61,
+      "named_crypto_functions": [],
+      "unresolved_indirect_sites": {
+        "usb_slave_mode": [
+          {
+            "address": "0x102f10",
+            "assembly": "call r2"
+          },
+          {
+            "address": "0x10305e",
+            "assembly": "call r1"
+          }
+        ],
+        "boot_poweroff": [
+          {
+            "address": "0x105166",
+            "assembly": "call r0"
+          }
+        ],
+        "uart_recv_loader": [
+          {
+            "address": "0x105868",
+            "assembly": "call r3"
+          }
+        ],
+        "Run_App": [
+          {
+            "address": "0x105e3e",
+            "assembly": "call r6"
+          },
+          {
+            "address": "0x105e60",
+            "assembly": "call r5"
+          },
+          {
+            "address": "0x105e74",
+            "assembly": "call r6"
+          },
+          {
+            "address": "0x105eb2",
+            "assembly": "call r6"
+          },
+          {
+            "address": "0x105ece",
+            "assembly": "call r7"
+          },
+          {
+            "address": "0x105f32",
+            "assembly": "call r8"
+          }
+        ]
+      },
+      "limitation": "Direct edges plus explicit roots only; no claim of formal whole-ROM coverage."
+    },
+    "supplemental_decoder_validation": {
+      "compared_records": 111,
+      "mismatches": 0
+    },
+    "supplemental_decoder_oracle_records": 111
+  },
+  "sdk_library": [
+    {
+      "object": "dec.o",
+      "sha256": "3d541760ad4dd38e147af17a2e8973d68949469a78c99e7b3077d46c9039ff4c",
+      "defined_function_count": 2,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "lz4.o",
+      "sha256": "99be978a5f0a54f13a30f95f07075a2fc8c547f451c4d0bdcf8e3740c9fb8051",
+      "defined_function_count": 0,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "printf.o",
+      "sha256": "8e42595417473226ac14e5ad0e876db6a9402d406665decb200ae587c9b66e8b",
+      "defined_function_count": 6,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "gpio.o",
+      "sha256": "40e3d0543196e131b5a3ae76cc5c9f62f3410e634d272a714fb929f88015411b",
+      "defined_function_count": 24,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "wdt.o",
+      "sha256": "21b1d27b8ac9d8838e82ec80441f6ec68e7aafa1771826b374bd1dcb4c830c65",
+      "defined_function_count": 1,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "setup.o",
+      "sha256": "f37173f66fe9ca99700d039462f4edf52faf9d6296fc058ec09867c884d9ae68",
+      "defined_function_count": 12,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "clock.o",
+      "sha256": "a0a55b612611d24c9c416db80af4eee7722bc81eb8ec7ff56eac41fb027c5b31",
+      "defined_function_count": 2,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "usb.o",
+      "sha256": "19a0f5a32ffc61fc0148839194c051b4bd8a3e190a79cc28fbcab7c94a66de6c",
+      "defined_function_count": 79,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "efuse.o",
+      "sha256": "89723ad85bb8acb2be7fcd5a1bd0166aee12ded5ba22d83ddafc77c1408da67a",
+      "defined_function_count": 3,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "crc.o",
+      "sha256": "990a4b377c291bc71d144cb56dd69310a6cffea6b5c7721a69783d3515a12c3b",
+      "defined_function_count": 1,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "p33.o",
+      "sha256": "1311af0b654580af71d343f14cac6ebbac391649bbf7ad3e3b46884846b947b6",
+      "defined_function_count": 1,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "irq.o",
+      "sha256": "d7c615357df1a0fda2650f5b8a51f3335bdb53fc986520d4ea067e47dd9d66c6",
+      "defined_function_count": 1,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "spi.o",
+      "sha256": "34bb9c19b1deb53057924180dc194a0c0057c2ba30593b5ca827cfc2bcf8c5b7",
+      "defined_function_count": 11,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "sfc_boot.o",
+      "sha256": "24664ab185ab5b3161a151110faafad949c67c1a7b44dab1db4ecb293de2085d",
+      "defined_function_count": 1,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "norflash.o",
+      "sha256": "873803d0e3493193b3c0a7ad98780ca55335041c65db64c0ccc06d1d11848412",
+      "defined_function_count": 23,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "sfc_test.o",
+      "sha256": "604be3b4643e05cf59d3a8f2769fc1f9a9c0b107b5fe1174c35bc9eafaf16707",
+      "defined_function_count": 0,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "jlfs.o",
+      "sha256": "4079746fa1714a267e259618eae8dbf0e396385d0f4a8fc85e949355878004aa",
+      "defined_function_count": 23,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "upgrade.o",
+      "sha256": "075b0ece5be1d2dd49ba9e49c60d39e122ab580563d372d0ec139a3973a95a2b",
+      "defined_function_count": 4,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "usb_phy.o",
+      "sha256": "5259d44e9c11687984156af8b55d62e8d3832abde19395b0ca9b974812b9a5e7",
+      "defined_function_count": 24,
+      "auth_related_called_names": []
+    },
+    {
+      "object": "usb_setup.o",
+      "sha256": "f0d6fc637d10640be532671ddfbbaef1a50a4e972019c2b74385a340e90f4201",
+      "defined_function_count": 18,
+      "auth_related_called_names": []
+    }
+  ],
+  "sdk_defined_functions": 236,
+  "vendor_pc_programs": [
+    {
+      "path": "Firmware&Software/02-BW150_PC_Application_V1.0.5.zip::02-BW150_PC_Application_V1.0.5/BW150_Application.exe",
+      "sha256": "2f66a70319cdb1eb7ea78fcc1a120bcc07ed216150a0adedc2786fd132075d16",
+      "size": 2631680,
+      "image_base": "0x400000",
+      "pe_security_directory": {
+        "offset": 0,
+        "size": 0
+      },
+      "limitation": "Static evidence; executable not loaded. Semantic conclusions require reading the listed code.",
+      "critical_blocks": [
+        {
+          "start": "0x433430",
+          "end_exclusive": "0x434060",
+          "mapped_bytes_sha256": "177151c4b7eb9fb4f0045c362b3d387ad4321935ea5d54206eb13a3903c7ecea",
+          "instruction_count": 755
+        },
+        {
+          "start": "0x41bed0",
+          "end_exclusive": "0x41c3f0",
+          "mapped_bytes_sha256": "3614351c0596b3ca2f61f87d79c0679382add4892a923dcfd8dcb2c439e2a0c3",
+          "instruction_count": 301
+        },
+        {
+          "start": "0x42dbaa",
+          "end_exclusive": "0x42dbb4",
+          "mapped_bytes_sha256": "97fe70c26c2c311584b4aab18c694996ca7d82c2116f74cac05d6bec99bd68f3",
+          "instruction_count": 1
+        }
+      ]
+    },
+    {
+      "path": "Firmware&Software/02-BW600_PC_Application_V1.0.8.zip::02-BW600_PC_Application_V1.0.8/Load_Application.exe",
+      "sha256": "80ba4378f4c616e9e2b5c99fa893ff8e3ce03c7b3816a266618ce3d64c9bcc31",
+      "size": 2649088,
+      "image_base": "0x400000",
+      "pe_security_directory": {
+        "offset": 0,
+        "size": 0
+      },
+      "limitation": "Static evidence; executable not loaded. Semantic conclusions require reading the listed code.",
+      "critical_blocks": [
+        {
+          "start": "0x4345c0",
+          "end_exclusive": "0x4351f0",
+          "mapped_bytes_sha256": "ff251b11c9abdd4d42e27666ed2b5664797f1454a67329948f77f41d46e2651d",
+          "instruction_count": 755
+        },
+        {
+          "start": "0x41d000",
+          "end_exclusive": "0x41d520",
+          "mapped_bytes_sha256": "c799f709ba089a723128a3bac94f71bdcbd0dd708d7898828c9fe26358e5e79f",
+          "instruction_count": 301
+        },
+        {
+          "start": "0x40b120",
+          "end_exclusive": "0x40c4f0",
+          "mapped_bytes_sha256": "4563b3353c74a4b97939b203272ff51459e633c3dde4d0ccaac0346ee028f609",
+          "instruction_count": 1142
+        },
+        {
+          "start": "0x42ee5a",
+          "end_exclusive": "0x42ee64",
+          "mapped_bytes_sha256": "97fe70c26c2c311584b4aab18c694996ca7d82c2116f74cac05d6bec99bd68f3",
+          "instruction_count": 1
+        }
+      ]
+    },
+    {
+      "path": "Firmware&Software/10-DL24负载使用说明以及手机蓝牙APP软件等各种资料.zip::10-DL24负载使用说明以及手机蓝牙APP软件等各种资料/DL24（电脑蓝牙APP）V1.0.1.zip::01-DL24M DL24 electronic load software V1.0.1 version/ElecLoadApplication.exe",
+      "sha256": "09279aafb9eab79e70ab44a5fb49d27439aa17411d427b0e04bbbe540fdf9048",
+      "size": 910848,
+      "image_base": "0x400000",
+      "pe_security_directory": {
+        "offset": 0,
+        "size": 0
+      },
+      "limitation": "Static evidence; executable not loaded. Semantic conclusions require reading the listed code.",
+      "critical_blocks": [
+        {
+          "start": "0x428350",
+          "end_exclusive": "0x428df0",
+          "mapped_bytes_sha256": "231f8bd473e55c5e62f9dca69bfe4bfbcedc728a1dd2bdcef2e0b463c1307e21",
+          "instruction_count": 651
+        },
+        {
+          "start": "0x429430",
+          "end_exclusive": "0x4298b0",
+          "mapped_bytes_sha256": "a0d77518e7d8b9ea130f69a179864c50bfd95a012b8bb80944fd7110c54983ae",
+          "instruction_count": 256
+        },
+        {
+          "start": "0x4298b0",
+          "end_exclusive": "0x42a6d0",
+          "mapped_bytes_sha256": "f70ee1f0f29edd97271c918aa3849c41623f4ccf373693f0f857ec4885fd1e51",
+          "instruction_count": 735
+        }
+      ]
+    }
+  ],
+  "scan_totals": {
+    "firmware_instances": 15,
+    "unique_firmware": 12,
+    "AC632N_unique": 10,
+    "boot_families": 3,
+    "object_representations": 72,
+    "DER_candidates": 9174,
+    "X509_certificates": 0,
+    "DER_public_keys": 0,
+    "marker_hit_objects": 0
+  }
+}

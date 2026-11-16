@@ -1,0 +1,1009 @@
+{
+  "status": "offline_batch8_checks_and_user_reported_agreed_acceptance_passed",
+  "hardware_tested": true,
+  "prior_result": {
+    "source": "docs/firmware-suite-test-20261115.md",
+    "reported_by": "user",
+    "result": "S6:3F",
+    "stable": true,
+    "cold_start": true,
+    "original_restored": "V1.1.0",
+    "scope": "Historical user report; no new device observation or readback."
+  },
+  "source": {
+    "path": "Firmware&Software/BW150-6321-APP-1-1-0-UPP.bin",
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "size": 643072
+  },
+  "tool_sha256": "c8011a4cbe5bdf086f1d2636d6ad20507eee9c857e74afe03fef49b0b39f829a",
+  "previous_tool_sha256": "6876ad9a14754e68c7725ccee032fb0646f6f8c985c501a6ba56958cf5367e83",
+  "previous_frozen_evidence_verified": {
+    "artifacts/firmware-minimal-test-20261115/manifest.json": {
+      "sha256": "d3862fd853920ea685e6b532822bd364e591f0635e0be3a96026974ab2e59906",
+      "covered_files_verified": 9
+    },
+    "artifacts/firmware-instruction-test-20261115/manifest.json": {
+      "sha256": "3d5ec6334166ba1a141f2b45ce8e347e0272edaf35a10a19c23f4e133b98db82",
+      "covered_files_verified": 6
+    },
+    "artifacts/firmware-sequence-test-20261115/manifest.json": {
+      "sha256": "f14f7545931f0da4101443346b33e73aba343642d5b6f7b2bd209c7b7a785520",
+      "covered_files_verified": 8
+    },
+    "artifacts/firmware-trampoline-test-20261115/manifest.json": {
+      "sha256": "b75a7d86eb8150f0fe2d268d87bf7a9ef7a7dc3cd8c18d8ba354de3a3f5f9316",
+      "covered_files_verified": 7
+    },
+    "artifacts/firmware-pc-limit-test-20261115/manifest.json": {
+      "sha256": "b1115147e818eee7e122323bc807f73e05035e5fc7a82846bed8037f82ba036c",
+      "covered_files_verified": 5
+    },
+    "artifacts/firmware-suite-test-20261115/manifest.json": {
+      "sha256": "73baee8e7fee431390806d56143c374377e6f4dfaf3bc71791046755cf9aba21",
+      "covered_files_verified": 4
+    }
+  },
+  "additional_isa_dependencies": {
+    "q32s_ins_logicops.sinc": "a1166d947aad9797fd13220f4eb29cb73738e46af308fb4cc2aa6532e7bff79a",
+    "q32s_ins_shiftrot.sinc": "dfb1a3d3b2185bf1d690d97b961f6d5b7331ac071eab625e897bbbc5e0b39a7b",
+    "q32s_ins_stack.sinc": "a21b5c9e1ddfe8d92bd93ab33f9c102b63493b357032cca639fbe135699c97a1",
+    "q32s_ins_loadstore.sinc": "3803753b575d89784fa73c03e91576a5284cb7f299d07f795e066a844265d7f6"
+  },
+  "candidate": {
+    "file": "BW150-V1.1.0-BATCH8-EXPERIMENTAL.bin",
+    "size": 643072,
+    "sha256": "87f4ce2e27090edfe00b960e84aa9f33eb98e14eef154a05898936adf569be83",
+    "app_sha256": "42a1731a7617c613decdc574919dbe30beef8197e9f6f52bfb41b0c0e32378cf",
+    "expected_about_model": "BW150",
+    "expected_about_version": "8FF",
+    "result_format": "8 followed by two uppercase hex digits; FF means all eight groups passed.",
+    "expected_usb_product": "ATORCH BW150 V1.1.0"
+  },
+  "groups": [
+    {
+      "bit": "01",
+      "name": "call_and_nested_stack_regression",
+      "vectors": 6
+    },
+    {
+      "bit": "02",
+      "name": "u32_add_subtract_multiply_boundaries",
+      "vectors": 8,
+      "checks_per_vector": 3
+    },
+    {
+      "bit": "04",
+      "name": "bitwise_and_logical_arithmetic_shifts",
+      "vectors": 6,
+      "checks_per_vector": 4
+    },
+    {
+      "bit": "08",
+      "name": "signed_unsigned_byte_halfword_extension",
+      "vectors": 8,
+      "checks_per_vector": 4
+    },
+    {
+      "bit": "10",
+      "name": "private_memory_copy_overlap_and_fill",
+      "vectors": 9
+    },
+    {
+      "bit": "20",
+      "name": "crc16_modbus_empty_binary_ascii",
+      "vectors": 8
+    },
+    {
+      "bit": "40",
+      "name": "bounded_packet_parser_length_header_crc_payload",
+      "vectors": 8
+    },
+    {
+      "bit": "80",
+      "name": "flash_function_table_dispatch_stress",
+      "vectors": 32
+    }
+  ],
+  "vector_checks_per_run": 143,
+  "vectors": {
+    "arithmetic": [
+      {
+        "a": "0x0",
+        "b": "0x0",
+        "sum": "0x0",
+        "difference": "0x0",
+        "product": "0x0"
+      },
+      {
+        "a": "0x1",
+        "b": "0x1",
+        "sum": "0x2",
+        "difference": "0x0",
+        "product": "0x1"
+      },
+      {
+        "a": "0xffffffff",
+        "b": "0x1",
+        "sum": "0x0",
+        "difference": "0xfffffffe",
+        "product": "0xffffffff"
+      },
+      {
+        "a": "0x7fffffff",
+        "b": "0x1",
+        "sum": "0x80000000",
+        "difference": "0x7ffffffe",
+        "product": "0x7fffffff"
+      },
+      {
+        "a": "0x80000000",
+        "b": "0xffffffff",
+        "sum": "0x7fffffff",
+        "difference": "0x80000001",
+        "product": "0x80000000"
+      },
+      {
+        "a": "0xffff",
+        "b": "0xffff",
+        "sum": "0x1fffe",
+        "difference": "0x0",
+        "product": "0xfffe0001"
+      },
+      {
+        "a": "0x10000",
+        "b": "0x10000",
+        "sum": "0x20000",
+        "difference": "0x0",
+        "product": "0x0"
+      },
+      {
+        "a": "0x12d687",
+        "b": "0x74cbb1",
+        "sum": "0x87a238",
+        "difference": "0xff9e0ad6",
+        "product": "0x324f6057"
+      }
+    ],
+    "logic": [
+      {
+        "a": "0x0",
+        "b": "0x0",
+        "xor": "0x0",
+        "and": "0x0",
+        "rotate_left_5": "0x0",
+        "arithmetic_right_4": "0x0"
+      },
+      {
+        "a": "0xffffffff",
+        "b": "0x55555555",
+        "xor": "0xaaaaaaaa",
+        "and": "0x55555555",
+        "rotate_left_5": "0xffffffff",
+        "arithmetic_right_4": "0xffffffff"
+      },
+      {
+        "a": "0x80000000",
+        "b": "0x1",
+        "xor": "0x80000001",
+        "and": "0x0",
+        "rotate_left_5": "0x10",
+        "arithmetic_right_4": "0xf8000000"
+      },
+      {
+        "a": "0x12345678",
+        "b": "0x87654321",
+        "xor": "0x95511559",
+        "and": "0x2244220",
+        "rotate_left_5": "0x468acf02",
+        "arithmetic_right_4": "0x1234567"
+      },
+      {
+        "a": "0x7fffffff",
+        "b": "0xa5a5a5a5",
+        "xor": "0xda5a5a5a",
+        "and": "0x25a5a5a5",
+        "rotate_left_5": "0xffffffef",
+        "arithmetic_right_4": "0x7ffffff"
+      },
+      {
+        "a": "0xffff0000",
+        "b": "0xffff",
+        "xor": "0xffffffff",
+        "and": "0x0",
+        "rotate_left_5": "0xffe0001f",
+        "arithmetic_right_4": "0xfffff000"
+      }
+    ],
+    "extension": [
+      {
+        "input": "0x0",
+        "u8": "0x0",
+        "s8": 0,
+        "u16": "0x0",
+        "s16": 0
+      },
+      {
+        "input": "0x7f",
+        "u8": "0x7f",
+        "s8": 127,
+        "u16": "0x7f",
+        "s16": 127
+      },
+      {
+        "input": "0x80",
+        "u8": "0x80",
+        "s8": -128,
+        "u16": "0x80",
+        "s16": 128
+      },
+      {
+        "input": "0xff",
+        "u8": "0xff",
+        "s8": -1,
+        "u16": "0xff",
+        "s16": 255
+      },
+      {
+        "input": "0x7fff",
+        "u8": "0xff",
+        "s8": -1,
+        "u16": "0x7fff",
+        "s16": 32767
+      },
+      {
+        "input": "0x8000",
+        "u8": "0x0",
+        "s8": 0,
+        "u16": "0x8000",
+        "s16": -32768
+      },
+      {
+        "input": "0xffff",
+        "u8": "0xff",
+        "s8": -1,
+        "u16": "0xffff",
+        "s16": -1
+      },
+      {
+        "input": "0x1234abcd",
+        "u8": "0xcd",
+        "s8": -51,
+        "u16": "0xabcd",
+        "s16": -21555
+      }
+    ],
+    "move": [
+      {
+        "destination": 8,
+        "source": 0,
+        "length": 0,
+        "compared_buffer_bytes": 32
+      },
+      {
+        "destination": 8,
+        "source": 0,
+        "length": 1,
+        "compared_buffer_bytes": 32
+      },
+      {
+        "destination": 8,
+        "source": 0,
+        "length": 7,
+        "compared_buffer_bytes": 32
+      },
+      {
+        "destination": 0,
+        "source": 8,
+        "length": 16,
+        "compared_buffer_bytes": 32
+      },
+      {
+        "destination": 3,
+        "source": 0,
+        "length": 13,
+        "compared_buffer_bytes": 32
+      },
+      {
+        "destination": 0,
+        "source": 3,
+        "length": 13,
+        "compared_buffer_bytes": 32
+      },
+      {
+        "destination": 1,
+        "source": 1,
+        "length": 15,
+        "compared_buffer_bytes": 32
+      },
+      {
+        "destination": 9,
+        "source": 1,
+        "length": 17,
+        "compared_buffer_bytes": 32
+      }
+    ],
+    "fill": {
+      "start": 3,
+      "length": 17,
+      "byte": "A5",
+      "compared_buffer_bytes": 32
+    },
+    "crc": [
+      {
+        "offset": 0,
+        "length": 0,
+        "data": "",
+        "expected": "FFFF"
+      },
+      {
+        "offset": 0,
+        "length": 1,
+        "data": "00",
+        "expected": "40BF"
+      },
+      {
+        "offset": 0,
+        "length": 2,
+        "data": "0001",
+        "expected": "70C0"
+      },
+      {
+        "offset": 0,
+        "length": 3,
+        "data": "000102",
+        "expected": "91F1"
+      },
+      {
+        "offset": 1,
+        "length": 7,
+        "data": "01020304050607",
+        "expected": "711D"
+      },
+      {
+        "offset": 0,
+        "length": 16,
+        "data": "000102030405060708090a0b0c0d0e0f",
+        "expected": "E7B4"
+      },
+      {
+        "offset": 0,
+        "length": 32,
+        "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+        "expected": "576B"
+      },
+      {
+        "offset": 32,
+        "length": 9,
+        "data": "313233343536373839",
+        "expected": "4B37"
+      }
+    ],
+    "parser": [
+      {
+        "data": "aa550100000015e1",
+        "provided_length": 8,
+        "expected_payload_or_failure": "0x0"
+      },
+      {
+        "data": "aa5501003412832c",
+        "provided_length": 8,
+        "expected_payload_or_failure": "0x1234"
+      },
+      {
+        "data": "aa550100ffff1451",
+        "provided_length": 8,
+        "expected_payload_or_failure": "0xffff"
+      },
+      {
+        "data": "ab550100cdab011f",
+        "provided_length": 8,
+        "expected_payload_or_failure": "0xffffffff"
+      },
+      {
+        "data": "aa55010021434c41",
+        "provided_length": 8,
+        "expected_payload_or_failure": "0xffffffff"
+      },
+      {
+        "data": "aa550100000015e1",
+        "provided_length": 7,
+        "expected_payload_or_failure": "0xffffffff"
+      },
+      {
+        "data": "aa550100000015e1",
+        "provided_length": 0,
+        "expected_payload_or_failure": "0xffffffff"
+      },
+      {
+        "data": "aa550100000015e1",
+        "provided_length": 9,
+        "expected_payload_or_failure": "0xffffffff"
+      }
+    ],
+    "dispatch": {
+      "iterations": 32,
+      "functions": ["sum", "product", "xor_value", "difference"],
+      "each_intermediate_value_checked": true
+    }
+  },
+  "layout": {
+    "app_growth_bytes": 3200,
+    "app_size": 621464,
+    "code_bytes": 934,
+    "used_extension_bytes": 3196,
+    "result_table_bytes": 1024,
+    "old_payload_end": "0x9c326",
+    "new_payload_end": "0x9cfa6",
+    "remaining_ff_tail_bytes": 90,
+    "config_and_P11_shift": 3200,
+    "other_member_bytes_unchanged": true,
+    "original_app_changes": [
+      {
+        "offset": "0x369aa",
+        "before": "C8",
+        "after": "C3"
+      },
+      {
+        "offset": "0x369ab",
+        "before": "FF",
+        "after": "F3"
+      },
+      {
+        "offset": "0x369ac",
+        "before": "65",
+        "after": "B5"
+      },
+      {
+        "offset": "0x369ad",
+        "before": "41",
+        "after": "02"
+      },
+      {
+        "offset": "0x369ae",
+        "before": "E5",
+        "after": "00"
+      },
+      {
+        "offset": "0x369af",
+        "before": "01",
+        "after": "00"
+      },
+      {
+        "offset": "0x3f2e0",
+        "before": "9C",
+        "after": "00"
+      },
+      {
+        "offset": "0x3f2e1",
+        "before": "40",
+        "after": "74"
+      }
+    ],
+    "package_changes_confined_to_declared_ranges": true
+  },
+  "addresses": {
+    "hook": "0x1e36aca",
+    "entry": "0x1e97038",
+    "continuation": "0x1e36ad0",
+    "code_end": "0x1e973de",
+    "flash_pc_high": "0x1e97400",
+    "result_table": "0x1e978b4",
+    "pass_text": "0x1e97cb0"
+  },
+  "original_display_branch_checks": [
+    {
+      "branch": "text_label_branch",
+      "seed": "0x0",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x1",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0xffffffff",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0xa5a5a5a5",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x80000000",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x7fffffff",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x55555555",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "text_label_branch",
+      "seed": "0x1020304",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x0",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x1",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0xffffffff",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0xa5a5a5a5",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x80000000",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x7fffffff",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x55555555",
+      "output": ["BW150", "8FF"]
+    },
+    {
+      "branch": "bitmap_label_branch",
+      "seed": "0x1020304",
+      "output": ["BW150", "8FF"]
+    }
+  ],
+  "pc_limit_setup": {
+    "write_count": 8,
+    "models_agree": true,
+    "selected_instructions": [
+      {
+        "address": "0x1e3f3cc",
+        "bytes": "c0ff17000080",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r0, #0x80000017",
+        "pcode": ["IMARK ram[1e3f3cc:6]", "r0 = 0x80000017"]
+      },
+      {
+        "address": "0x1e3f3d2",
+        "bytes": "c1ffc0e11b00",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r1, #0x1be1c0",
+        "pcode": ["IMARK ram[1e3f3d2:6]", "r1 = 0x1be1c0"]
+      },
+      {
+        "address": "0x1e3f3d8",
+        "bytes": "0843",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r0, [r1 + 0x40]",
+        "pcode": [
+          "IMARK ram[1e3f3d8:2]",
+          "unique[f400:4] = r1 + 0x40",
+          "*[ram]unique[f400:4] = r0"
+        ]
+      },
+      {
+        "address": "0x1e3f3da",
+        "bytes": "c0f40119",
+        "length": 4,
+        "mnemonic": "mem.set",
+        "operands": "0x1, [r1 + 0x0]",
+        "pcode": [
+          "IMARK ram[1e3f3da:4]",
+          "unique[1a00:4] = 0x1",
+          "unique[7f00:4] = r1 + 0x0",
+          "*[ram]unique[7f00:4] = unique[1a00:4]"
+        ]
+      },
+      {
+        "address": "0x1e3f3de",
+        "bytes": "dbf4101b",
+        "length": 4,
+        "mnemonic": "mem.set",
+        "operands": "0x100000, [r1 + 0x6c]",
+        "pcode": [
+          "IMARK ram[1e3f3de:4]",
+          "unique[1c00:4] = 0x100000",
+          "unique[7f00:4] = r1 + 0x6c",
+          "*[ram]unique[7f00:4] = unique[1c00:4]"
+        ]
+      },
+      {
+        "address": "0x1e3f3e2",
+        "bytes": "daf4111b",
+        "length": 4,
+        "mnemonic": "mem.set",
+        "operands": "0x110000, [r1 + 0x68]",
+        "pcode": [
+          "IMARK ram[1e3f3e2:4]",
+          "unique[1c00:4] = 0x110000",
+          "unique[7f00:4] = r1 + 0x68",
+          "*[ram]unique[7f00:4] = unique[1c00:4]"
+        ]
+      },
+      {
+        "address": "0x1e3f3e6",
+        "bytes": "c4ff607b0000",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r4, #0x7b60",
+        "pcode": ["IMARK ram[1e3f3e6:6]", "r4 = 0x7b60"]
+      },
+      {
+        "address": "0x1e3f3ec",
+        "bytes": "9c43",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r4, [r1 + 0x64]",
+        "pcode": [
+          "IMARK ram[1e3f3ec:2]",
+          "unique[f400:4] = r1 + 0x64",
+          "*[ram]unique[f400:4] = r4"
+        ]
+      },
+      {
+        "address": "0x1e3f3ee",
+        "bytes": "c6ffa8a00000",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r6, #0xa0a8",
+        "pcode": ["IMARK ram[1e3f3ee:6]", "r6 = 0xa0a8"]
+      },
+      {
+        "address": "0x1e3f3f4",
+        "bytes": "8e43",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r6, [r1 + 0x60]",
+        "pcode": [
+          "IMARK ram[1e3f3f4:2]",
+          "unique[f400:4] = r1 + 0x60",
+          "*[ram]unique[f400:4] = r6"
+        ]
+      },
+      {
+        "address": "0x1e3f3f6",
+        "bytes": "c0ff2001e001",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r0, #0x1e00120",
+        "pcode": ["IMARK ram[1e3f3f6:6]", "r0 = 0x1e00120"]
+      },
+      {
+        "address": "0x1e3f3fc",
+        "bytes": "7843",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r0, [r1 + 0x5c]",
+        "pcode": [
+          "IMARK ram[1e3f3fc:2]",
+          "unique[f400:4] = r1 + 0x5c",
+          "*[ram]unique[f400:4] = r0"
+        ]
+      },
+      {
+        "address": "0x1e3f3fe",
+        "bytes": "c0ff0074e901",
+        "length": 6,
+        "mnemonic": "mov",
+        "operands": "r0, #0x1e97400",
+        "pcode": ["IMARK ram[1e3f3fe:6]", "r0 = 0x1e97400"]
+      },
+      {
+        "address": "0x1e3f404",
+        "bytes": "6843",
+        "length": 2,
+        "mnemonic": "sw",
+        "operands": "r0, [r1 + 0x58]",
+        "pcode": [
+          "IMARK ram[1e3f404:2]",
+          "unique[f400:4] = r1 + 0x58",
+          "*[ram]unique[f400:4] = r0"
+        ]
+      }
+    ],
+    "register_values": {
+      "EMU_CON": {
+        "mmio_address": "0x1be200",
+        "value": "0x80000017"
+      },
+      "LIM_PC0_L": {
+        "mmio_address": "0x1be21c",
+        "value": "0x1e00120"
+      },
+      "LIM_PC0_H": {
+        "mmio_address": "0x1be218",
+        "value": "0x1e97400"
+      },
+      "LIM_PC1_L": {
+        "mmio_address": "0x1be224",
+        "value": "0x7b60"
+      },
+      "LIM_PC1_H": {
+        "mmio_address": "0x1be220",
+        "value": "0xa0a8"
+      },
+      "LIM_PC2_L": {
+        "mmio_address": "0x1be22c",
+        "value": "0x100000"
+      },
+      "LIM_PC2_H": {
+        "mmio_address": "0x1be228",
+        "value": "0x110000"
+      }
+    },
+    "other_write": {
+      "mmio_address": "0x1be1c0",
+      "value": "0x1"
+    },
+    "scope": "Bounded setup writes in memory models; not live MMIO or an exception trace."
+  },
+  "official_branch_oracle": {
+    "record_count": 527,
+    "counts": {
+      "goto": 159,
+      "call": 368
+    },
+    "mismatches": 0,
+    "scope": "Real vendor ROM encodings and explicit targets; not device execution of the new stub."
+  },
+  "official_stack_oracle": {
+    "record_count": 118,
+    "mismatches": 0,
+    "examples": [
+      {
+        "address": "0x1001d8",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x100310",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x100404",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x10041e",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x10042e",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x100440",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x1004d8",
+        "bytes": "3400",
+        "official": "[--sp] = rets"
+      },
+      {
+        "address": "0x100502",
+        "bytes": "3000",
+        "official": "pc = [sp++]"
+      },
+      {
+        "address": "0x10051a",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x10053c",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x1006a2",
+        "bytes": "2000",
+        "official": "rts"
+      },
+      {
+        "address": "0x1008d2",
+        "bytes": "3400",
+        "official": "[--sp] = rets"
+      }
+    ],
+    "scope": "Exact vendor encodings for individual push RETS, pop PC and RTS; not a full ABI proof."
+  },
+  "third_party_cross_check": {
+    "matched_files": 5,
+    "decoded_container_identical": true,
+    "chipkey": "0x8d07",
+    "entry_point": "0x1e00120"
+  },
+  "negative_parser_controls_memory_only": [
+    {
+      "case": "flash_header_crc",
+      "rejected": true,
+      "reason": "Flash header CRC"
+    },
+    {
+      "case": "top_entry_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x20"
+    },
+    {
+      "case": "inner_header_crc",
+      "rejected": true,
+      "reason": "Directory header CRC at 0x4020"
+    },
+    {
+      "case": "app_payload_crc",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    },
+    {
+      "case": "outer_data_crc",
+      "rejected": true,
+      "reason": "Outer data CRC: app_area_head"
+    },
+    {
+      "case": "truncated_file",
+      "rejected": true,
+      "reason": "Truncated BANKCB"
+    },
+    {
+      "case": "new_code_corrupted_without_crc_update",
+      "rejected": true,
+      "reason": "Inner data CRC: app.bin"
+    }
+  ],
+  "roundtrip": {
+    "file": "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin",
+    "size": 643072,
+    "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad",
+    "byte_identical_rebuild": true,
+    "reverse_to_original_identical": true
+  },
+  "limitations": [
+    "BATCH8 acceptance is subsequently user-reported passed; the frozen offline analysis/manifest retain their original hardware_tested=false values. No exact reentry count, duration or itemized measurement accuracy was reported.",
+    "These are bounded local software helpers, not a compiler/C ABI test, vendor ROM interoperation, hardware control or standalone firmware boot.",
+    "All writes are bounded to 132 stack bytes; actual task stack headroom, hardware PSR, interrupts/cache and complete UI remain unmodeled.",
+    "SLEIGH omits CALL RETS updates; both models explicitly use the inherited architectural assumption.",
+    "The 3200-byte extension relocates unchanged config/P11 farther than prior SUITE6 and requires its own device acceptance.",
+    "Expanded Flash PC interval also spans preexisting data between the old bound and the extension.",
+    "Normal assertion failures produce a complete bitmap; a CPU exception/reset can prevent the final code from being drawn.",
+    "Only one normal candidate is emitted; all 255 mask and 143 individual fault variants stay in computer memory."
+  ],
+  "execution_checks": {
+    "initial_state_cases": 64,
+    "steps_total": 748672,
+    "steps_per_run": 11698,
+    "checks_by_group": {
+      "0": 6,
+      "1": 24,
+      "2": 24,
+      "3": 32,
+      "4": 9,
+      "5": 8,
+      "6": 8,
+      "7": 32
+    },
+    "calls_per_run": {
+      "call16": 61,
+      "call32": 1,
+      "callreg": 33
+    },
+    "maximum_additional_stack_bytes": 132,
+    "all_results": ["8FF"],
+    "all_other_GPRs_SP_RETS_preserved": true,
+    "stack_boundary_sentinels_unchanged": true,
+    "call_RETS_adapter": true,
+    "hardware_PSR_interrupts_emulated": false
+  },
+  "combined_failures": {
+    "cases": 255,
+    "all_expected_bitmaps_passed": true,
+    "memory_only": true
+  },
+  "individual_failures": {
+    "cases": 143,
+    "all_detected_at_intended_check": true,
+    "memory_only": true
+  },
+  "local_evidence": {
+    "directory": "artifacts/firmware-batch-test-20261115",
+    "analysis_sha256": "f6ecd3acd6fd257a140d39cd212bbc94d8dbc52ac5feac77cd7283df9f6d3523",
+    "manifest_sha256": "e7da807fffe12b2632d0da0fe88f1647370848d39de0657051f64547d01fa10d",
+    "manifest": {
+      "hardware_tested": false,
+      "files": {
+        "analysis.json": {
+          "size": 455797,
+          "sha256": "f6ecd3acd6fd257a140d39cd212bbc94d8dbc52ac5feac77cd7283df9f6d3523"
+        },
+        "batch-listing.txt": {
+          "size": 14626,
+          "sha256": "c9bd32795c284a26d3888978b481104a670400f2c9dbef83f14739d12ef284c4"
+        },
+        "BW150-V1.1.0-BATCH8-EXPERIMENTAL.bin": {
+          "size": 643072,
+          "sha256": "87f4ce2e27090edfe00b960e84aa9f33eb98e14eef154a05898936adf569be83"
+        },
+        "BW150-V1.1.0-ROUNDTRIP-IDENTICAL.bin": {
+          "size": 643072,
+          "sha256": "009e6b5c344c26e8d4949293248241fa65d9d053f4577ef17e38569fe8ae99ad"
+        }
+      }
+    },
+    "git_ignored": true
+  },
+  "offline_protocol_rehearsal": {
+    "hardware_tested": false,
+    "image_count": 2,
+    "phase": "Complete",
+    "blocks_per_image": 11088,
+    "last_block_bytes": 26,
+    "log": "artifacts/firmware-batch8-protocol-20261115.txt",
+    "log_sha256": "29cbc2c47bd3761a5d4a7509b707dc54357eb8741cc316f1034a139a47ffc055",
+    "scope": "Mock replies only; no device transport."
+  },
+  "offline_build_status": "offline_batch8_multi_vector_checks_passed_hardware_not_tested",
+  "automated_hardware_tested": false,
+  "hardware_experiment": {
+    "report_date_local": "2026-11-15",
+    "timezone": "Asia/Shanghai",
+    "evidence_source": "user_report_only",
+    "user_quote": "8FF，全部通过，继续下一轮",
+    "candidate_sha256": "87f4ce2e27090edfe00b960e84aa9f33eb98e14eef154a05898936adf569be83",
+    "reported_result": "8FF",
+    "all_eight_groups_reported_passed": true,
+    "agreed_acceptance_reported_passed": [
+      "about_result",
+      "reentry_and_used_functions",
+      "complete_power_off_cold_start",
+      "original_restore"
+    ],
+    "exact_reentry_count": null,
+    "duration": null,
+    "scope": "Overall pass under the four-step acceptance procedure. No new assistant device action, independent observation, capture or Flash readback."
+  },
+  "offline_build_limitations": [
+    "New candidate has not been flashed, cold-started or restored; historical SUITE6 acceptance is not this result.",
+    "These are bounded local software helpers, not a compiler/C ABI test, vendor ROM interoperation, hardware control or standalone firmware boot.",
+    "All writes are bounded to 132 stack bytes; actual task stack headroom, hardware PSR, interrupts/cache and complete UI remain unmodeled.",
+    "SLEIGH omits CALL RETS updates; both models explicitly use the inherited architectural assumption.",
+    "The 3200-byte extension relocates unchanged config/P11 farther than prior SUITE6 and requires its own device acceptance.",
+    "Expanded Flash PC interval also spans preexisting data between the old bound and the extension.",
+    "Normal assertion failures produce a complete bitmap; a CPU exception/reset can prevent the final code from being drawn.",
+    "Only one normal candidate is emitted; all 255 mask and 143 individual fault variants stay in computer memory."
+  ],
+  "special_register_validation_correction": {
+    "date": "2026-11-15",
+    "report": "docs/firmware-runtime-rt1c-failure-20261115.md",
+    "topic": "Vendor 0xFB29 write-special field order contradicts the shared assembler/field/SLEIGH definition",
+    "affected_claim": "Prior offline RETS restoration checks containing these writes are invalid. Raw arithmetic, package checks and user hardware reports are not changed.",
+    "user_hardware_result_changed": false
+  }
+}
