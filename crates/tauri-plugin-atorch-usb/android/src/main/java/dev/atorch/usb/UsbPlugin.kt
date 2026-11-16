@@ -175,11 +175,11 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
                     endpoints.any { it.type == UsbConstants.USB_ENDPOINT_XFER_INT && it.direction == UsbConstants.USB_DIR_IN && it.maxPacketSize == 64 } &&
                     endpoints.any { it.type == UsbConstants.USB_ENDPOINT_XFER_INT && it.direction == UsbConstants.USB_DIR_OUT && it.maxPacketSize == 64 }
             }
-            check(hid) { "此设备不是已核准的 64 字节 USB HID 接口" }
+            check(hid) { "此设备没有支持的 64 字节 USB HID 接口" }
             val iap = when {
-                d.manufacturerName == "APP" && d.productName == "ATORCH BW150 V1.1.0" -> false
-                d.manufacturerName == "IAP" && d.productName == "ATORCH BW150 V1.0.2" -> true
-                else -> error("此设备不属于已核准的 BW150 应用 / IAP 接口")
+                d.manufacturerName == "APP" -> false
+                d.manufacturerName == "IAP" -> true
+                else -> error("无法识别设备的 APP / IAP USB 接口")
             }
             JSObject().put("iap", iap)
         }

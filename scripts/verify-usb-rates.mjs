@@ -123,7 +123,7 @@ try {
     };
     return true;
   })()`);
-  for (const hz of [2, 5, 10]) {
+  for (const hz of [1, 2, 5]) {
     // Use the actual visible selector, including its API and confirmed readback.
     await evaluate(`(() => {
       const select = document.querySelector('select[aria-label="USB 采样率"]');

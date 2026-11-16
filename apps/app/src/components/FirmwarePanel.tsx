@@ -57,20 +57,10 @@ export function FirmwarePanel({
   const job = snapshot.firmware;
   const hardware = !!firmware?.hardwareWriteAvailable;
   const selectedDevice = devices.find((d) => d.path === selectedPath);
-  const recovery = selectedDevice?.name === "ATORCH BW150 V1.0.2";
-  const eligible =
-    !!selectedDevice &&
-    /^ATORCH BW150 V1\.(1\.0|0\.2)$/.test(selectedDevice.name);
   const otherConnection =
     snapshot.connected && snapshot.device?.path !== selectedPath;
   const startable =
-    hardware &&
-    eligible &&
-    !busy &&
-    !scanning &&
-    (!snapshot.recording ||
-      (snapshot.recordingPaused && snapshot.telemetry?.running === false)) &&
-    !otherConnection;
+    hardware && !!selectedDevice && !busy && !scanning && !otherConnection;
   const scan = async () => {
     setScanning(true);
     setScanError("");
@@ -97,9 +87,6 @@ export function FirmwarePanel({
     // telemetry polling must not repeatedly enumerate or open the bootloader.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hardware, job?.active]);
-  const target = snapshot.device?.name.toUpperCase() ?? "";
-  const modelMatches =
-    !!firmware?.filenameModel && target.includes(firmware.filenameModel);
   return (
     <div className="firmware-layout">
       <Card>
@@ -111,11 +98,11 @@ export function FirmwarePanel({
           <div className="firmware-file-icon">
             <ArrowUpload20Regular />
           </div>
-          <h3>{firmware?.name ?? "选择 AC632N .bin 固件"}</h3>
+          <h3>{firmware?.name ?? "选择 .bin 固件"}</h3>
           <p>
             {firmware
               ? `${firmware.bytes.toLocaleString()} 字节 · ${firmware.blocks.toLocaleString()} 块`
-              : "读取原始文件，检查封装、大小、摘要和升级分块。"}
+              : "读取原始文件，显示大小、摘要和升级分块。"}
           </p>
           <Button
             disabled={busy || !native}
@@ -137,8 +124,8 @@ export function FirmwarePanel({
               setRehearsal(null);
               data.current = "";
               void onTask(async () => {
-                if (file.size < 64 || file.size > 58 * 65535)
-                  throw new Error("固件大小必须在 64 至 3,801,030 字节之间");
+                if (file.size === 0 || file.size > 1_024_000)
+                  throw new Error("固件大小必须在 1 至 1,024,000 字节之间");
                 const bytes = new Uint8Array(await file.arrayBuffer());
                 let binary = "";
                 for (let offset = 0; offset < bytes.length; offset += 8192)
@@ -169,15 +156,6 @@ export function FirmwarePanel({
               <dt>SHA-256</dt>
               <dd className="mono">{firmware.sha256}</dd>
             </dl>
-            {snapshot.device && !(modelMatches && hardware) && (
-              <MessageBar intent={modelMatches ? "info" : "warning"}>
-                <MessageBarBody>
-                  {modelMatches
-                    ? "文件名型号与当前设备一致；封装头不包含已核准的型号标识，仍需人工核对固件来源与版本。"
-                    : "文件名型号与当前设备不匹配或无法识别，请勿用于实机升级。离线预演可检查传输协议。"}
-                </MessageBarBody>
-              </MessageBar>
-            )}
             <details className="firmware-packets">
               <summary>查看握手与首尾分块</summary>
               <p>应用态进入升级模式（预演不会发送）：</p>
@@ -279,29 +257,14 @@ export function FirmwarePanel({
                 <MessageBarBody>{scanError}</MessageBarBody>
               </MessageBar>
             )}
-            {snapshot.recording && (
-              <p>
-                {snapshot.recordingPaused &&
-                snapshot.telemetry?.running === false
-                  ? "确认升级后将保存并关闭已暂停的记录。"
-                  : "请先停止负载并暂停记录，再开始升级。"}
-              </p>
-            )}
+            {snapshot.recording && <p>确认刷写后将保存并结束当前记录。</p>}
             {otherConnection && <p>请先断开当前设备，再选择另一个升级目标。</p>}
-            {selectedDevice && !eligible && (
-              <p>此设备不属于已核准的 BW150 应用 / IAP 接口。</p>
-            )}
-            <p>
-              {recovery
-                ? "已发现 IAP 升级模式。可以从第 0 块重新传输同一份原厂固件。"
-                : "升级前请退出官方程序，停止负载并移除测试输入。应用会检查新的待机遥测，随后独占 USB 传输。"}
-            </p>
             <Button
               appearance="primary"
               disabled={!startable}
               onClick={() => setConfirm(true)}
             >
-              {recovery ? "恢复 BW150 固件…" : "升级 BW150 固件…"}
+              刷写固件…
             </Button>
           </>
         )}
@@ -339,9 +302,9 @@ export function FirmwarePanel({
             {job.flashConfirmed && (
               <p>
                 设备 FF 完成应答已确认。
-                {job.phase === "complete"
+                {job.restoredDevice
                   ? "正常应用回读已通过。"
-                  : "正常应用回读结果以最终状态为准。"}
+                  : "正常应用尚未恢复监测。"}
               </p>
             )}
             <details>
@@ -370,9 +333,7 @@ export function FirmwarePanel({
       >
         <DialogSurface>
           <DialogBody>
-            <DialogTitle>
-              {recovery ? "确认恢复 BW150 固件" : "确认升级 BW150 固件"}
-            </DialogTitle>
+            <DialogTitle>确认刷写固件</DialogTitle>
             <DialogContent>
               <p>
                 目标：{selectedDevice?.name} · {selectedDevice?.serial}
@@ -382,9 +343,9 @@ export function FirmwarePanel({
               </p>
               <p className="mono firmware-digest">SHA-256 {firmware?.sha256}</p>
               <p>
-                确认后将停止当前监测并
-                {recovery ? "从第 0 块重新传输" : "重启进入升级模式"}
-                。请保持供电和 USB 连接，等待烧写及正常应用回读完成。
+                确认后将结束当前监测与记录，并从第 0
+                块开始传输。应用态设备会先进入升级模式。 请保持供电和 USB
+                连接，等待设备完成应答。
               </p>
             </DialogContent>
             <DialogActions>

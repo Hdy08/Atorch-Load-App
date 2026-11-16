@@ -249,7 +249,7 @@ impl DeviceManager {
     }
     pub fn set_usb_sample_rate(&self, hz: u8) -> Result<(), String> {
         if !sampling::valid_usb_rate(hz) {
-            return Err("USB 采样率仅支持 1、2、5 或 10 Hz".into());
+            return Err("USB 采样率仅支持 1、2 或 5 Hz".into());
         }
         if self.firmware_active() {
             return Err("固件升级期间不能更改采样率".into());

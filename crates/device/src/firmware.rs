@@ -1,4 +1,4 @@
-//! Exclusive, explicitly started BW150 USB update/recovery. No polling runs
+//! Exclusive, explicitly started vendor USB update/recovery. No polling runs
 //! alongside the bootloader, and no implicit write retry or load restart occurs.
 use crate::{DeviceInfo, DeviceManager};
 use atorch_protocol::firmware::Image;
@@ -8,7 +8,7 @@ use std::{
     sync::{atomic::Ordering, Arc},
 };
 
-/// Platform USB lifecycle around the shared, verified BW150 transfer engine.
+/// Platform USB lifecycle around the shared vendor transfer engine.
 /// Android holds its optional Host role across APP/IAP re-enumeration.
 pub trait FirmwareHost: Send + Sync + 'static {
     fn check_available(&self) -> Result<(), String>;
@@ -140,9 +140,9 @@ mod engine {
             device.usage_page(),
             device.usage(),
         ) {
-            (Some("IAP"), 0xff00, 1) if info.name == "ATORCH BW150 V1.0.2" => Ok(true),
-            (Some("APP"), 0xff02, 2) if info.name == "ATORCH BW150 V1.1.0" => Ok(false),
-            _ => Err("此设备不属于已核准的 BW150 应用 / IAP 接口".into()),
+            (Some("IAP"), 0xff00, 1) => Ok(true),
+            (Some("APP"), 0xff02, 2) => Ok(false),
+            _ => Err("无法识别设备的 APP / IAP USB 接口".into()),
         }
     }
     #[cfg(target_os = "windows")]
@@ -180,12 +180,6 @@ mod engine {
         directory: PathBuf,
         host: Arc<dyn FirmwareHost>,
     ) -> Result<(), String> {
-        if image.info.sha256 != legacy::BW150_IMAGE_SHA256 {
-            return Err(
-                "实机刷写只接受已完成真实传输核准的 BW150 V1.1.0 原厂文件；其他文件可离线预演"
-                    .into(),
-            );
-        }
         host.check_available()?;
         let mut worker = manager.firmware_worker.lock().unwrap();
         if worker.as_ref().is_some_and(|w| !w.is_finished()) {
@@ -205,17 +199,9 @@ mod engine {
             return Err("所选升级设备与当前连接不同，请先手动断开".into());
         }
         if before.recording.is_some() {
-            if before.recording_paused
-                && before
-                    .telemetry
-                    .as_ref()
-                    .is_some_and(|t| t.running == Some(false))
-            {
-                // The confirmed upgrade closes the paused CSV before taking USB.
-                manager.record(None)?;
-            } else {
-                return Err("请先停止负载并暂停录制，再开始固件升级".into());
-            }
+            // The explicit upgrade confirmation closes the current CSV before
+            // disconnecting monitoring and taking exclusive ownership of USB.
+            manager.record(None)?;
         }
         if manager.maintenance.swap(true, Ordering::AcqRel) {
             return Err("已有维护任务".into());
@@ -226,7 +212,7 @@ mod engine {
         }
         manager.disconnect();
         manager.firmware_cancel.store(false, Ordering::Release);
-        let log_path = directory.join(format!("BW150_firmware_{}.jsonl", now_ms()));
+        let log_path = directory.join(format!("Atorch_firmware_{}.jsonl", now_ms()));
         manager.state.lock().unwrap().firmware = Some(FirmwareStatus {
             active: true,
             cancellable: true,
@@ -267,6 +253,9 @@ mod engine {
                 }
                 Ok::<_, String>(())
             })();
+            // Platform ownership follows restored monitoring, independently
+            // of FF completion. Android must release its USB role when no
+            // monitoring connection was established after the flash.
             let result = match host.finish(result.is_ok()) {
                 Ok(()) => result,
                 Err(error) => Err(format!("{error}；平台 USB 维护会话未正常结束")),
@@ -280,6 +269,13 @@ mod engine {
                     Ok(()) => {
                         s.phase = "complete".into();
                         s.message = "设备确认烧写完成，正常应用回读通过，已恢复只读监测".into();
+                    }
+                    Err(error) if s.flash_confirmed => {
+                        // Like the vendor, FF determines transfer completion.
+                        // Failure to reopen the new application is reported
+                        // separately and does not reject a different firmware.
+                        s.phase = "complete".into();
+                        s.message = format!("设备已确认烧写完成；{error}");
                     }
                     Err(error) => {
                         s.phase = if manager.firmware_cancel.load(Ordering::Acquire) {
@@ -317,7 +313,7 @@ mod engine {
         let end = Instant::now() + Duration::from_secs(3);
         let mut next_query = Instant::now();
         let mut kind = 3;
-        let (mut settings, mut stopped) = (false, false);
+        let (mut settings, mut telemetry) = (false, false);
         while Instant::now() < end {
             if Instant::now() >= next_query {
                 let query = atorch_protocol::query(1, kind);
@@ -332,45 +328,33 @@ mod engine {
             }
             match atorch_protocol::parse(&bytes[..n], 1, now_ms()) {
                 Ok(Report::Settings(_)) => settings = true,
-                Ok(Report::Telemetry(t)) => {
-                    if t.running != Some(false) || t.voltage.abs() > 0.05 {
-                        return Err("设备回读未满足负载停止且输入为零的要求".into());
-                    }
-                    stopped = true;
-                }
+                Ok(Report::Telemetry(_)) => telemetry = true,
                 _ => {}
             }
-            if settings && stopped {
+            if settings && telemetry {
                 return Ok(());
             }
         }
-        Err("未得到新的参数和待机遥测回读".into())
+        Err("未得到新的参数和遥测回读".into())
     }
-    fn wait_profile(
-        host: &dyn FirmwareHost,
-        iap: bool,
-        serial: Option<&str>,
-    ) -> Result<DeviceInfo, String> {
+    fn wait_profile(host: &dyn FirmwareHost, iap: bool) -> Result<DeviceInfo, String> {
         let end = Instant::now() + Duration::from_secs(15);
         while Instant::now() < end {
             let candidates: Vec<_> = host
                 .discover()?
                 .into_iter()
-                .filter(|d| {
-                    host.profile(d) == Ok(iap)
-                        && serial.is_none_or(|s| d.serial.is_empty() || d.serial == s)
-                })
+                .filter(|d| host.profile(d) == Ok(iap))
                 .collect();
             if candidates.len() == 1 {
                 return Ok(candidates[0].clone());
             }
             if candidates.len() > 1 {
-                return Err("检测到多个候选 BW150，无法确认重新枚举的设备".into());
+                return Err("检测到多个候选 USB 设备，无法确认重新枚举的设备".into());
             }
             thread::sleep(Duration::from_millis(150));
         }
         Err(if iap {
-            "未检测到 BW150 IAP 接口，请重新扫描后使用升级模式恢复"
+            "未检测到 IAP 接口，请重新扫描后使用升级模式恢复"
         } else {
             "已经收到 FF，但正常应用尚未重新出现；请保持供电并检查设备"
         }
@@ -384,10 +368,8 @@ mod engine {
         log: &mut BufWriter<File>,
     ) -> Result<DeviceInfo, String> {
         let is_iap = host.profile(&initial)?;
-        let serial = (!is_iap && !initial.serial.is_empty()).then_some(initial.serial.clone());
         let mut transport = host.open(&initial)?;
         if !is_iap {
-            normal_readback(transport.as_mut(), log)?;
             {
                 // Close the cancellation window atomically with the status
                 // change, before issuing the application-to-IAP command.
@@ -405,13 +387,20 @@ mod engine {
             audit(log, "tx_boot_entry", &entry)?;
             transport.write(&entry)?;
             drop(transport);
-            let iap = wait_profile(host, true, None)?;
+            let iap = wait_profile(host, true)?;
             transport = host.open(&iap)?;
         }
-        let descriptor = transport.report_descriptor()?.unwrap_or_default();
-        audit(log, "iap_descriptor", &descriptor)?;
-        if !legacy::is_iap_descriptor(&descriptor) {
-            return Err("IAP HID 描述符与实测配置不同，未发送握手或数据".into());
+        // Descriptor bytes are diagnostic data. The platform has already
+        // selected the USB interface; no captured-byte allowlist is applied.
+        match transport.report_descriptor() {
+            Ok(Some(descriptor)) => audit(log, "iap_descriptor", &descriptor)?,
+            Ok(None) => {}
+            Err(error) => writeln!(
+                log,
+                "{}",
+                serde_json::json!({"timestamp":now_ms(),"kind":"iap_descriptor_unavailable","message":error})
+            )
+            .map_err(|e| e.to_string())?,
         }
         transfer(manager, image, transport.as_mut(), log)?;
         drop(transport);
@@ -421,22 +410,16 @@ mod engine {
             "已收到 FF，正在核对正常应用与遥测",
             false,
         );
-        let restored = wait_profile(host, false, serial.as_deref())?;
-        if restored.name != "ATORCH BW150 V1.1.0" {
-            return Err("设备已重连，但固件版本名称与所选文件不一致".into());
-        }
+        let restored = wait_profile(host, false)?;
         let mut check = host.open(&restored)?;
         normal_readback(check.as_mut(), log)?;
-        // Android exposes serial only after the re-enumerated interface has
-        // permission. Recheck after opening, before accepting restored APP.
+        // Refresh Android identity after opening grants USB permission. New
+        // firmware may expose a different product name, version or serial.
         let verified = host
             .discover()?
             .into_iter()
             .find(|d| d.path == restored.path)
             .ok_or("设备在回读后移除")?;
-        if serial.as_ref().is_some_and(|s| verified.serial != *s) {
-            return Err("正常应用序列号与升级前不一致".into());
-        }
         Ok(verified)
     }
     fn transfer(
@@ -544,13 +527,13 @@ mod engine {
     mod tests {
         use super::*;
         use atorch_protocol::firmware::crc16;
-        use std::{collections::VecDeque, sync::atomic::AtomicU64};
+        use std::{
+            collections::VecDeque,
+            sync::atomic::{AtomicU64, AtomicU8},
+        };
 
         fn image() -> Image {
-            let mut bytes = vec![0x5a; 117];
-            bytes[..22]
-                .copy_from_slice(b"\xdc\xee\xbf\x1d0.01\xf0\x31\xac\x67\xc5\xad\xff\x68AC632N");
-            Image::inspect("BW150-test.bin", bytes).unwrap()
+            Image::inspect("experiment.bin", vec![0x5a; 117]).unwrap()
         }
         fn wire_reply(mut packet: Vec<u8>, kind: u8) -> Vec<u8> {
             packet[0] = kind;
@@ -735,22 +718,166 @@ mod engine {
             assert!(!status.flash_confirmed);
         }
         #[test]
-        fn unverified_image_rejected_before_device_discovery() {
-            let manager = Arc::new(DeviceManager::default());
-            let error = start(
-                &manager,
-                "nonexistent".into(),
-                image(),
-                std::env::temp_dir(),
-                Arc::new(WindowsHost),
-            )
-            .unwrap_err();
-            assert!(error.contains("已完成真实传输核准"));
-            assert!(!manager.firmware_active());
-            assert!(manager.snapshot().firmware.is_none());
+        fn arbitrary_firmware_runs_through_app_iap_and_changed_app_identity() {
+            struct State {
+                mode: AtomicU8,
+                writes: std::sync::Mutex<Vec<Vec<u8>>>,
+                finished: std::sync::Mutex<Option<bool>>,
+                no_app_after_flash: bool,
+            }
+            struct Host(Arc<State>);
+            struct Device {
+                state: Arc<State>,
+                iap: bool,
+                pending: VecDeque<Vec<u8>>,
+            }
+            impl FirmwareHost for Host {
+                fn check_available(&self) -> Result<(), String> {
+                    Ok(())
+                }
+                fn discover(&self) -> Result<Vec<DeviceInfo>, String> {
+                    let (path, name, serial) = match self.0.mode.load(Ordering::Acquire) {
+                        0 => ("before", "ATORCH DL24 V1.0.9", "before-serial"),
+                        1 => ("iap", "ATORCH BW600 V1.0.3", "iap-serial"),
+                        _ if self.0.no_app_after_flash => return Err("模拟：正常应用未重连".into()),
+                        _ => ("after", "ATORCH BW600 V9.8.7", "changed-serial"),
+                    };
+                    Ok(vec![DeviceInfo {
+                        path: path.into(),
+                        name: name.into(),
+                        serial: serial.into(),
+                        vendor_id: atorch_protocol::VENDOR_ID,
+                        product_id: atorch_protocol::PRODUCT_ID,
+                        transport: crate::TransportKind::Usb,
+                        rssi: None,
+                    }])
+                }
+                fn profile(&self, info: &DeviceInfo) -> Result<bool, String> {
+                    Ok(info.path == "iap")
+                }
+                fn open(&self, info: &DeviceInfo) -> Result<Box<dyn Transport>, String> {
+                    Ok(Box::new(Device {
+                        state: Arc::clone(&self.0),
+                        iap: info.path == "iap",
+                        pending: VecDeque::new(),
+                    }))
+                }
+                fn finish(&self, success: bool) -> Result<(), String> {
+                    *self.0.finished.lock().unwrap() = Some(success);
+                    Ok(())
+                }
+            }
+            impl Transport for Device {
+                fn report_descriptor(&self) -> Result<Option<Vec<u8>>, String> {
+                    // The platform identifies the interface. Exact captured
+                    // descriptor bytes must not gate a selected firmware.
+                    Ok(Some(vec![1, 2, 3]))
+                }
+                fn write(&mut self, bytes: &[u8]) -> Result<(), String> {
+                    self.state.writes.lock().unwrap().push(bytes.to_vec());
+                    if self.iap {
+                        assert_eq!(bytes[0], 0x55);
+                        match bytes[1] {
+                            0xaa => self
+                                .pending
+                                .push_back(wire_reply(image().handshake(), 0xbb)),
+                            0xcc => {
+                                let index = u16::from_le_bytes([bytes[3], bytes[4]]);
+                                assert_eq!(
+                                    bytes,
+                                    legacy::encode(&image().block(index).unwrap()).unwrap()
+                                );
+                                self.pending.push_back(wire_reply(
+                                    image().block(index).unwrap(),
+                                    if index == 2 { 0xee } else { 0xdd },
+                                ));
+                                if index == 2 {
+                                    self.pending.push_back(ff(false));
+                                    self.state.mode.store(2, Ordering::Release);
+                                }
+                            }
+                            _ => panic!("unexpected IAP write"),
+                        }
+                    } else if bytes == enter_bootloader() {
+                        self.state.mode.store(1, Ordering::Release);
+                    } else {
+                        assert!(matches!(bytes[3], 3 | 5));
+                        let mut reply = vec![0; 64];
+                        reply[..4].copy_from_slice(&[0xaa, 5, 1, bytes[3]]);
+                        reply[62..].copy_from_slice(&[0xee, 0xff]);
+                        if bytes[3] == 5 {
+                            reply[8..12].copy_from_slice(&20_000u32.to_le_bytes());
+                            reply[52] = 1;
+                        }
+                        self.pending.push_back(reply);
+                    }
+                    Ok(())
+                }
+                fn read(&mut self, bytes: &mut [u8], _: i32) -> Result<usize, String> {
+                    if let Some(reply) = self.pending.pop_front() {
+                        bytes[..reply.len()].copy_from_slice(&reply);
+                        Ok(reply.len())
+                    } else {
+                        thread::sleep(Duration::from_millis(1));
+                        Ok(0)
+                    }
+                }
+            }
+            for no_app_after_flash in [false, true] {
+                let state = Arc::new(State {
+                    mode: AtomicU8::new(0),
+                    writes: Default::default(),
+                    finished: Default::default(),
+                    no_app_after_flash,
+                });
+                let root = std::env::temp_dir().join(format!(
+                    "atorch-fw-policy-{}-{}-{no_app_after_flash}",
+                    std::process::id(),
+                    now_ms(),
+                ));
+                std::fs::create_dir(&root).unwrap();
+                let manager = Arc::new(DeviceManager::default());
+                start(
+                    &manager,
+                    "before".into(),
+                    image(),
+                    root.join("logs"),
+                    Arc::new(Host(Arc::clone(&state))),
+                )
+                .unwrap();
+                let deadline = Instant::now() + Duration::from_secs(4);
+                while manager.firmware_active() {
+                    assert!(Instant::now() < deadline, "simulated update did not finish");
+                    thread::sleep(Duration::from_millis(5));
+                }
+                let job = manager.snapshot().firmware.unwrap();
+                assert_eq!(job.phase, "complete");
+                assert!(job.flash_confirmed);
+                assert_eq!(job.acknowledged_blocks, 3);
+                assert_eq!(*state.finished.lock().unwrap(), Some(!no_app_after_flash));
+                assert_eq!(state.writes.lock().unwrap()[0], enter_bootloader());
+                if no_app_after_flash {
+                    assert!(job.restored_device.is_none());
+                    assert!(job.message.contains("正常应用未重连"));
+                } else {
+                    let restored = job.restored_device.unwrap();
+                    assert_eq!(restored.name, "ATORCH BW600 V9.8.7");
+                    assert_eq!(restored.serial, "changed-serial");
+                }
+                manager.disconnect();
+                if let Some(worker) = manager.firmware_worker.lock().unwrap().take() {
+                    worker.join().unwrap();
+                }
+                let owned = root.canonicalize().unwrap();
+                assert_eq!(
+                    owned.parent().unwrap(),
+                    std::env::temp_dir().canonicalize().unwrap()
+                );
+                std::fs::remove_dir_all(owned).unwrap();
+            }
         }
         #[test]
-        fn preflight_spaces_queries_and_requires_two_fresh_report_types() {
+        fn post_flash_readback_spaces_queries_and_accepts_nonzero_running_telemetry() {
             struct IdleDevice {
                 previous: Option<Instant>,
                 pending: VecDeque<Vec<u8>>,
@@ -764,12 +891,16 @@ mod engine {
                     self.previous = Some(Instant::now());
                     assert!(
                         matches!(bytes[3], 3 | 5),
-                        "preflight must never issue a control command"
+                        "readback must never issue a control command"
                     );
                     self.queries.push(bytes[3]);
                     let mut reply = vec![0; 64];
                     reply[..4].copy_from_slice(&[0xaa, 5, 1, bytes[3]]);
                     reply[62..].copy_from_slice(&[0xee, 0xff]);
+                    if bytes[3] == 5 {
+                        reply[8..12].copy_from_slice(&20_000u32.to_le_bytes());
+                        reply[52] = 1;
+                    }
                     self.pending.push_back(reply);
                     Ok(())
                 }

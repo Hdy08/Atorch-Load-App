@@ -6,13 +6,15 @@ async function fixture(
   hardware = false,
   recording = false,
   iap = false,
+  deviceName = "",
 ) {
   await page.addInitScript(
-    ({ fail, hardware, recording, iap }) => {
+    ({ fail, hardware, recording, iap, deviceName }) => {
       const calls: any[] = [];
       const device = {
         path: "test-usb-path",
-        name: iap ? "ATORCH BW150 V1.0.2" : "ATORCH BW150 V1.1.0",
+        name:
+          deviceName || (iap ? "ATORCH BW150 V1.0.2" : "ATORCH BW150 V1.1.0"),
         serial: "924415",
         transport: "usb",
       };
@@ -45,13 +47,13 @@ async function fixture(
             if (command === "discover_devices") return hardware ? [device] : [];
             if (command === "get_usb_diagnostics") return null;
             if (command === "inspect_firmware") {
-              if (fail) throw Error("不是已识别的 AC632N 固件封装，请核对文件");
+              if (fail) throw Error("固件编码无效");
               return {
                 name: args.name,
                 bytes: 116,
                 sha256: "a".repeat(64),
                 crc16: "4B37",
-                family: "AC632N",
+                family: "二进制固件",
                 filenameModel: args.name.startsWith("BW600")
                   ? "BW600"
                   : "BW150",
@@ -63,9 +65,7 @@ async function fixture(
                 lastBlockHex: "CC 40 01 00",
                 bootEntryHex: "55 05 09 02 00 00 00 EE FF",
                 hardwareWriteAvailable: hardware,
-                limitation: hardware
-                  ? "已核准 BW150 V1.1.0 原厂文件；Windows / Android 可通过 USB 升级或从 IAP V1.0.2 重新传输，需核对接口及描述符。"
-                  : "此文件仅支持离线预演",
+                limitation: hardware ? "" : "此平台仅支持离线预演",
               };
             }
             if (command === "start_firmware") {
@@ -115,7 +115,7 @@ async function fixture(
         },
       });
     },
-    { fail, hardware, recording, iap },
+    { fail, hardware, recording, iap, deviceName },
   );
   await page.goto("/");
   await page.getByRole("button", { name: "设备设置", exact: true }).click();
@@ -138,7 +138,7 @@ test("real update requires confirmation and locks other device actions while act
     ),
   ).toHaveCount(0);
   const start = page.getByRole("button", {
-    name: "升级 BW150 固件…",
+    name: "刷写固件…",
     exact: true,
   });
   await expect(start).toBeEnabled();
@@ -183,11 +183,9 @@ test("IAP recovery works without a normal connection and progress survives page 
   await fixture(page, false, true, false, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(
-    page.getByText("已发现 IAP 升级模式", { exact: false }),
+    page.getByRole("heading", { name: "ATORCH BW150 V1.0.2", exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "恢复 BW150 固件…", exact: true })
-    .click();
+  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
   await page.getByRole("button", { name: "确认并开始", exact: true }).click();
   await expect(page.getByTestId("firmware-job")).toContainText("传输固件");
   await page.getByRole("button", { name: "实时监控", exact: true }).click();
@@ -201,17 +199,17 @@ test("IAP recovery works without a normal connection and progress survives page 
   await expect(page.getByTestId("firmware-job")).toContainText("传输固件");
 });
 
-test("recording or an unverified file cannot start a hardware update", async ({
+test("confirmed update can close the current recording without a manual pause", async ({
   page,
 }) => {
   await fixture(page, false, true, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(
-    page.getByText("请先停止负载并暂停记录，再开始升级。"),
+    page.getByText("确认刷写后将保存并结束当前记录。"),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "升级 BW150 固件…", exact: true }),
-  ).toBeDisabled();
+    page.getByRole("button", { name: "刷写固件…", exact: true }),
+  ).toBeEnabled();
   expect(
     await page.evaluate(() =>
       (window as any).firmwareCalls.filter(
@@ -219,6 +217,9 @@ test("recording or an unverified file cannot start a hardware update", async ({
       ),
     ),
   ).toHaveLength(0);
+  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
+  await page.getByRole("button", { name: "确认并开始", exact: true }).click();
+  await expect(page.getByTestId("firmware-job")).toContainText("传输固件");
 });
 
 test("stopped load with paused automatic recording can confirm firmware maintenance", async ({
@@ -230,11 +231,9 @@ test("stopped load with paused automatic recording can confirm firmware maintena
   });
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(
-    page.getByText("确认升级后将保存并关闭已暂停的记录。", { exact: true }),
+    page.getByText("确认刷写后将保存并结束当前记录。", { exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "升级 BW150 固件…", exact: true })
-    .click();
+  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "确认并开始", exact: true }),
   ).toBeEnabled();
@@ -248,14 +247,12 @@ test("stopped load with paused automatic recording can confirm firmware maintena
   ).toHaveLength(0);
 });
 
-test("writing cannot be cancelled and FF without application verification is not shown as success", async ({
+test("writing cannot be cancelled and FF completion does not claim application verification", async ({
   page,
 }) => {
   await fixture(page, false, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
-  await page
-    .getByRole("button", { name: "升级 BW150 固件…", exact: true })
-    .click();
+  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
   await page.getByRole("button", { name: "确认并开始", exact: true }).click();
   await expect(page.getByTestId("firmware-job")).toBeVisible();
   await page.evaluate(() =>
@@ -271,18 +268,20 @@ test("writing cannot be cancelled and FF without application verification is not
   ).toBeDisabled();
   await page.evaluate(() =>
     Object.assign((window as any).firmwareJob, {
-      phase: "failed",
+      phase: "complete",
       active: false,
       flashConfirmed: true,
       message: "正常应用尚未重新出现",
     }),
   );
-  await expect(page.getByTestId("firmware-job")).toContainText("升级未完成");
+  await expect(page.getByTestId("firmware-job")).toContainText("升级完成");
   await expect(page.getByTestId("firmware-job")).toContainText(
     "正常应用尚未重新出现",
   );
   await expect(
-    page.getByTestId("firmware-job").getByText("升级完成", { exact: true }),
+    page
+      .getByTestId("firmware-job")
+      .getByText("正常应用回读已通过。", { exact: false }),
   ).toHaveCount(0);
 });
 
@@ -297,7 +296,7 @@ test("firmware inspection and rehearsal are explicit and never send device comma
   await expect(run).toBeDisabled();
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(page.locator(".firmware-facts")).toContainText("SHA-256");
-  await expect(page.getByText(/封装头不包含已核准的型号标识/)).toBeVisible();
+  await expect(page.getByText(/封装头不包含已核准的型号标识/)).toHaveCount(0);
   await expect(
     page.getByText(/已恢复的升级流程|已核准 BW150 V1.1.0 原厂文件/),
   ).toHaveCount(0);
@@ -336,18 +335,18 @@ test("firmware inspection and rehearsal are explicit and never send device comma
     ).toBeLessThanOrEqual(width);
   }
   await page.screenshot({
-    path: "artifacts/firmware-handshake-ui.png",
+    path: "artifacts/firmware-open-policy/handshake-ui.png",
     fullPage: true,
   });
 });
 
-test("invalid or oversized images clear prior state and cannot rehearse", async ({
+test("inspection errors or oversized images clear prior state and cannot rehearse", async ({
   page,
 }) => {
   await fixture(page, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(
-    page.locator(".fui-Toast").getByText(/不是已识别的 AC632N 固件封装/),
+    page.locator(".fui-Toast").getByText(/固件编码无效/),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "离线预演升级握手", exact: true }),
@@ -355,7 +354,7 @@ test("invalid or oversized images clear prior state and cannot rehearse", async 
   await page.getByTestId("firmware-input").setInputFiles({
     name: "BW150-huge.bin",
     mimeType: "application/octet-stream",
-    buffer: Buffer.alloc(58 * 65535 + 1),
+    buffer: Buffer.alloc(1_024_001),
   });
   await expect(
     page.locator(".fui-Toast").getByText(/固件大小必须/),
@@ -368,16 +367,33 @@ test("invalid or oversized images clear prior state and cannot rehearse", async 
   expect(inspect).toHaveLength(1);
 });
 
-test("other model filename stays visibly incompatible while offline rehearsal works", async ({
+test("custom binaries and other model versions can be selected for hardware flashing", async ({
   page,
 }) => {
-  await fixture(page);
+  await fixture(page, false, true, false, false, "ATORCH BW600 V2.0.5");
   await page
     .getByTestId("firmware-input")
-    .setInputFiles(file("BW600-test.bin"));
-  await expect(page.getByText(/文件名型号与当前设备不匹配/)).toBeVisible();
+    .setInputFiles(file("RT1I-experiment.bin"));
+  await expect(
+    page.getByText(/文件名型号与当前设备不匹配|已核准的 BW150/),
+  ).toHaveCount(0);
+  await expect(page.locator(".firmware-facts")).toContainText("二进制固件");
+  await expect(
+    page.getByRole("button", { name: "刷写固件…", exact: true }),
+  ).toBeEnabled();
   await page
     .getByRole("button", { name: "离线预演升级握手", exact: true })
     .click();
   await expect(page.getByTestId("firmware-rehearsal")).toBeVisible();
+  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("ATORCH BW600 V2.0.5");
+  await expect(page.getByRole("dialog")).toContainText("RT1I-experiment.bin");
+  await page.getByRole("button", { name: "确认并开始", exact: true }).click();
+  const calls = await page.evaluate(() =>
+    (window as any).firmwareCalls.filter(
+      (c: any) => c.command === "start_firmware",
+    ),
+  );
+  expect(calls).toHaveLength(1);
+  expect(calls[0].args.name).toBe("RT1I-experiment.bin");
 });

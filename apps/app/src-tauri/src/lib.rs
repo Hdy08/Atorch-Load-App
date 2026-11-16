@@ -332,7 +332,7 @@ fn firmware_image(name: &str, encoded: &str) -> Result<atorch_protocol::firmware
         || !name.to_ascii_lowercase().ends_with(".bin")
         || encoded.len() > atorch_protocol::firmware::MAX_IMAGE_SIZE.div_ceil(3) * 4
     {
-        return Err("请选择大小在协议范围内的 .bin 固件文件".into());
+        return Err("请选择不超过 1,024,000 字节的 .bin 固件文件".into());
     }
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(encoded)
@@ -346,14 +346,12 @@ async fn inspect_firmware(
     data_base64: String,
 ) -> Result<atorch_protocol::firmware::FirmwareInfo, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let image=firmware_image(&name,&data_base64)?;
-        let mut info=image.info;
-        let verified=info.sha256==atorch_protocol::firmware::legacy::BW150_IMAGE_SHA256;
-        info.hardware_write_available=cfg!(any(target_os="windows",target_os="android"))&&verified;
-        info.limitation=if verified {
-            "已核准 BW150 V1.1.0 原厂文件；Windows / Android 可通过 USB 升级或从 IAP V1.0.2 重新传输，需核对接口及描述符。".into()
-        }else{
-            "此文件尚未完成实机传输及型号核准；可检查和离线预演，不能实机刷写。".into()
+        let mut info = firmware_image(&name, &data_base64)?.info;
+        info.hardware_write_available = cfg!(any(target_os = "windows", target_os = "android"));
+        info.limitation = if info.hardware_write_available {
+            String::new()
+        } else {
+            "实机刷写目前支持 Windows / Android USB；此平台可使用离线预演。".into()
         };
         Ok(info)
     })

@@ -1,5 +1,11 @@
 # BW150 USB 固件升级、恢复与离线预演
 
+## 当前刷写规则（2026-11-16 更新）
+
+按用户要求，应用已取消固定 SHA-256、固件文件名型号、AC632N 文件头、BW150 产品 / 版本、刷后序列号和精确 IAP 描述符白名单。Windows / Android 对非空且不超过 **1,024,000 字节**的 `.bin` 文件开放 USB 刷写，与已分析的官方 PC 文件入口一致；不设隐藏开关。SHA-256 和封装系列仅供显示。确认后自动结束当前记录并独占 USB，不再要求先收到停止 / 零输入遥测。设备有效 FF 确认为刷写完成，随后正常应用回读与监测恢复另行报告。CRC、分块序号、回显核对和传输超时继续用于协议完整性。
+
+完整行为、测试和范围见 [刷写规则调整](firmware-open-policy-20261116.md)。下文关于“仅限核准原厂文件”“固定 APP / IAP 版本”“FF 后回读失败即任务失败”等描述属于此前实现及历史硬件验收条件，以本节当前规则为准；历史实机结果不会因软件规则调整而扩大。
+
 更新：2026-11-13（北京时间）。实现位于 `crates/protocol/src/firmware.rs`、`crates/protocol/src/firmware/legacy.rs` 和 `crates/device/src/firmware.rs`。已取得官方程序的一次完整成功传输，并用新应用在 Windows / Android 完成同一台 BW150 的实际升级、FF 确认和正常应用回读。两平台开放这份核准原厂文件的 USB 升级及 IAP 重新传输；Android 已实测从 IAP 直接恢复，以及 APP → IAP → APP 完整升级。Android USB 平台生命周期由 `crates/tauri-plugin-atorch-usb/` 负责。
 
 ## 文件与逻辑包

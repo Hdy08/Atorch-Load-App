@@ -113,7 +113,7 @@ export interface Snapshot {
   sampleCount: number;
   samplingPaused?: boolean;
   samplingElapsedMs?: number;
-  usbSampleRateHz?: 1 | 2 | 5 | 10;
+  usbSampleRateHz?: 1 | 2 | 5;
   connectedAt: number;
   lastReportAt: number;
   recording: string | null;

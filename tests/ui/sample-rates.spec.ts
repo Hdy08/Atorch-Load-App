@@ -5,7 +5,12 @@ async function fixture(page: Page, bluetooth = false) {
   await page.addInitScript(
     ({ bluetooth }) => {
       const state = {
-        hz: Number(localStorage.getItem("fixture-native-rate") ?? 1),
+        hz: (() => {
+          const saved = Number(
+            localStorage.getItem("fixture-native-rate") ?? 1,
+          );
+          return saved === 10 ? 5 : [1, 2, 5].includes(saved) ? saved : 1;
+        })(),
         failRate: false,
         calls: [] as { command: string; time: number }[],
         renders: [] as number[],
@@ -21,6 +26,8 @@ async function fixture(page: Page, bluetooth = false) {
             state.calls.push({ command, time: performance.now() });
             if (command === "set_usb_sample_rate") {
               if (state.failRate) throw new Error("采样率设置失败");
+              if (![1, 2, 5].includes(args.hz))
+                throw new Error("USB 采样率仅支持 1、2 或 5 Hz");
               state.hz = args.hz;
               localStorage.setItem("fixture-native-rate", String(args.hz));
               state.lastTick = performance.now();
@@ -90,7 +97,7 @@ async function fixture(page: Page, bluetooth = false) {
   await expect(page.locator(".trend-chart canvas")).toBeVisible();
 }
 
-for (const hz of [1, 2, 5, 10]) {
+for (const hz of [1, 2, 5]) {
   test(`USB ${hz} Hz selection synchronizes IPC and actual chart rendering`, async ({
     page,
   }) => {
@@ -147,9 +154,9 @@ for (const hz of [1, 2, 5, 10]) {
         ["get_snapshot", "get_history"].includes(command as string),
       ),
     ).toBe(true);
-    await mkdir("artifacts/usb-rates", { recursive: true });
+    await mkdir("artifacts/sampling-10hz-disabled", { recursive: true });
     await writeFile(
-      `artifacts/usb-rates/ui-${hz}hz.json`,
+      `artifacts/sampling-10hz-disabled/ui-${hz}hz.json`,
       JSON.stringify(result, null, 2),
     );
   });
@@ -162,7 +169,7 @@ test("rate failures preserve the confirmed rate and BLE exposes no rate write", 
   await page.evaluate(() => {
     (window as any).rateFixture.failRate = true;
   });
-  await page.getByLabel("USB 采样率").selectOption("10");
+  await page.getByLabel("USB 采样率").selectOption("5");
   await expect(
     page.getByText("Error: 采样率设置失败", { exact: true }),
   ).toBeVisible();
@@ -182,12 +189,28 @@ test("sample rate defaults to 1 Hz and reflects the saved native preference on r
     "1 Hz 采样",
     "2 Hz 采样",
     "5 Hz 采样",
-    "10 Hz 采样",
   ]);
   await select.selectOption("5");
   await expect(select).toHaveValue("5");
   await page.reload();
   await expect(page.getByLabel("USB 采样率")).toHaveValue("5");
+});
+
+test("a saved 10 Hz preference falls back to 5 Hz without exposing a 10 Hz option", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("fixture-native-rate", "10");
+  });
+  await fixture(page);
+  const select = page.getByLabel("USB 采样率");
+  await expect(select).toHaveValue("5");
+  await expect(select.locator('option[value="10"]')).toHaveCount(0);
+  await expect(select.locator("option")).toHaveText([
+    "1 Hz 采样",
+    "2 Hz 采样",
+    "5 Hz 采样",
+  ]);
 });
 
 test("BLE retains its device cadence without USB rate controls", async ({

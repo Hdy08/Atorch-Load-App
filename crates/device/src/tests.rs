@@ -154,7 +154,7 @@ fn usb_sample_rate_changes_cadence_without_sending_control_commands() {
     let manager = connect(usb);
     manager.set_sampling(true).unwrap();
     assert_eq!(manager.snapshot().usb_sample_rate_hz, 1);
-    for hz in [1, 2, 5, 10] {
+    for hz in [1, 2, 5] {
         manager.set_usb_sample_rate(hz).unwrap();
         // Allow the previous blocking read to finish before timing the new rate.
         thread::sleep(Duration::from_millis(120));
@@ -167,9 +167,9 @@ fn usb_sample_rate_changes_cadence_without_sending_control_commands() {
         );
         assert_eq!(manager.snapshot().usb_sample_rate_hz, hz);
     }
-    for invalid in [0, 3, 255] {
+    for invalid in [0, 3, 10, 255] {
         assert!(manager.set_usb_sample_rate(invalid).is_err());
-        assert_eq!(manager.snapshot().usb_sample_rate_hz, 10);
+        assert_eq!(manager.snapshot().usb_sample_rate_hz, 5);
     }
     manager.disconnect();
     manager.set_usb_sample_rate(5).unwrap();
@@ -203,6 +203,20 @@ fn usb_sample_rate_preferences_survive_restart_and_reject_invalid_values() {
             .usb_sample_rate_hz,
         1
     );
+    std::fs::write(&path, "{\"usbSampleRateHz\":10}").unwrap();
+    {
+        let manager = DeviceManager::with_sampling_preferences(path.clone());
+        assert_eq!(manager.snapshot().usb_sample_rate_hz, 5);
+        assert!(manager.set_usb_sample_rate(10).is_err());
+        assert_eq!(manager.snapshot().usb_sample_rate_hz, 5);
+        manager.set_usb_sample_rate(5).unwrap();
+    }
+    assert_eq!(
+        DeviceManager::with_sampling_preferences(path.clone())
+            .snapshot()
+            .usb_sample_rate_hz,
+        5
+    );
     for text in [
         "malformed",
         "{}",
@@ -222,7 +236,7 @@ fn usb_sample_rate_preferences_survive_restart_and_reject_invalid_values() {
     std::fs::create_dir_all(&directory).unwrap();
     let manager = DeviceManager::with_sampling_preferences(directory);
     assert!(manager
-        .set_usb_sample_rate(10)
+        .set_usb_sample_rate(5)
         .unwrap_err()
         .contains("保存失败"));
     assert_eq!(manager.snapshot().usb_sample_rate_hz, 1);
@@ -1175,7 +1189,7 @@ fn automatic_recording_follows_load_and_sampling_and_resumes_the_same_file() {
         )
         .unwrap();
     wait(|| manager.snapshot().telemetry.is_some());
-    manager.set_usb_sample_rate(10).unwrap();
+    manager.set_usb_sample_rate(5).unwrap();
     assert!(manager.snapshot().recording.is_none());
     let running = |value| Command {
         kind: "running".into(),
@@ -1265,7 +1279,7 @@ fn usb_panel_state_edges_sync_sampling_once_and_preserve_manual_overrides() {
         let (mut usb, writes, _) = fake(true);
         usb.panel_running = Some(panel.clone());
         let manager = DeviceManager::default();
-        manager.set_usb_sample_rate(10).unwrap();
+        manager.set_usb_sample_rate(5).unwrap();
         manager
             .connect(
                 DeviceInfo {

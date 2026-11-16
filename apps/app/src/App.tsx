@@ -814,7 +814,7 @@ export function App() {
                             });
                           }}
                         >
-                          {[1, 2, 5, 10].map((hz) => (
+                          {[1, 2, 5].map((hz) => (
                             <option key={hz} value={hz}>
                               {hz} Hz 采样
                             </option>

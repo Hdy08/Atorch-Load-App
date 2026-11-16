@@ -6,7 +6,7 @@ use std::{
 pub const DEFAULT_USB_HZ: u8 = 1;
 
 pub fn valid_usb_rate(hz: u8) -> bool {
-    matches!(hz, 1 | 2 | 5 | 10)
+    matches!(hz, 1 | 2 | 5)
 }
 
 pub(crate) fn read_usb_rate(path: &Path) -> u8 {
@@ -15,6 +15,8 @@ pub(crate) fn read_usb_rate(path: &Path) -> u8 {
         .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
         .and_then(|value| value["usbSampleRateHz"].as_u64())
         .and_then(|hz| u8::try_from(hz).ok())
+        // Retire the old 10 Hz preference until independent updates are verified.
+        .map(|hz| if hz == 10 { 5 } else { hz })
         .filter(|hz| valid_usb_rate(*hz))
         .unwrap_or(DEFAULT_USB_HZ)
 }
@@ -137,7 +139,7 @@ mod tests {
 
     #[test]
     fn telemetry_slots_match_each_rate_and_parameters_remain_one_hz() {
-        for hz in [1, 2, 5, 10] {
+        for hz in [1, 2, 5] {
             let start = Instant::now();
             let mut schedule = UsbSchedule::new(start, hz);
             let (mut settings, mut data) = (0, 0);
@@ -164,14 +166,15 @@ mod tests {
         let late = start + Duration::from_secs(5);
         assert_eq!(schedule.due_queries(late), [3, 5]);
         assert!(schedule.due_queries(late).is_empty());
-        schedule.set_rate(late, 10);
+        schedule.set_rate(late, 5);
         assert_eq!(schedule.due_queries(late), [5]);
         assert_eq!(schedule.timeout_ms(late), 80);
-        assert_eq!(schedule.timeout_ms(late + Duration::from_millis(90)), 10);
+        assert_eq!(schedule.timeout_ms(late + Duration::from_millis(190)), 10);
         schedule.refresh(late);
         assert_eq!(schedule.due_queries(late), [3, 5]);
         assert!(valid_usb_rate(DEFAULT_USB_HZ));
         assert!(!valid_usb_rate(0));
+        assert!(!valid_usb_rate(10));
         assert!(!valid_usb_rate(255));
     }
 
