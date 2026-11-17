@@ -154,3 +154,60 @@ test("connection resumes scanning after loss without overlapping scan cycles", a
   await f.controller.setEnabled(false);
   assert.equal(f.calls.filter((c) => c === "usb").length, 2);
 });
+
+for (const [preference, expected] of [
+  ["prefer-ble", ["ble", ble.path]],
+  ["usb-only", ["usb", usb.path]],
+  ["ble-only", ["ble", ble.path]],
+]) {
+  test(`automatic connection respects ${preference}`, async () => {
+    const f = fixture({ usb: [usb] });
+    await f.controller.configure(preference);
+    await f.controller.setEnabled(true);
+    await until(() => f.result);
+    await f.controller.setEnabled(false);
+    assert.deepEqual(f.calls, expected);
+  });
+}
+test("BLE priority falls back to USB when BLE is unavailable", async () => {
+  const f = fixture({ usb: [usb], fail: ble.path });
+  await f.controller.configure("prefer-ble");
+  await f.controller.setEnabled(true);
+  await until(() => f.result);
+  await f.controller.setEnabled(false);
+  assert.deepEqual(f.calls, ["ble", ble.path, "usb", usb.path]);
+});
+test("off never scans either transport and USB-only never requests BLE permission", async () => {
+  for (const preference of ["off", "usb-only"]) {
+    const f = fixture();
+    await f.controller.configure(preference);
+    await f.controller.setEnabled(true);
+    await sleep(45);
+    await f.controller.setEnabled(false);
+    assert(!f.calls.includes("ble"));
+    if (preference === "off") assert.deepEqual(f.calls, []);
+    else assert(f.calls.includes("usb"));
+  }
+});
+test("changing transport policy drains the old BLE scan before starting the new scan", async () => {
+  let finish;
+  const f = fixture({
+    usb: [],
+    scan: () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    stop: () => finish([ble]),
+  });
+  await f.controller.setEnabled(true);
+  await until(() => finish);
+  await f.controller.configure("usb-only");
+  f.api.discover = async () => {
+    f.calls.push("usb");
+    return [usb];
+  };
+  await f.controller.setEnabled(true);
+  await until(() => f.result);
+  await f.controller.setEnabled(false);
+  assert.deepEqual(f.calls, ["usb", "ble", "stop", "usb", usb.path]);
+});

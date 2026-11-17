@@ -4,6 +4,7 @@ import {
   chartTimeline,
   samplesInChartRange,
   zoomAxisRange,
+  pinchAxisRange,
 } from "../apps/app/src/lib/chartInteraction.ts";
 import { exportCsv, parseCsv } from "../apps/app/src/lib/csv.ts";
 
@@ -129,4 +130,25 @@ test("CSV exports retain pause boundaries and effective time on selected subsets
   assert.deepEqual(parseCsv(csv), rows);
   assert.deepEqual(parseCsv(exportCsv(rows.slice(1))), rows.slice(1));
   assert.throws(() => parseCsv(csv.replace(/,1$/, ",-1")), /分段/);
+});
+
+test("pinch uses damped absolute distance, independent of move count and jitter", () => {
+  const domain = { startValue: 0, endValue: 1000 };
+  const range = { startValue: 200, endValue: 800 };
+  const initial = pinchAxisRange(range, 0.5, 100, 100, domain);
+  assert.deepEqual(initial, range);
+  const doubled = pinchAxisRange(range, 0.5, 100, 200, domain);
+  assert(
+    Math.abs(doubled.endValue - doubled.startValue - 600 / Math.sqrt(2)) <
+      1e-10,
+  );
+  assert.equal((doubled.startValue + doubled.endValue) / 2, 500);
+  const oneMove = pinchAxisRange(range, 0.5, 100, 150, domain);
+  let manyMoves;
+  for (let distance = 100; distance <= 150; distance++)
+    manyMoves = pinchAxisRange(range, 0.5, 100, distance, domain);
+  assert.deepEqual(manyMoves, oneMove);
+  const jitter = pinchAxisRange(range, 0.5, 100, 100.1, domain);
+  assert(Math.abs(jitter.startValue - range.startValue) < 0.2);
+  assert.deepEqual(pinchAxisRange(domain, 0, 100, 10, domain), domain);
 });

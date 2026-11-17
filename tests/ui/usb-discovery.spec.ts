@@ -53,6 +53,7 @@ for (const scenario of cases) {
         isTauri: true,
         __TAURI_INTERNALS__: {
           invoke: async (command: string) => {
+            if (command === "set_window_theme") return false;
             if (command === "discover_devices") return devices;
             if (command === "get_usb_diagnostics") return diagnostics;
             if (command === "get_snapshot")
@@ -92,7 +93,9 @@ for (const scenario of cases) {
   });
 }
 
-test("scan errors appear inside the connection dialog", async ({ page }) => {
+test("scan errors appear as floating notifications while the dialog stays usable", async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     Object.assign(window, {
       isTauri: true,
@@ -124,7 +127,12 @@ test("scan errors appear inside the connection dialog", async ({ page }) => {
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("扫描失败", { exact: true })).toBeVisible();
   await expect(
-    dialog.getByText("Error: USB service unavailable", { exact: true }),
+    page
+      .locator(".fui-Toast")
+      .getByText("Error: USB service unavailable", { exact: true }),
   ).toBeVisible();
+  await expect(
+    dialog.getByText("Error: USB service unavailable", { exact: true }),
+  ).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "重新扫描" })).toBeEnabled();
 });

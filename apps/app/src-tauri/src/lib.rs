@@ -12,6 +12,135 @@ type Devices = Arc<DeviceManager>;
 type RecordLibrary = Arc<Mutex<Library>>;
 
 #[tauri::command]
+fn get_system_accent(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::UI::ViewManagement::{UIColorType, UISettings};
+        let _ = app;
+        let color = UISettings::new()
+            .and_then(|settings| settings.GetColorValue(UIColorType::Accent))
+            .map_err(|error| error.to_string())?;
+        Ok(Some(format!(
+            "#{:02x}{:02x}{:02x}",
+            color.R, color.G, color.B
+        )))
+    }
+    #[cfg(target_os = "android")]
+    {
+        tauri_plugin_atorch_usb::mobile::system_accent(&app).map(Some)
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "android")))]
+    {
+        let _ = app;
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+fn get_system_theme() -> Result<Option<bool>, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::UI::ViewManagement::{UIColorType, UISettings};
+        let color = UISettings::new()
+            .and_then(|settings| settings.GetColorValue(UIColorType::Background))
+            .map_err(|error| error.to_string())?;
+        Ok(Some(
+            2 * u32::from(color.R) + 5 * u32::from(color.G) + u32::from(color.B) < 8 * 128,
+        ))
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+fn set_window_theme(
+    app: tauri::AppHandle,
+    dark: bool,
+    background: String,
+    foreground: String,
+    follow_system: bool,
+) -> Result<bool, String> {
+    #[cfg(desktop)]
+    if let Some(window) = app.get_webview_window("main") {
+        window
+            .set_theme(if follow_system {
+                None
+            } else {
+                Some(if dark {
+                    tauri::Theme::Dark
+                } else {
+                    tauri::Theme::Light
+                })
+            })
+            .map_err(|error| error.to_string())?;
+        #[cfg(target_os = "windows")]
+        {
+            window
+                .set_decorations(true)
+                .map_err(|error| error.to_string())?;
+            use windows::Win32::Graphics::Dwm::{
+                DwmSetWindowAttribute, DWMWA_CAPTION_COLOR, DWMWA_TEXT_COLOR,
+            };
+            let hwnd = window.hwnd().map_err(|error| error.to_string())?;
+            for (attribute, color) in [
+                (DWMWA_CAPTION_COLOR, caption_color(&background)?),
+                (DWMWA_TEXT_COLOR, caption_color(&foreground)?),
+            ] {
+                // Preserve the system caption buttons even if the OS does not
+                // support custom caption colors. Theme changes remain native.
+                let _ = unsafe {
+                    DwmSetWindowAttribute(
+                        hwnd,
+                        attribute,
+                        (&color as *const u32).cast(),
+                        std::mem::size_of::<u32>() as u32,
+                    )
+                };
+            }
+        }
+    }
+    let _ = (app, dark, background, foreground, follow_system);
+    Ok(false)
+}
+
+#[tauri::command]
+fn window_action(app: tauri::AppHandle, action: String) -> Result<bool, String> {
+    #[cfg(desktop)]
+    if let Some(window) = app.get_webview_window("main") {
+        match action.as_str() {
+            "minimize" => window.minimize(),
+            "maximize" => {
+                if window.is_maximized().map_err(|error| error.to_string())? {
+                    window.unmaximize()
+                } else {
+                    window.maximize()
+                }
+            }
+            "close" => window.close(),
+            "drag" => window.start_dragging(),
+            "state" => Ok(()),
+            _ => return Err("无效的窗口操作".into()),
+        }
+        .map_err(|error| error.to_string())?;
+        return window.is_maximized().map_err(|error| error.to_string());
+    }
+    let _ = (app, action);
+    Ok(false)
+}
+
+#[cfg(target_os = "windows")]
+fn caption_color(hex: &str) -> Result<u32, String> {
+    if hex.len() != 7 || !hex.starts_with('#') {
+        return Err("无效的窗口主题颜色".into());
+    }
+    let rgb = u32::from_str_radix(&hex[1..], 16).map_err(|_| "无效的窗口主题颜色")?;
+    // DWM accepts COLORREF (0x00BBGGRR), whereas Fluent tokens use #RRGGBB.
+    Ok(((rgb & 0xff0000) >> 16) | (rgb & 0x00ff00) | ((rgb & 0x0000ff) << 16))
+}
+
+#[tauri::command]
 async fn set_chart_fullscreen(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
     #[cfg(target_os = "android")]
     {
@@ -300,6 +429,17 @@ fn set_sampling(manager: State<'_, Devices>, enabled: bool) -> Result<(), String
     manager.set_sampling(enabled)
 }
 #[tauri::command]
+fn set_auto_record_on_load(manager: State<'_, Devices>, enabled: bool) -> Result<(), String> {
+    manager.set_auto_record_on_load(enabled)
+}
+#[tauri::command]
+fn set_auto_recording(
+    manager: State<'_, Devices>,
+    settings: atorch_device::auto_recording::Settings,
+) -> Result<(), String> {
+    manager.set_auto_recording(settings)
+}
+#[tauri::command]
 fn set_usb_sample_rate(manager: State<'_, Devices>, hz: u8) -> Result<(), String> {
     manager.set_usb_sample_rate(hz)
 }
@@ -418,6 +558,67 @@ async fn start_firmware(
 #[tauri::command]
 fn cancel_firmware(manager: State<'_, Devices>) -> Result<(), String> {
     manager.cancel_firmware()
+}
+#[tauri::command]
+async fn open_firmware_log(
+    app: tauri::AppHandle,
+    manager: State<'_, Devices>,
+) -> Result<(), String> {
+    // The frontend supplies no path: only the current native job's log can open.
+    let log_path = manager
+        .snapshot()
+        .firmware
+        .map(|job| job.log_path)
+        .filter(|path| !path.is_empty())
+        .ok_or("尚无传输日志")?;
+    let directory = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("firmware_logs");
+    tauri::async_runtime::spawn_blocking(move || {
+        let path = PathBuf::from(log_path)
+            .canonicalize()
+            .map_err(|e| format!("无法读取传输日志：{e}"))?;
+        let directory = directory.canonicalize().map_err(|e| e.to_string())?;
+        if path.parent() != Some(directory.as_path())
+            || path.extension().and_then(|extension| extension.to_str()) != Some("jsonl")
+            || !path.is_file()
+        {
+            return Err("无效的传输日志文件".into());
+        }
+        #[cfg(target_os = "android")]
+        {
+            tauri_plugin_atorch_usb::mobile::open_firmware_log(&app, &path.to_string_lossy())
+        }
+        #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
+        {
+            #[cfg(target_os = "windows")]
+            let mut command = std::process::Command::new("notepad.exe");
+            #[cfg(target_os = "macos")]
+            let mut command = {
+                let mut command = std::process::Command::new("open");
+                command.arg("-t");
+                command
+            };
+            #[cfg(target_os = "linux")]
+            let mut command = std::process::Command::new("xdg-open");
+            command
+                .arg(path)
+                .spawn()
+                .map(|_| ())
+                .map_err(|e| format!("无法打开传输日志：{e}"))
+        }
+        #[cfg(not(any(
+            target_os = "windows",
+            target_os = "android",
+            target_os = "macos",
+            target_os = "linux"
+        )))]
+        Err("当前平台不支持打开传输日志".into())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 #[tauri::command]
 async fn export_csv(
@@ -647,6 +848,28 @@ pub fn run() {
         .plugin(tauri_plugin_atorch_usb::init())
         .plugin(tauri_plugin_atorch_ble::init())
         .setup(|app| {
+            #[cfg(target_os = "windows")]
+            if let Some(window) = app.get_webview_window("main") {
+                window.with_webview(|webview| {
+                    use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings3;
+                    use windows::core::Interface;
+                    let configure = || -> windows::core::Result<()> {
+                        unsafe {
+                            let settings = webview.controller().CoreWebView2()?.Settings()?;
+                            settings.SetAreDefaultContextMenusEnabled(false)?;
+                            settings.SetAreDevToolsEnabled(false)?;
+                            settings.SetIsZoomControlEnabled(false)?;
+                            settings
+                                .cast::<ICoreWebView2Settings3>()?
+                                .SetAreBrowserAcceleratorKeysEnabled(false)?;
+                        }
+                        Ok(())
+                    };
+                    if let Err(error) = configure() {
+                        eprintln!("WebView input preferences: {error}");
+                    }
+                })?;
+            }
             let path = app.path().app_config_dir()?.join("sampling.json");
             app.manage(Arc::new(DeviceManager::with_sampling_preferences(path)));
             let index = app.path().app_config_dir()?.join("record-library.json");
@@ -661,6 +884,10 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            get_system_accent,
+            get_system_theme,
+            set_window_theme,
+            window_action,
             set_chart_fullscreen,
             discover_devices,
             get_bluetooth_status,
@@ -673,6 +900,8 @@ pub fn run() {
             get_snapshot,
             get_history,
             set_sampling,
+            set_auto_record_on_load,
+            set_auto_recording,
             set_usb_sample_rate,
             clear_samples,
             send_command,
@@ -681,6 +910,7 @@ pub fn run() {
             rehearse_firmware,
             start_firmware,
             cancel_firmware,
+            open_firmware_log,
             set_recording,
             export_csv,
             save_csv,

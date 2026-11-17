@@ -22,11 +22,13 @@ async function fixture(
         limitMinutes: 0,
       };
       const calls: any[] = [];
+      const connectedAt = Date.now();
       Object.assign(window, {
         isTauri: true,
         modeCalls: calls,
         __TAURI_INTERNALS__: {
           invoke: async (command: string, args: any) => {
+            if (command === "set_window_theme") return false;
             if (command === "get_snapshot")
               return {
                 connected: true,
@@ -47,7 +49,7 @@ async function fixture(
                   running: bluetooth ? null : running,
                 },
                 sampleCount: 1,
-                connectedAt: Date.now(),
+                connectedAt,
                 lastReportAt: Date.now(),
                 recording: null,
                 logs: [],
@@ -73,10 +75,12 @@ async function fixture(
     options,
   );
   await page.goto("/");
-  if (!options.bluetooth)
-    await page
-      .getByRole("button", { name: "切换测试模式", exact: true })
-      .click();
+  if (!options.bluetooth) await openModes(page);
+}
+
+async function openModes(page: Page) {
+  await page.getByRole("button", { name: "负载控制设置", exact: true }).click();
+  await page.getByRole("tab", { name: "模式切换", exact: true }).click();
 }
 
 test("mode changes wait for confirmation, refresh target units and never start the load", async ({
@@ -90,10 +94,10 @@ test("mode changes wait for confirmation, refresh target units and never start t
   ).toBeDisabled();
   await expect(page.locator('[data-mode="CC"]')).toHaveClass(/active/);
   await expect(
-    page.getByRole("dialog", { name: "切换测试模式", exact: true }),
+    page.getByRole("dialog", { name: "负载控制", exact: true }),
   ).toBeHidden();
   await expect(
-    page.getByRole("spinbutton", { name: "目标电压", exact: true }),
+    page.getByRole("textbox", { name: "目标电压快速设定", exact: true }),
   ).toHaveValue("5.00");
   await expect(page.locator(".mode-code")).toHaveText("CV");
   await page.getByRole("button", { name: "启动负载", exact: true }).click();
@@ -110,14 +114,12 @@ test("mode changes wait for confirmation, refresh target units and never start t
     "CDxn",
     "CC",
   ]) {
-    await page
-      .getByRole("button", { name: "切换测试模式", exact: true })
-      .click();
+    await openModes(page);
     await page
       .getByRole("button", { name: `切换到 ${code}`, exact: true })
       .click();
     await expect(
-      page.getByRole("dialog", { name: "切换测试模式", exact: true }),
+      page.getByRole("dialog", { name: "负载控制", exact: true }),
     ).toBeHidden();
     await expect(page.locator(".mode-code")).toHaveText(code);
   }
@@ -134,14 +136,51 @@ test("mode changes wait for confirmation, refresh target units and never start t
   }
 });
 
+test("mode cards contain only code and title, expose descriptions on hover, and activate by click or keyboard", async ({
+  page,
+}, info) => {
+  await fixture(page);
+  await expect(page.getByText(/当前模式：/)).toHaveCount(0);
+  await expect(
+    page.locator(".test-mode button, .test-mode-footer, .test-mode p"),
+  ).toHaveCount(0);
+  const cv = page.locator('[data-mode="CV"]');
+  await expect(cv).toHaveText("CV恒压模式");
+  await cv.hover();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "保持设定电压，测试电源限流特性",
+  );
+  await page.screenshot({ path: info.outputPath("compact-mode-cards.png") });
+  await cv.getByRole("heading").click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  expect(await page.evaluate(() => (window as any).modeCalls)).toHaveLength(1);
+  await openModes(page);
+  await expect(page.locator('[data-mode="CV"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  const cr = page.locator('[data-mode="CR"]');
+  await cr.focus();
+  await cr.press("Space");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  expect(
+    await page.evaluate(() =>
+      (window as any).modeCalls.map((call: any) => call.value),
+    ),
+  ).toEqual([1, 2]);
+});
+
 test("failed mode selection retains the actual mode and can be retried", async ({
   page,
 }) => {
   await fixture(page, { fail: true });
   await page.getByRole("button", { name: "切换到 CV", exact: true }).click();
   await expect(
-    page.getByRole("dialog").getByText(/未收到设备确认/),
+    page.locator(".fui-Toast").getByText(/未收到设备确认/),
   ).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").filter({ hasText: "未收到设备确认" }),
+  ).toHaveCount(1);
   await expect(page.locator('[data-mode="CC"]')).toHaveClass(/active/);
   await expect(page.locator('[data-mode="CV"]')).not.toHaveClass(/active/);
   await expect(
@@ -163,6 +202,7 @@ test("target writes retain the mode whose unit the user edited", async ({
   await fixture(page);
   await page.getByRole("button", { name: "切换到 CV", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
+  await page.getByRole("button", { name: "负载控制设置", exact: true }).click();
   const parameter = page.locator(".parameter").filter({ hasText: "目标电压" });
   await parameter.getByRole("spinbutton").fill("6");
   await parameter.getByRole("button", { name: "应用", exact: true }).click();
@@ -186,7 +226,15 @@ test("special test entry requires confirmation and never invents a target", asyn
   await expect(
     page.getByRole("spinbutton", { name: "目标电流", exact: true }),
   ).toHaveCount(0);
-  await expect(page.getByText(/普通电流目标值不适用/)).toBeVisible();
+  await expect(page.locator(".floating-load-target")).toHaveCount(0);
+  await page.getByRole("button", { name: "负载控制设置", exact: true }).click();
+  await expect(
+    page.getByRole("tab", { name: "快速设定", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "关闭", exact: true })
+    .click();
   expect(
     (await page.evaluate(() => (window as any).modeCalls)).map(
       (c: any) => c.kind,
@@ -198,19 +246,17 @@ test("BLE keeps the panel remote without exposing USB mode controls", async ({
   page,
 }) => {
   await fixture(page, { bluetooth: true });
-  await expect(
-    page.getByRole("heading", { name: "蓝牙面板遥控", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".ble-keys")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "测试模式", exact: true }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "切换测试模式", exact: true }),
+    page.getByRole("button", { name: "负载控制", exact: true }),
   ).toHaveCount(0);
   expect(await page.evaluate(() => (window as any).modeCalls)).toEqual([]);
 });
 
-test("mode switching stays inside the load card and opens a scrollable responsive dialog without writing on cancel", async ({
+test("mode switching opens from the floating control in a scrollable responsive dialog without writing on cancel", async ({
   page,
 }) => {
   await fixture(page);
@@ -223,25 +269,26 @@ test("mode switching stays inside the load card and opens a scrollable responsiv
   ).toHaveCount(0);
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    const card = page.locator(".mode-display");
+    const card = page.locator(".floating-load-control");
     const trigger = card.getByRole("button", {
-      name: "切换测试模式",
+      name: "负载控制设置",
       exact: true,
     });
-    await expect(trigger).toHaveText("切换");
+    await expect(trigger).toHaveText("");
     const cardBox = (await card.boundingBox())!;
     const buttonBox = (await trigger.boundingBox())!;
     expect(buttonBox.x + buttonBox.width).toBeLessThanOrEqual(
       cardBox.x + cardBox.width,
     );
     expect(buttonBox.x).toBeGreaterThan(cardBox.x + cardBox.width / 2);
-    await mkdir("artifacts/parameter-fix", { recursive: true });
+    await mkdir("artifacts/floating-controls-20261117/ui", { recursive: true });
     await card.screenshot({
-      path: `artifacts/parameter-fix/load-mode-${width}.png`,
+      path: `artifacts/floating-controls-20261117/ui/load-mode-${width}.png`,
     });
     await trigger.click();
+    await page.getByRole("tab", { name: "模式切换", exact: true }).click();
     const dialog = page.getByRole("dialog", {
-      name: "切换测试模式",
+      name: "负载控制",
       exact: true,
     });
     await expect(dialog.locator(".test-mode")).toHaveCount(10);
@@ -256,7 +303,7 @@ test("mode switching stays inside the load card and opens a scrollable responsiv
       await content.evaluate((el) => el.clientWidth),
     );
     await page.screenshot({
-      path: `artifacts/parameter-fix/mode-dialog-${width}.png`,
+      path: `artifacts/floating-controls-20261117/ui/mode-dialog-${width}.png`,
     });
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();

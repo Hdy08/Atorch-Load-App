@@ -15,8 +15,26 @@ import type {
   FirmwareRehearsal,
 } from "./types";
 import { emptySnapshot } from "./types";
+import type { AutoRecordingSettings } from "./autoRecording";
 export const native = isTauri();
 export const api = {
+  systemAccent: () => invoke<string | null>("get_system_accent"),
+  systemTheme: () => invoke<boolean | null>("get_system_theme"),
+  windowTheme: (
+    dark: boolean,
+    background: string,
+    foreground: string,
+    followSystem: boolean,
+  ) =>
+    invoke<boolean>("set_window_theme", {
+      dark,
+      background,
+      foreground,
+      followSystem,
+    }),
+  windowAction: (
+    action: "minimize" | "maximize" | "close" | "drag" | "state",
+  ) => invoke<boolean>("window_action", { action }),
   chartFullscreen: (enabled: boolean) =>
     invoke<void>("set_chart_fullscreen", { enabled }),
   discover: () =>
@@ -57,8 +75,13 @@ export const api = {
   startFirmware: (path: string, name: string, dataBase64: string) =>
     invoke<void>("start_firmware", { path, name, dataBase64 }),
   cancelFirmware: () => invoke<void>("cancel_firmware"),
+  openFirmwareLog: () => invoke<void>("open_firmware_log"),
   record: (enabled: boolean) => invoke<void>("set_recording", { enabled }),
   sampling: (enabled: boolean) => invoke<void>("set_sampling", { enabled }),
+  autoRecordOnLoad: (enabled: boolean) =>
+    invoke<void>("set_auto_record_on_load", { enabled }),
+  autoRecording: (settings: AutoRecordingSettings) =>
+    invoke<void>("set_auto_recording", { settings }),
   usbSampleRate: (hz: number) => invoke<void>("set_usb_sample_rate", { hz }),
   clearSamples: () => invoke<void>("clear_samples"),
   saveCsv: (name: string, content: string) =>

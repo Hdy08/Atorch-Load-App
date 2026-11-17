@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Badge,
   Button,
   Card,
   Dialog,
@@ -9,20 +8,13 @@ import {
   DialogContent,
   DialogSurface,
   DialogTitle,
-  Field,
-  MessageBar,
-  MessageBarBody,
   ProgressBar,
   Select,
 } from "@fluentui/react-components";
-import { ArrowUpload20Regular, UsbPlug20Regular } from "@fluentui/react-icons";
+import { ArrowUpload20Regular } from "@fluentui/react-icons";
 import { api, native } from "../lib/api";
-import type {
-  DeviceInfo,
-  FirmwareInfo,
-  FirmwareRehearsal,
-  Snapshot,
-} from "../lib/types";
+import { Notification, useNotify } from "./Notifications";
+import type { DeviceInfo, FirmwareInfo, Snapshot } from "../lib/types";
 
 const phases: Record<string, string> = {
   preparing: "检查设备",
@@ -36,6 +28,31 @@ const phases: Record<string, string> = {
   cancelled: "已停止传输",
 };
 
+/** Observe the job even while another application page is open. */
+export function FirmwareNotification({ job }: { job: Snapshot["firmware"] }) {
+  const notify = useNotify();
+  const reported = useRef("");
+  const active = job?.active ?? true;
+  const phase = job?.phase ?? "";
+  const startedAt = job?.startedAt ?? 0;
+  const sha256 = job?.sha256 ?? "";
+  const message = job?.message ?? "";
+  const verified = !!job?.flashConfirmed && !!job?.restoredDevice;
+  useEffect(() => {
+    if (active || !["complete", "failed", "cancelled"].includes(phase)) return;
+    const key = `${startedAt}:${sha256}:${phase}:${verified}`;
+    if (reported.current === key) return;
+    reported.current = key;
+    const complete = phase === "complete" && verified;
+    notify({
+      text: complete ? "固件升级完成" : message || "固件升级未完成",
+      error: phase === "failed" || (phase === "complete" && !complete),
+      intent: phase === "cancelled" ? "info" : undefined,
+    });
+  }, [active, phase, startedAt, sha256, message, verified, notify]);
+  return null;
+}
+
 export function FirmwarePanel({
   snapshot,
   busy,
@@ -47,11 +64,10 @@ export function FirmwarePanel({
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const data = useRef("");
+  const notify = useNotify();
   const [firmware, setFirmware] = useState<FirmwareInfo | null>(null);
-  const [rehearsal, setRehearsal] = useState<FirmwareRehearsal | null>(null);
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [selectedPath, setSelectedPath] = useState("");
-  const [scanError, setScanError] = useState("");
   const [scanning, setScanning] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const job = snapshot.firmware;
@@ -61,9 +77,12 @@ export function FirmwarePanel({
     snapshot.connected && snapshot.device?.path !== selectedPath;
   const startable =
     hardware && !!selectedDevice && !busy && !scanning && !otherConnection;
+  const showTarget = !!firmware || !!job;
+  const percentage = job?.blocks
+    ? Math.round((job.acknowledgedBlocks / job.blocks) * 100)
+    : 0;
   const scan = async () => {
     setScanning(true);
-    setScanError("");
     try {
       const found = (await api.discover()).filter(
         (d) => d.transport !== "bluetooth",
@@ -76,7 +95,7 @@ export function FirmwarePanel({
             (found.length === 1 ? found[0].path : "")),
       );
     } catch (e) {
-      setScanError(String(e));
+      notify({ text: String(e), error: true });
     } finally {
       setScanning(false);
     }
@@ -88,10 +107,10 @@ export function FirmwarePanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hardware, job?.active]);
   return (
-    <div className="firmware-layout">
+    <div className={`firmware-layout${showTarget ? " has-target" : ""}`}>
       <Card>
         <div className="section-head">
-          <h2>固件检查与升级握手</h2>
+          <h2>固件检查</h2>
           <ArrowUpload20Regular />
         </div>
         <div className="firmware-drop">
@@ -121,7 +140,6 @@ export function FirmwarePanel({
               event.target.value = "";
               if (!file) return;
               setFirmware(null);
-              setRehearsal(null);
               data.current = "";
               void onTask(async () => {
                 if (file.size === 0 || file.size > 1_024_000)
@@ -151,180 +169,92 @@ export function FirmwarePanel({
                 {firmware.blocks} × 最多 58 字节；尾块 {firmware.lastBlockBytes}{" "}
                 字节；握手余数 {firmware.remainder}
               </dd>
-              <dt>文件 CRC16</dt>
+              <dt>CRC16</dt>
               <dd className="mono">{firmware.crc16}</dd>
               <dt>SHA-256</dt>
               <dd className="mono">{firmware.sha256}</dd>
             </dl>
-            <details className="firmware-packets">
-              <summary>查看握手与首尾分块</summary>
-              <p>应用态进入升级模式（预演不会发送）：</p>
-              <code>{firmware.bootEntryHex}</code>
-              <p>AA 握手逻辑包：</p>
-              <code data-testid="firmware-handshake">
-                {firmware.handshakeHex}
-              </code>
-              <p>第 0 块（补零至 64 字节）：</p>
-              <code>{firmware.firstBlockHex}</code>
-              <p>最后一块（补零至 64 字节）：</p>
-              <code>{firmware.lastBlockHex}</code>
-              <p>
-                BW150 实测 USB：发送为 55 加逻辑包前 63 字节，接收为 AA 加应答前
-                63 字节。满块校验全部数据回显与 CRC 低字节；末块 EE 后仍等待
-                FF。
-              </p>
-            </details>
           </>
         )}
         {firmware && !hardware && (
-          <MessageBar intent="warning">
-            <MessageBarBody>{firmware.limitation}</MessageBarBody>
-          </MessageBar>
-        )}
-        <Button
-          appearance="primary"
-          disabled={!firmware || busy}
-          onClick={() => {
-            setRehearsal(null);
-            void onTask(async () => {
-              const result = await api.rehearseFirmware(
-                firmware!.name,
-                data.current,
-              );
-              if (!result.offline || result.phase !== "complete")
-                throw new Error("升级握手预演未完成");
-              setRehearsal(result);
-            });
-          }}
-        >
-          离线预演升级握手
-        </Button>
-        {rehearsal && (
-          <div className="firmware-rehearsal" data-testid="firmware-rehearsal">
-            <Badge color="success" appearance="tint">
-              协议预演完成
-            </Badge>
-            <p>
-              已校验 {rehearsal.acknowledgedBlocks} / {rehearsal.blocks}{" "}
-              个分块、{rehearsal.transferredBytes.toLocaleString()}{" "}
-              字节。未向设备发送升级命令。
-            </p>
-            <ol>
-              {rehearsal.events.map((text, index) => (
-                <li key={index}>{text}</li>
-              ))}
-            </ol>
-          </div>
+          <Notification text={firmware.limitation} intent="warning" />
         )}
       </Card>
-      <Card className="firmware-status">
-        <div className="section-head">
-          <h2>USB 升级与恢复</h2>
-        </div>
-        <UsbPlug20Regular />
-        <h2>
-          {selectedDevice?.name ?? snapshot.device?.name ?? "尚未选择设备"}
-        </h2>
-        <p>序列号 {selectedDevice?.serial ?? snapshot.device?.serial ?? "—"}</p>
-        <Badge
-          appearance="tint"
-          color={snapshot.connected ? "success" : "informative"}
-        >
-          {snapshot.connected ? "设备在线" : "等待连接"}
-        </Badge>
-        {hardware && (
-          <>
-            <Field label="升级 USB 设备">
-              <Select
-                aria-label="升级 USB 设备"
-                value={selectedPath}
-                disabled={busy || scanning}
-                onChange={(_, d) => setSelectedPath(d.value)}
-              >
-                <option value="">请选择 USB 设备</option>
-                {devices.map((device) => (
-                  <option key={device.path} value={device.path}>
-                    {device.name} · {device.serial}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Button disabled={busy || scanning} onClick={() => void scan()}>
-              {scanning ? "正在扫描…" : "刷新 USB 设备"}
-            </Button>
-            {scanError && (
-              <MessageBar intent="error">
-                <MessageBarBody>{scanError}</MessageBarBody>
-              </MessageBar>
-            )}
-            {snapshot.recording && <p>确认刷写后将保存并结束当前记录。</p>}
-            {otherConnection && <p>请先断开当前设备，再选择另一个升级目标。</p>}
-            <Button
-              appearance="primary"
-              disabled={!startable}
-              onClick={() => setConfirm(true)}
+      {showTarget && (
+        <Card className="firmware-status">
+          <div className="section-head">
+            <h2>选择 USB 设备</h2>
+          </div>
+          {(hardware || job) && (
+            <>
+              <div className="firmware-device-controls">
+                <Select
+                  aria-label="升级 USB 设备"
+                  value={selectedPath}
+                  disabled={busy || scanning || !hardware}
+                  onChange={(_, d) => setSelectedPath(d.value)}
+                >
+                  <option value="">请选择 USB 设备</option>
+                  {devices.map((device) => (
+                    <option key={device.path} value={device.path}>
+                      {device.name} · {device.serial}
+                    </option>
+                  ))}
+                </Select>
+                <Button
+                  disabled={busy || scanning || !native}
+                  onClick={() => void scan()}
+                >
+                  刷新
+                </Button>
+                <Button
+                  appearance="primary"
+                  disabled={job?.active ? !job.cancellable : !startable}
+                  onClick={() => {
+                    if (job?.active) void onTask(() => api.cancelFirmware());
+                    else setConfirm(true);
+                  }}
+                >
+                  {job?.active ? "停止" : "刷写"}
+                </Button>
+              </div>
+              {otherConnection && (
+                <p>请先断开当前设备，再选择另一个升级目标。</p>
+              )}
+            </>
+          )}
+          {job && (
+            <div
+              className="firmware-job"
+              data-testid="firmware-job"
+              aria-live="polite"
             >
-              刷写固件…
-            </Button>
-          </>
-        )}
-        {job && (
-          <div
-            className="firmware-job"
-            data-testid="firmware-job"
-            aria-live="polite"
-          >
-            <Badge
-              appearance="tint"
-              color={
-                job.phase === "complete"
-                  ? "success"
-                  : job.active
-                    ? "informative"
-                    : "warning"
-              }
-            >
-              {phases[job.phase] ?? job.phase}
-            </Badge>
-            <ProgressBar
-              aria-label="固件传输进度"
-              value={job.blocks ? job.acknowledgedBlocks / job.blocks : 0}
-            />
-            <p>
-              {job.acknowledgedBlocks.toLocaleString()} /{" "}
-              {job.blocks.toLocaleString()} 块 ·{" "}
-              {job.blocks
-                ? ((job.acknowledgedBlocks / job.blocks) * 100).toFixed(1)
-                : "0.0"}
-              %
-            </p>
-            <p>{job.message}</p>
-            {job.flashConfirmed && (
+              <p className="firmware-phase">{phases[job.phase] ?? job.phase}</p>
+              <ProgressBar
+                aria-label="固件传输进度"
+                value={job.blocks ? job.acknowledgedBlocks / job.blocks : 0}
+              />
               <p>
-                设备 FF 完成应答已确认。
-                {job.restoredDevice
-                  ? "正常应用回读已通过。"
-                  : "正常应用尚未恢复监测。"}
+                {percentage}% {job.acknowledgedBlocks}/{job.blocks}
               </p>
-            )}
-            <details>
-              <summary>传输日志</summary>
-              <p className="mono">{job.logPath}</p>
-            </details>
-            {job.active && (
-              <Button
-                disabled={!job.cancellable}
-                onClick={() => void onTask(() => api.cancelFirmware())}
-              >
-                停止后续传输
-              </Button>
-            )}
-            {job.active && !job.cancellable && (
-              <p>当前阶段请保持设备供电，等待设备完成与重新连接。</p>
-            )}
-          </div>
-        )}
-      </Card>
+              <div>
+                <Button
+                  disabled={!native || !job.logPath}
+                  onClick={() =>
+                    void api
+                      .openFirmwareLog()
+                      .catch((error) =>
+                        notify({ text: String(error), error: true }),
+                      )
+                  }
+                >
+                  传输日志
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
       <Dialog
         open={confirm}
         onOpenChange={(_, d) => {
@@ -342,11 +272,6 @@ export function FirmwarePanel({
                 固件：{firmware?.name} · {firmware?.bytes.toLocaleString()} 字节
               </p>
               <p className="mono firmware-digest">SHA-256 {firmware?.sha256}</p>
-              <p>
-                确认后将结束当前监测与记录，并从第 0
-                块开始传输。应用态设备会先进入升级模式。 请保持供电和 USB
-                连接，等待设备完成应答。
-              </p>
             </DialogContent>
             <DialogActions>
               <Button disabled={busy} onClick={() => setConfirm(false)}>

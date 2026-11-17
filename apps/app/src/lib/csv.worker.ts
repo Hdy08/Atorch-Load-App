@@ -2,6 +2,7 @@
 import { parseCsvBase64, readCsv } from "./csv";
 import { indexedChartData, chartIndexBuffers } from "./chartData";
 import { summarizeMeasurements } from "./analysis";
+import { measurementPrecision } from "./measurementFormat";
 import {
   packCsvRows,
   type CsvImportRequest,
@@ -21,9 +22,17 @@ self.onmessage = async (event: MessageEvent<CsvImportRequest>) => {
     if (chart) {
       transfer.push(...chartIndexBuffers(chart));
     }
-    self.postMessage({ values, chart, summaries } satisfies CsvImportResponse, {
-      transfer,
-    });
+    self.postMessage(
+      {
+        values,
+        chart,
+        summaries,
+        precision: measurementPrecision(rows),
+      } satisfies CsvImportResponse,
+      {
+        transfer,
+      },
+    );
   } catch (error) {
     self.postMessage({
       error: error instanceof Error ? error.message : String(error),

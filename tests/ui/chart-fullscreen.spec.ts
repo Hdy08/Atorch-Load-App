@@ -85,6 +85,30 @@ async function screenshot(page: Page, name: string) {
   await page.screenshot({ path: `${folder}/${name}.png` });
 }
 
+async function expectScaledFullscreen(
+  page: Page,
+  width: number,
+  height: number,
+  rotated = false,
+) {
+  const scale = await page.evaluate(() =>
+    Number(
+      document.documentElement.style.getPropertyValue("--ui-scale") || "1",
+    ),
+  );
+  await expect
+    .poll(async () => (await chartState(page)).width)
+    .toBe(Math.floor((rotated ? height : width) / scale));
+  await expect
+    .poll(async () => (await chartState(page)).height)
+    .toBe(Math.floor((rotated ? width : height) / scale));
+  const rect = await page.locator(".trend-chart").boundingBox();
+  expect(rect!.x).toBeCloseTo(0, 0);
+  expect(rect!.y).toBeCloseTo(0, 0);
+  expect(rect!.width).toBeCloseTo(width, 0);
+  expect(rect!.height).toBeCloseTo(height, 0);
+}
+
 test("desktop live and history fill the window, preserving zoom, data and card height", async ({
   page,
 }) => {
@@ -104,7 +128,9 @@ test("desktop live and history fill the window, preserving zoom, data and card h
     const before = await chartState(page, true);
     const box = await page.locator(".trend-chart").boundingBox();
     await page.mouse.move(box!.x + 40, box!.y + box!.height / 2);
+    await page.keyboard.down("Control");
     await page.mouse.wheel(0, -120);
+    await page.keyboard.up("Control");
     const zoomed = await chartState(page);
     expect(zoomed.axes).not.toEqual(before.axes);
     await footer.getByRole("button", { name: "全屏", exact: true }).click();
@@ -183,8 +209,7 @@ test.describe("mobile chart fullscreen", () => {
     await expect.poll(nativeChanges).toEqual([true]);
     await page.setViewportSize({ width: 844, height: 390 });
     await expect(page.locator("dialog:modal")).not.toHaveClass(/rotated/);
-    await expect.poll(async () => (await chartState(page)).height).toBe(390);
-    expect((await chartState(page)).width).toBe(844);
+    await expectScaledFullscreen(page, 844, 390);
     expect((await chartState(page)).id).toBe(before.id);
     expect((await chartState(page)).range).toEqual(before.range);
     await screenshot(page, "android-landscape-emulated");
@@ -229,10 +254,7 @@ test.describe("mobile chart fullscreen", () => {
     await expect(page.locator("dialog:modal")).toHaveClass(
       /chart-fullscreen-rotated/,
     );
-    await expect.poll(async () => (await chartState(page)).width).toBe(844);
-    expect((await chartState(page)).height).toBe(390);
-    const rect = await page.locator(".trend-chart").boundingBox();
-    expect(rect).toEqual({ x: 0, y: 0, width: 390, height: 844 });
+    await expectScaledFullscreen(page, 390, 844, true);
     await screenshot(page, "mobile-landscape-fallback");
     await page.getByRole("button", { name: "退出全屏", exact: true }).click();
     await expect(page.locator("dialog:modal")).toHaveCount(0);

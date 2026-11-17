@@ -94,12 +94,42 @@ export function zoomAxisRange(
   minimumSpan: number,
   domain?: ChartTimeRange,
 ): ChartTimeRange {
+  return scaleAxisRange(
+    range,
+    anchor,
+    Math.exp(Math.sign(delta) * 0.2),
+    minimumSpan,
+    domain,
+  );
+}
+
+/** Pinch uses distance from gesture start, so event frequency cannot multiply zoom. */
+export function pinchAxisRange(
+  range: ChartTimeRange,
+  anchor: number,
+  initialDistance: number,
+  distance: number,
+  domain: ChartTimeRange,
+): ChartTimeRange {
+  const factor = Math.sqrt(
+    Math.max(1, initialDistance) / Math.max(1, distance),
+  );
+  return scaleAxisRange(range, anchor, factor, 1, domain);
+}
+
+function scaleAxisRange(
+  range: ChartTimeRange,
+  anchor: number,
+  factor: number,
+  minimumSpan: number,
+  domain?: ChartTimeRange,
+): ChartTimeRange {
   const span = range.endValue - range.startValue;
   const ratio = Math.max(0, Math.min(1, anchor));
   const maximumSpan = domain ? domain.endValue - domain.startValue : 1e15;
   const nextSpan = Math.max(
     Math.min(minimumSpan, maximumSpan),
-    Math.min(maximumSpan, span * Math.exp(Math.sign(delta) * 0.2)),
+    Math.min(maximumSpan, span * factor),
   );
   let startValue = range.startValue + (span - nextSpan) * ratio;
   if (domain)

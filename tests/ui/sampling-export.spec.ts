@@ -63,6 +63,7 @@ async function fixture(
         samplingFixture: state,
         __TAURI_INTERNALS__: {
           invoke: async (command: string, args: any) => {
+            if (command === "set_window_theme") return false;
             state.calls.push({ command, args });
             if (command === "get_snapshot")
               return {
@@ -178,7 +179,14 @@ for (const bluetooth of [false, true]) {
     ).toBe(122);
     const calls = await page.evaluate(() =>
       (window as any).samplingFixture.calls.filter(
-        (call: any) => !["get_history", "get_snapshot"].includes(call.command),
+        (call: any) =>
+          ![
+            "get_history",
+            "get_snapshot",
+            "set_window_theme",
+            "get_system_accent",
+            "get_system_theme",
+          ].includes(call.command),
       ),
     );
     expect(calls).toEqual([
@@ -800,10 +808,10 @@ for (const mode of ["clock", "elapsed"]) {
       String(rows.length),
     );
     await expect(stats.getByRole("cell").nth(2)).toHaveText(
-      String(rows[0].voltage),
+      rows[0].voltage.toFixed(3),
     );
     await expect(stats.getByRole("cell").nth(3)).toHaveText(
-      String(rows.at(-1).voltage),
+      rows.at(-1).voltage.toFixed(3),
     );
     await expect(
       page.getByRole("table", { name: "采样明细" }).locator("tbody tr"),
@@ -856,20 +864,134 @@ test("stationary mouse keeps the tooltip visible across incoming samples and hid
   await expect(tip).toBeHidden();
 });
 
+test("plain wheel scrolls the page over plot and axes, while Ctrl wheel zooms without browser scaling", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 700 });
+  await fixture(page);
+  const shell = page.locator(".main-shell");
+  expect(
+    await shell.evaluate(
+      (element) => element.scrollHeight - element.clientHeight,
+    ),
+  ).toBeGreaterThan(0);
+  const initial = await chartState(page);
+  const points = [
+    { x: initial.grid.left + 50, y: 100 },
+    { x: initial.grid.left - 12, y: 100 },
+    { x: initial.grid.left + 50, y: initial.height - 40 },
+  ];
+  for (const point of points) {
+    await shell.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    const state = await chartState(page);
+    await page.mouse.move(state.left + point.x, state.top + point.y);
+    await page.mouse.wheel(0, 100);
+    await expect
+      .poll(() => shell.evaluate((element) => element.scrollTop))
+      .toBeGreaterThan(0);
+    const after = await chartState(page);
+    expect(after.axes).toEqual(initial.axes);
+    expect(after.range).toEqual(initial.range);
+  }
+  await shell.evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  const state = await chartState(page);
+  await page.mouse.move(state.left + initial.grid.left + 50, state.top + 100);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, -120);
+  await page.keyboard.up("Control");
+  await expect
+    .poll(
+      async () =>
+        (await chartState(page)).range.end -
+        (await chartState(page)).range.start,
+    )
+    .toBeLessThan(100);
+  expect(await shell.evaluate((element) => element.scrollTop)).toBe(0);
+  expect(await page.evaluate(() => visualViewport!.scale)).toBe(1);
+});
+
+test.describe("damped chart touch zoom", () => {
+  test.use({
+    isMobile: true,
+    hasTouch: true,
+    viewport: { width: 393, height: 850 },
+  });
+  test("pinch follows finger distance instead of touch-event count and preserves page scale", async ({
+    page,
+  }, info) => {
+    await fixture(page);
+    await page.locator(".trend-chart").scrollIntoViewIfNeeded();
+    const session = await page.context().newCDPSession(page);
+    const resetRange = async () =>
+      page.evaluate(async () => {
+        const url = performance
+          .getEntriesByType("resource")
+          .map((entry) => entry.name)
+          .find((url) => url.includes("/echarts_core.js"))!;
+        const { getInstanceByDom } = await import(url);
+        getInstanceByDom(document.querySelector(".trend-chart")).dispatchAction(
+          { type: "dataZoom", start: 20, end: 80 },
+        );
+      });
+    const spans: number[] = [];
+    for (const moves of [2, 20]) {
+      await resetRange();
+      const before = await chartState(page);
+      const x =
+        before.left + (before.grid.left + before.width - before.grid.right) / 2;
+      const y = before.top + 100;
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [
+          { id: 0, x: x - 40, y },
+          { id: 1, x: x + 40, y },
+        ],
+      });
+      for (let index = 1; index <= moves; index++) {
+        const half = 40 + (20 * index) / moves;
+        await session.send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [
+            { id: 0, x: x - half, y },
+            { id: 1, x: x + half, y },
+          ],
+        });
+      }
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      const after = await chartState(page);
+      spans.push(after.range.endValue - after.range.startValue);
+      expect(
+        spans.at(-1)! / (before.range.endValue - before.range.startValue),
+      ).toBeCloseTo(Math.sqrt(80 / 120), 3);
+      expect(await page.evaluate(() => visualViewport!.scale)).toBe(1);
+    }
+    expect(spans[1]).toBeCloseTo(spans[0], 3);
+    await page.screenshot({ path: info.outputPath("damped-pinch.png") });
+    await session.detach();
+  });
+});
+
 test("wheel over each unit axis zooms only that axis and reset restores all axes", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1920, height: 1100 });
   await fixture(page);
   for (const name of [
-    "功率 (W)",
-    "电阻 (Ω)",
-    "电量 (Wh)",
-    "容量 (mAh)",
-    "CPU 温度 (°C)",
-    "探头温度 (°C)",
-    "MOS 温度 (°C)",
-    "风扇 (RPM)",
+    "功率",
+    "电阻",
+    "电量",
+    "容量",
+    "CPU 温度",
+    "NTC 温度",
+    "MOS 温度",
+    "风扇转速",
   ])
     await page.getByRole("checkbox", { name, exact: true }).check();
   const initial = await chartState(page);
@@ -883,7 +1005,9 @@ test("wheel over each unit axis zooms only that axis and reset restores all axes
         : before.width - before.grid.right + axis.offset + 12;
     const scroll = await page.evaluate(() => window.scrollY);
     await page.mouse.move(before.left + x, before.top + 100);
+    await page.keyboard.down("Control");
     await page.mouse.wheel(0, -120);
+    await page.keyboard.up("Control");
     await expect
       .poll(async () => {
         const after = await chartState(page);
@@ -907,7 +1031,9 @@ test("wheel over each unit axis zooms only that axis and reset restores all axes
     state.left + (state.grid.left + state.width - state.grid.right) / 2,
     state.top + state.height - 40,
   );
+  await page.keyboard.down("Control");
   await page.mouse.wheel(0, -120);
+  await page.keyboard.up("Control");
   await expect
     .poll(
       async () =>

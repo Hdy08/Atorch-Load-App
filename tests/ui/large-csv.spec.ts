@@ -230,7 +230,7 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
     )
       throw new Error(`Export changed original sample ${i}`);
   }
-  for (const key of ["功率 (W)", "电量 (Wh)", "容量 (mAh)", "CPU 温度 (°C)"])
+  for (const key of ["功率", "电量", "容量", "CPU 温度"])
     await page.getByRole("checkbox", { name: key, exact: true }).check();
   await page.evaluate(async () => {
     const url = performance
@@ -264,8 +264,11 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
     "CPU 温度 (°C)",
   ])
     await expect(page.locator(".curve-tooltip")).toContainText(label);
-  expect(await page.locator(".curve-tooltip").innerText()).not.toMatch(
-    /\d+\.\d{5,}/,
+  await expect(page.locator('[data-measurement="voltage"] strong')).toHaveText(
+    /^\d+\.\d{1,20}$/,
+  );
+  await expect(page.locator('[data-measurement="current"] strong')).toHaveText(
+    /^-?\d+\.\d{2}$/,
   );
   // Hover an original current reading omitted from that channel's points.
   const hoverPosition = await page.evaluate(async () => {
@@ -311,22 +314,24 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
   await page.mouse.move(hoverPosition.x, hoverPosition.y);
   const hovered = await page.evaluate(() => (window as any).csvLodHover);
   expect(hovered.rendered).toBe(false);
-  const expectedValues = [
-    5 + (hovered.index % 777) / 1000,
-    -(hovered.index % 31) / 100,
-    hovered.index === 123456 ? 400 : 5,
-    hovered.index / 123456789,
-    hovered.index / 1000,
-    hovered.index % 100,
-  ].map((value) =>
-    value.toLocaleString("en-US", {
-      maximumFractionDigits: 4,
-      useGrouping: false,
-    }),
-  );
-  await expect(page.locator(".curve-tooltip-row strong")).toHaveText(
-    expectedValues,
-  );
+  const expectedValues = {
+    voltage: 5 + (hovered.index % 777) / 1000,
+    current: -(hovered.index % 31) / 100,
+    power: hovered.index === 123456 ? 400 : 5,
+    energy: hovered.index / 123456789,
+    capacity: hovered.index / 1000,
+    cpuTemperature: hovered.index % 100,
+  };
+  for (const [key, value] of Object.entries(expectedValues))
+    await expect
+      .poll(async () =>
+        Number(
+          await page
+            .locator(`[data-measurement="${key}"] strong`)
+            .textContent(),
+        ),
+      )
+      .toBeCloseTo(value, 12);
   await page.mouse.move(0, 0);
   await page
     .getByLabel("曲线时间坐标", { exact: true })
@@ -412,6 +417,7 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
             clientX: x,
             clientY: y,
             deltaY: -100,
+            ctrlKey: true,
             bubbles: true,
             cancelable: true,
           }),

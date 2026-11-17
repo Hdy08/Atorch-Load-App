@@ -5,10 +5,30 @@ use tauri::{plugin::PluginHandle, AppHandle, Manager, Runtime};
 
 pub struct Usb<R: Runtime>(pub PluginHandle<R>);
 
+pub fn system_accent<R: Runtime>(app: &AppHandle<R>) -> Result<String, String> {
+    #[derive(Deserialize)]
+    struct Accent {
+        color: String,
+    }
+    app.state::<Usb<R>>()
+        .0
+        .run_mobile_plugin::<Accent>("systemAccent", ())
+        .map(|result| result.color)
+        .map_err(|error| error.to_string())
+}
+
 pub fn set_chart_fullscreen<R: Runtime>(app: &AppHandle<R>, enabled: bool) -> Result<(), String> {
     app.state::<Usb<R>>()
         .0
         .run_mobile_plugin::<serde_json::Value>("setChartFullscreen", json!({ "enabled": enabled }))
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+pub fn open_firmware_log<R: Runtime>(app: &AppHandle<R>, path: &str) -> Result<(), String> {
+    app.state::<Usb<R>>()
+        .0
+        .run_mobile_plugin::<serde_json::Value>("openFirmwareLog", json!({ "path": path }))
         .map(|_| ())
         .map_err(|e| e.to_string())
 }

@@ -81,9 +81,16 @@ for (const width of [390, 1440]) {
       });
     });
     await page.goto("/");
+    await page
+      .getByRole("button", { name: "负载控制设置", exact: true })
+      .click();
     await expect(
       page.getByRole("spinbutton", { name: "截止电压", exact: true }),
     ).toHaveValue("2.50");
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "关闭", exact: true })
+      .click();
     await page.getByRole("button", { name: "设备设置", exact: true }).click();
     const cutoff = page.getByRole("spinbutton", {
       name: "截止电压",
@@ -140,6 +147,9 @@ for (const width of [390, 1440]) {
     await expect(cutoff).toHaveValue("2.75");
     await expect(temperature).toHaveValue("1.1250");
     await page.getByRole("button", { name: "实时监控", exact: true }).click();
+    await page
+      .getByRole("button", { name: "负载控制设置", exact: true })
+      .click();
     await expect(
       page.getByRole("spinbutton", { name: "截止电压", exact: true }),
     ).toHaveValue("2.75");

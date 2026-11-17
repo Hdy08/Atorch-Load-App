@@ -7,6 +7,7 @@ import {
 import type { Telemetry } from "./types";
 import { cacheChartData } from "./chartData";
 import { cacheSummaries } from "./analysis";
+import { cacheMeasurementPrecision } from "./measurementFormat";
 
 export async function importCsv(input: CsvImportRequest): Promise<Telemetry[]> {
   const worker = new Worker(new URL("./csv.worker.ts", import.meta.url), {
@@ -27,7 +28,7 @@ export async function importCsv(input: CsvImportRequest): Promise<Telemetry[]> {
       worker.onmessageerror = () => reject(new Error("CSV 后台数据传输失败"));
       worker.postMessage(input);
     });
-    const { values, chart, summaries } = result;
+    const { values, chart, summaries, precision } = result;
     const count = values.length / csvRowWidth;
     const rows = new Array<Telemetry>(count);
     // Bound UI work per turn while materialising the original, complete rows.
@@ -38,6 +39,7 @@ export async function importCsv(input: CsvImportRequest): Promise<Telemetry[]> {
     }
     if (chart) cacheChartData(rows, chart);
     cacheSummaries(rows, summaries);
+    cacheMeasurementPrecision(rows, precision);
     return rows;
   } finally {
     worker.terminate();

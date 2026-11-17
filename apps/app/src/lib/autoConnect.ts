@@ -1,5 +1,17 @@
 import type { BluetoothState, DeviceInfo, Snapshot } from "./types";
 
+export type AutoConnectPreference =
+  "off" | "prefer-usb" | "prefer-ble" | "usb-only" | "ble-only";
+export function readAutoConnectPreference(): AutoConnectPreference {
+  const value = localStorage.getItem("atorch-auto-connect");
+  return value === "off" ||
+    value === "prefer-ble" ||
+    value === "usb-only" ||
+    value === "ble-only"
+    ? value
+    : "prefer-usb";
+}
+
 export type AutoConnectionPhase =
   "idle" | "usb" | "bluetooth" | "connecting" | "waiting";
 export interface ConnectionApi {
@@ -20,6 +32,7 @@ export class AutomaticConnection {
   private phase: AutoConnectionPhase = "idle";
   private permissionRequested = false;
   private failures = new Map<string, number>();
+  private preference: AutoConnectPreference = "prefer-usb";
   private readonly api: ConnectionApi;
   private readonly onPhase: (phase: AutoConnectionPhase) => void;
   private readonly onConnected: (snapshot: Snapshot) => void;
@@ -40,6 +53,12 @@ export class AutomaticConnection {
   private update(phase: AutoConnectionPhase) {
     this.phase = phase;
     this.onPhase(phase);
+  }
+
+  async configure(preference: AutoConnectPreference): Promise<void> {
+    if (preference === this.preference) return;
+    await this.setEnabled(false);
+    this.preference = preference;
   }
 
   setEnabled(enabled: boolean): Promise<void> {
@@ -121,9 +140,20 @@ export class AutomaticConnection {
     const state = await this.api.snapshot();
     if (!this.current(generation) || state.connected || state.firmware?.active)
       return;
-    if (await this.usb(generation)) return;
+    if (this.preference === "off") return;
+    if (this.preference === "usb-only") {
+      await this.usb(generation);
+      return;
+    }
+    if (this.preference === "prefer-usb" && (await this.usb(generation)))
+      return;
+    if (await this.bluetooth(generation)) return;
+    if (this.preference === "prefer-ble") await this.usb(generation);
+  }
+
+  private async bluetooth(generation: number) {
     if (!this.current(generation)) return;
-    const status = await this.api.bluetoothStatus();
+    const status = await this.api.bluetoothStatus().catch(() => null);
     if (
       !this.current(generation) ||
       !status?.supported ||
@@ -140,7 +170,8 @@ export class AutomaticConnection {
     const devices = await this.api.discoverBluetooth().catch(() => []);
     if (!this.current(generation)) return;
     // A USB device may have arrived during the six-second BLE scan.
-    if (await this.usb(generation)) return;
-    await this.connectCandidates(devices, generation);
+    if (this.preference === "prefer-usb" && (await this.usb(generation)))
+      return true;
+    return this.connectCandidates(devices, generation);
   }
 }

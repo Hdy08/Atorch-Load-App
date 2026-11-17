@@ -1084,9 +1084,11 @@ fn ble_notifications_record_gaps_and_never_send_usb_commands() {
     for row in csv.lines().skip(1) {
         let cells: Vec<_> = row.split(',').collect();
         assert_eq!(cells.len(), 11);
-        for index in [4, 5, 7, 8, 10] {
+        for index in [7, 8, 10] {
             assert_eq!(cells[index], "");
         }
+        assert_eq!(cells[4], "0.000");
+        assert_eq!(cells[5], "0.000");
         assert_eq!(cells[6], "6620.000");
         assert_eq!(cells[9], "26.000");
     }
@@ -1099,6 +1101,70 @@ fn ble_notifications_record_gaps_and_never_send_usb_commands() {
     manager.disconnect();
     assert!(writes.lock().unwrap().is_empty());
     std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn ble_estimates_reach_snapshot_history_and_csv_but_usb_keeps_device_values() {
+    let state = Arc::new(Mutex::new(Snapshot {
+        device: Some(DeviceInfo {
+            path: "ble://derived-test".into(),
+            name: "test".into(),
+            serial: "".into(),
+            vendor_id: 0,
+            product_id: 0,
+            transport: TransportKind::Bluetooth,
+            rssi: None,
+        }),
+        ..Default::default()
+    }));
+    let samples = Arc::new(Mutex::new(VecDeque::new()));
+    let mut recorder = recorder::Recorder::new(std::env::temp_dir());
+    recorder.manual(None, &mut state.lock().unwrap()).unwrap();
+    for timestamp in [1000, 2000, 3000] {
+        accept_report(
+            Report::Telemetry(Telemetry {
+                timestamp,
+                voltage: 12.0,
+                current: 0.3,
+                power: 3.6,
+                ..Default::default()
+            }),
+            &state,
+            &samples,
+            &mut recorder,
+        )
+        .unwrap();
+    }
+    let latest = state.lock().unwrap().telemetry.clone().unwrap();
+    assert_eq!(latest.resistance, Some(40.0));
+    assert!((latest.energy.unwrap() - 0.002).abs() < 1e-12);
+    assert_eq!(
+        samples.lock().unwrap().back().unwrap().energy,
+        latest.energy
+    );
+    assert!(
+        csv(&samples.lock().unwrap().iter().cloned().collect::<Vec<_>>()).contains("40.000,0.002")
+    );
+    // A transport switch must never replace actual USB counters with estimates.
+    state.lock().unwrap().device.as_mut().unwrap().transport = TransportKind::Usb;
+    accept_report(
+        Report::Telemetry(Telemetry {
+            timestamp: 4000,
+            voltage: 12.0,
+            current: 0.3,
+            power: 3.6,
+            resistance: Some(39.991),
+            energy: Some(129.664),
+            ..Default::default()
+        }),
+        &state,
+        &samples,
+        &mut recorder,
+    )
+    .unwrap();
+    let latest = state.lock().unwrap().telemetry.clone().unwrap();
+    assert_eq!(latest.resistance, Some(39.991));
+    assert_eq!(latest.energy, Some(129.664));
 }
 
 #[test]
@@ -1173,6 +1239,7 @@ fn automatic_recording_follows_load_and_sampling_and_resumes_the_same_file() {
         std::env::temp_dir().join(format!("atorch_auto_{}_{}", std::process::id(), now_ms()));
     let (usb, _, _) = fake(true);
     let manager = DeviceManager::default();
+    manager.set_auto_record_on_load(true).unwrap();
     manager
         .connect(
             DeviceInfo {
@@ -1279,6 +1346,7 @@ fn usb_panel_state_edges_sync_sampling_once_and_preserve_manual_overrides() {
         let (mut usb, writes, _) = fake(true);
         usb.panel_running = Some(panel.clone());
         let manager = DeviceManager::default();
+        manager.set_auto_record_on_load(true).unwrap();
         manager.set_usb_sample_rate(5).unwrap();
         manager
             .connect(
@@ -1299,20 +1367,20 @@ fn usb_panel_state_edges_sync_sampling_once_and_preserve_manual_overrides() {
         assert_eq!(manager.snapshot().sampling_paused, !initially_running);
         assert_eq!(manager.snapshot().recording.is_some(), initially_running);
 
-        // No state edge: repeated reports cannot undo a manual override.
+        // Manual pause masks start. Manual continue must still obey stop.
         manager.set_sampling(!initially_running).unwrap();
         let overridden_count = manager.snapshot().sample_count;
         for _ in 0..3 {
             let report = manager.snapshot().telemetry.unwrap().timestamp;
             wait(|| manager.snapshot().telemetry.unwrap().timestamp > report);
-            assert_eq!(manager.snapshot().sampling_paused, initially_running);
+            assert!(manager.snapshot().sampling_paused);
         }
         if initially_running {
             assert_eq!(manager.snapshot().sample_count, overridden_count);
             assert!(manager.snapshot().recording_paused);
         } else {
-            assert!(manager.snapshot().sample_count >= 3);
-            assert!(!manager.snapshot().recording_paused);
+            assert_eq!(manager.snapshot().sample_count, overridden_count);
+            assert!(manager.snapshot().recording.is_none());
         }
 
         // A physical stop/start transition restores automatic behavior.
@@ -1334,6 +1402,108 @@ fn usb_panel_state_edges_sync_sampling_once_and_preserve_manual_overrides() {
         }
         std::fs::remove_dir(directory).unwrap();
     }
+}
+
+#[test]
+fn automatic_load_recording_is_off_by_default_and_preferences_are_independent() {
+    let root = std::env::temp_dir().join(format!(
+        "atorch_record_preferences_{}_{}",
+        std::process::id(),
+        now_ms()
+    ));
+    let path = root.join("sampling.json");
+    let manager = DeviceManager::with_sampling_preferences(path.clone());
+    assert!(!manager.snapshot().auto_record_on_load);
+    manager.set_auto_record_on_load(true).unwrap();
+    manager.set_usb_sample_rate(5).unwrap();
+    let restarted = DeviceManager::with_sampling_preferences(path.clone());
+    assert!(restarted.snapshot().auto_record_on_load);
+    assert_eq!(restarted.snapshot().usb_sample_rate_hz, 5);
+    restarted.set_auto_record_on_load(false).unwrap();
+    let restarted = DeviceManager::with_sampling_preferences(path.clone());
+    assert!(!restarted.snapshot().auto_record_on_load);
+    assert_eq!(restarted.snapshot().usb_sample_rate_hz, 5);
+    // Existing installations have only the sampling rate: the new setting is off.
+    std::fs::write(&path, r#"{"usbSampleRateHz": 10}"#).unwrap();
+    let migrated = DeviceManager::with_sampling_preferences(path.clone());
+    assert!(!migrated.snapshot().auto_record_on_load);
+    assert_eq!(migrated.snapshot().usb_sample_rate_hz, 5);
+    std::fs::write(&path, r#"{"usbSampleRateHz": 3, "autoRecordOnLoad": true}"#).unwrap();
+    let independent = DeviceManager::with_sampling_preferences(path);
+    assert!(independent.snapshot().auto_record_on_load);
+    assert_eq!(independent.snapshot().usb_sample_rate_hz, 1);
+    let directory = root.join("directory");
+    std::fs::create_dir_all(&directory).unwrap();
+    let failed = DeviceManager::with_sampling_preferences(directory);
+    assert!(failed
+        .set_auto_record_on_load(true)
+        .unwrap_err()
+        .contains("保存失败"));
+    assert!(!failed.snapshot().auto_record_on_load);
+    std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn load_recording_switch_controls_usb_edges_without_sending_device_commands() {
+    let root = std::env::temp_dir().join(format!(
+        "atorch_record_toggle_{}_{}",
+        std::process::id(),
+        now_ms()
+    ));
+    let panel = Arc::new(AtomicBool::new(false));
+    let (mut usb, writes, _) = fake(true);
+    usb.panel_running = Some(panel.clone());
+    let manager = DeviceManager::default();
+    manager.set_usb_sample_rate(5).unwrap();
+    manager
+        .connect(
+            DeviceInfo {
+                path: "record-toggle".into(),
+                name: "BW150".into(),
+                serial: "fixture".into(),
+                vendor_id: 0,
+                product_id: 0,
+                transport: TransportKind::Usb,
+                rssi: None,
+            },
+            usb,
+            root.clone(),
+        )
+        .unwrap();
+    wait(|| manager.snapshot().sample_count >= 2);
+    assert!(!manager.snapshot().auto_record_on_load);
+    assert!(!manager.snapshot().sampling_paused);
+    assert!(manager.snapshot().recording.is_some());
+    let path = manager.snapshot().recording.unwrap();
+    manager.set_sampling(false).unwrap();
+    let paused_count = manager.snapshot().sample_count;
+    panel.store(true, Ordering::Relaxed);
+    wait(|| manager.snapshot().telemetry.unwrap().running == Some(true));
+    assert!(manager.snapshot().sampling_paused);
+    assert_eq!(manager.snapshot().sample_count, paused_count);
+    // Enabling applies the current running state once, without waiting for an edge.
+    manager.set_auto_record_on_load(true).unwrap();
+    assert!(!manager.snapshot().sampling_paused);
+    wait(|| manager.snapshot().sample_count > paused_count);
+    panel.store(false, Ordering::Relaxed);
+    wait(|| manager.snapshot().telemetry.unwrap().running == Some(false));
+    assert!(manager.snapshot().sampling_paused);
+    assert!(manager.snapshot().recording_paused);
+    manager.set_auto_record_on_load(false).unwrap();
+    let paused_count = manager.snapshot().sample_count;
+    panel.store(true, Ordering::Relaxed);
+    wait(|| manager.snapshot().telemetry.unwrap().running == Some(true));
+    assert!(manager.snapshot().sampling_paused);
+    assert_eq!(manager.snapshot().sample_count, paused_count);
+    manager.set_sampling(true).unwrap();
+    wait(|| manager.snapshot().sample_count > paused_count);
+    assert_eq!(manager.snapshot().recording.as_deref(), Some(path.as_str()));
+    manager.disconnect();
+    assert!(writes.lock().unwrap().iter().all(|r| matches!(r[3], 3 | 5)));
+    for file in recordings::list(&root, None).unwrap() {
+        std::fs::remove_file(root.join(file.name)).unwrap();
+    }
+    std::fs::remove_dir(root).unwrap();
 }
 
 #[test]

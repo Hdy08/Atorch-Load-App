@@ -150,9 +150,9 @@ test("selected curves and axis order persist across pages, files and reloads", a
   };
 
   await expectSelection(["voltage", "current"]);
-  for (const name of ["电量 (Wh)", "MOS 温度 (°C)", "容量 (mAh)"])
+  for (const name of ["电量", "MOS 温度", "容量"])
     await selector.getByRole("checkbox", { name, exact: true }).check();
-  for (const name of ["电压 (V)", "电流 (A)"])
+  for (const name of ["电压", "电流"])
     await selector.getByRole("checkbox", { name, exact: true }).uncheck();
   const selected = ["energy", "mosTemperature", "capacity"];
   await expectSelection(selected);
@@ -171,14 +171,12 @@ test("selected curves and axis order persist across pages, files and reloads", a
   await expectSelection(selected);
   // A file without temperature data must retain the user's chosen channel.
   await expect(
-    selector.getByRole("checkbox", { name: "MOS 温度 (°C)", exact: true }),
+    selector.getByRole("checkbox", { name: "MOS 温度", exact: true }),
   ).toBeChecked();
   await selector
-    .getByRole("checkbox", { name: "MOS 温度 (°C)", exact: true })
+    .getByRole("checkbox", { name: "MOS 温度", exact: true })
     .uncheck();
-  await selector
-    .getByRole("checkbox", { name: "功率 (W)", exact: true })
-    .check();
+  await selector.getByRole("checkbox", { name: "功率", exact: true }).check();
   await page.setViewportSize({ width: 390, height: 900 });
   await page.reload();
   await expectSelection(["energy", "capacity", "power"]);
@@ -285,7 +283,7 @@ test("sample details remember page size and allow bounded page jumps beside the 
   await jump.fill("3");
   await jump.press("Enter");
   await expect(page.getByText("第 3 / 13 页")).toBeVisible();
-  await expect(detail.first().getByRole("cell").nth(1)).toHaveText("1070");
+  await expect(detail.first().getByRole("cell").nth(1)).toHaveText("1070.000");
   await jump.fill("999");
   await jump.press("Tab");
   await expect(jump).toHaveValue("13");
@@ -325,6 +323,13 @@ test("valid sample detail page size persists across reloads and fits narrow scre
   ).toHaveCount(50);
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 1050 });
+    await page.locator("main").evaluate(async (element) => {
+      await Promise.all(
+        element
+          .getAnimations()
+          .map((animation) => animation.finished.catch(() => {})),
+      );
+    });
     const selectorBox = await size.locator("..").boundingBox();
     const jumpBox = await page
       .getByLabel("跳转页码", { exact: true })
@@ -357,9 +362,9 @@ test("chart range drives statistics, details and exported rows without date inpu
   await expect(voltage.getByRole("cell")).toHaveText([
     "电压 / V",
     "2",
-    "20",
-    "30",
-    "25",
+    "20.000",
+    "30.000",
+    "25.000",
   ]);
   await expect(
     page.getByRole("table", { name: "采样明细" }).locator("tbody tr"),
@@ -372,7 +377,7 @@ test("chart range drives statistics, details and exported rows without date inpu
   );
   expect(saved.trim().split(/\r?\n/)).toHaveLength(3);
   await expect(
-    page.getByRole("checkbox", { name: "电量 (Wh)", exact: true }),
+    page.getByRole("checkbox", { name: "电量", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "重置缩放", exact: true }).click();
   await expect(
@@ -384,7 +389,7 @@ test("cumulative channels have no average and calculated totals retain their ori
   page,
 }) => {
   await fixture(page);
-  for (const name of ["电量 (Wh)", "容量 (mAh)"])
+  for (const name of ["电量", "容量"])
     await page.getByRole("checkbox", { name, exact: true }).check();
   const stats = page.getByRole("table", { name: "采样统计" });
   const energy = stats.getByRole("row").filter({ hasText: "电量 / Wh" });
@@ -435,7 +440,9 @@ test("per-channel coordinate ranges validate and persist independently", async (
   await page.getByLabel("电压最小值", { exact: true }).fill("20");
   await page.getByLabel("电压最大值", { exact: true }).fill("1");
   await page.getByRole("button", { name: "应用更改" }).click();
-  await expect(page.getByText(/电压的范围无效/)).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").getByText(/电压的范围无效/),
+  ).toBeVisible();
   await page.getByLabel("电压最小值", { exact: true }).fill("0");
   await page.getByLabel("电压最大值", { exact: true }).fill("50");
   await page.getByLabel("电流最小值", { exact: true }).fill("-2");
@@ -443,7 +450,9 @@ test("per-channel coordinate ranges validate and persist independently", async (
   await page.getByLabel("电压颜色", { exact: true }).fill("#aa33cc");
   await page.getByLabel("电压线宽", { exact: true }).fill("4");
   await page.getByRole("button", { name: "应用更改" }).click();
-  await expect(page.getByText(/线宽范围为/)).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").getByText(/线宽范围为/),
+  ).toBeVisible();
   await page.getByLabel("电压线宽", { exact: true }).fill("1.5");
   await page.getByRole("button", { name: "应用更改" }).click();
   expect(
@@ -468,6 +477,7 @@ test("per-channel coordinate ranges validate and persist independently", async (
   );
   await expect(page.getByLabel("电压线宽", { exact: true })).toHaveValue("1.5");
   await page.getByRole("button", { name: "恢复默认", exact: true }).click();
+  await page.getByRole("button", { name: "应用更改", exact: true }).click();
   expect(
     await page.evaluate(() => localStorage.getItem("atorch-chart-bounds")),
   ).toBe("{}");
@@ -558,6 +568,7 @@ test("default voltage axis starts at zero and current zero remains centered", as
   expect((await axes())[1]).toEqual([-2, 5]);
   await openCurveSettings(page);
   await page.getByRole("button", { name: "恢复默认", exact: true }).click();
+  await page.getByRole("button", { name: "应用更改", exact: true }).click();
   await page.getByRole("button", { name: "数据记录", exact: true }).click();
   const restored = (await axes())[1];
   expect(restored[0]).toBe(-restored[1]);

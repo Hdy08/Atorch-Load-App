@@ -258,6 +258,7 @@ dependencies = [
  "atorch-device",
  "atorch-protocol",
  "base64 0.22.1",
+ "json-patch",
  "rfd",
  "serde",
  "serde_json",
@@ -265,6 +266,9 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-atorch-ble",
  "tauri-plugin-atorch-usb",
+ "tauri-utils",
+ "webview2-com",
+ "windows",
 ]
 
 [[package]]

@@ -50,6 +50,7 @@ async function fixture(page: Page, dark: boolean, sampleCount = 61) {
         themeConnected: true,
         __TAURI_INTERNALS__: {
           invoke: async (command: string, args: any) => {
+            if (command === "set_window_theme") return false;
             if (command === "get_snapshot") {
               const connected = (window as any).themeConnected;
               return {
@@ -280,6 +281,10 @@ for (const dark of [false, true]) {
       ["resistance", theme.colorPalettePurpleBorderActive],
       ["energy", theme.colorPaletteGoldForeground2],
       ["capacity", theme.colorPaletteRedForeground1],
+      ["cpuTemperature", theme.colorPaletteMagentaBorderActive],
+      ["ntcTemperature", theme.colorPaletteLightTealBorderActive],
+      ["mosTemperature", theme.colorPaletteDarkOrangeForeground1],
+      ["fanSpeed", theme.colorPaletteForestBorderActive],
     ]) {
       const card = page.locator(`.metric[data-measurement="${key}"]`);
       await expect(card.locator(".metric-number")).toHaveCSS(
@@ -333,7 +338,10 @@ for (const dark of [false, true]) {
     await page.getByRole("button", { name: "应用更改", exact: true }).click();
     await page.getByRole("button", { name: "应用设置", exact: true }).click();
     await page.getByRole("tab", { name: "外观", exact: true }).click();
-    await page.getByRole("switch", { name: "深色主题", exact: true }).click();
+    await page
+      .getByRole("combobox", { name: "主题", exact: true })
+      .selectOption(dark ? "light" : "dark");
+    await page.getByRole("button", { name: "应用更改", exact: true }).click();
     await expect(page.locator(".app")).toHaveCSS(
       "background-color",
       rgb(nextTheme.colorNeutralBackground2),
@@ -371,6 +379,7 @@ for (const dark of [false, true]) {
     await page.getByRole("button", { name: "应用设置", exact: true }).click();
     await page.getByRole("tab", { name: "曲线", exact: true }).click();
     await page.getByRole("button", { name: "恢复默认", exact: true }).click();
+    await page.getByRole("button", { name: "应用更改", exact: true }).click();
     await page.getByRole("button", { name: "实时监控", exact: true }).click();
     await expect
       .poll(async () => (await chartStyle(page)).series)
@@ -412,7 +421,9 @@ for (const dark of [false, true]) {
             await expect(
               page.getByRole("button", { name, exact: true }),
             ).toHaveCount(0);
-          const metricsBox = await page.locator(".metrics").boundingBox();
+          const metricsBox = await page
+            .locator(".metrics:not(.thermal-metrics)")
+            .boundingBox();
           const chartBox = await page.locator(".chart-card").boundingBox();
           expect(chartBox!.width).toBeCloseTo(metricsBox!.width, 0);
           for (const select of await page
@@ -443,7 +454,12 @@ for (const dark of [false, true]) {
           expect((await record.boundingBox())!.x).toBeLessThan(
             chartBox!.x + 20,
           );
-          await expect(page.locator(".metrics > .metric")).toHaveCount(6);
+          await expect(
+            page.locator(".metrics:not(.thermal-metrics) > .metric"),
+          ).toHaveCount(6);
+          await expect(page.locator(".thermal-metrics > .metric")).toHaveCount(
+            4,
+          );
           const titleStyle = await page
             .getByRole("heading", { name: "实时曲线", exact: true })
             .evaluate((el) => {
@@ -472,16 +488,18 @@ for (const dark of [false, true]) {
           await expect(
             page.getByRole("heading", { name: "累计数据", exact: true }),
           ).toHaveCount(0);
-          const cards = await page.locator(".metric").evaluateAll((elements) =>
-            elements.map((element) => {
-              const box = element.getBoundingClientRect();
-              return {
-                top: box.top,
-                height: box.height,
-                overflow: element.scrollWidth > element.clientWidth,
-              };
-            }),
-          );
+          const cards = await page
+            .locator(".metrics:not(.thermal-metrics) > .metric")
+            .evaluateAll((elements) =>
+              elements.map((element) => {
+                const box = element.getBoundingClientRect();
+                return {
+                  top: box.top,
+                  height: box.height,
+                  overflow: element.scrollWidth > element.clientWidth,
+                };
+              }),
+            );
           expect(
             cards.every((card) => card.height <= 88 && !card.overflow),
             JSON.stringify(cards),
@@ -490,7 +508,7 @@ for (const dark of [false, true]) {
             expect(new Set(cards.map((card) => card.top)).size).toBe(1);
           if (width === 390 || width === 1440) {
             await mkdir("artifacts/sampling-timeline", { recursive: true });
-            await page.locator(".metrics").screenshot({
+            await page.locator(".metrics:not(.thermal-metrics)").screenshot({
               path: `artifacts/sampling-timeline/${name}-${width}-cards.png`,
             });
           }
@@ -512,11 +530,11 @@ for (const dark of [false, true]) {
             page.getByRole("tab", { name: "参数与维护", exact: true }),
           ).toHaveAttribute("aria-selected", "true");
           await expect(
-            page.getByRole("switch", { name: "深色主题", exact: true }),
+            page.getByRole("combobox", { name: "主题", exact: true }),
           ).toHaveCount(0);
           await expect(
             page
-              .locator("nav")
+              .getByRole("navigation", { name: "主导航" })
               .getByRole("button", { name: "固件更新", exact: true }),
           ).toHaveCount(0);
         }
@@ -525,7 +543,7 @@ for (const dark of [false, true]) {
             page.getByRole("tab", { name: "外观", exact: true }),
           ).toHaveAttribute("aria-selected", "true");
           await expect(
-            page.getByRole("switch", { name: "深色主题", exact: true }),
+            page.getByRole("combobox", { name: "主题", exact: true }),
           ).toBeVisible();
           await expect(
             page.getByRole("tablist", { name: "设备设置分类" }),
@@ -768,7 +786,7 @@ test("live and history share bounds, styles, fill opacity and chart height after
   await page.getByLabel("电压阴影不透明度", { exact: true }).fill("25");
   await page.getByLabel("电流阴影不透明度", { exact: true }).fill("60");
   await page.getByRole("button", { name: "应用更改", exact: true }).click();
-  const savedToast = page.locator(".fui-Toast");
+  const savedToast = page.locator(".fui-Toast").filter({ hasText: "已保存" });
   await expect(savedToast).toContainText("已保存");
   await expect(page.locator('.curve-settings [role="status"]')).toHaveCount(0);
   await expect(page.locator(".fui-Toaster.app-notifications")).toHaveCSS(
@@ -824,6 +842,7 @@ test("live and history share bounds, styles, fill opacity and chart height after
     page.getByLabel("电压阴影不透明度", { exact: true }),
   ).toHaveValue("25");
   await page.getByRole("button", { name: "恢复默认", exact: true }).click();
+  await page.getByRole("button", { name: "应用更改", exact: true }).click();
   await expect(
     page.getByLabel("电压阴影不透明度", { exact: true }),
   ).toHaveValue("0");
@@ -849,7 +868,7 @@ test("energy precedes capacity in cards, selectors, settings and review tables",
   await fixture(page, true);
   expect(
     await page
-      .locator(".metrics .metric")
+      .locator(".metrics:not(.thermal-metrics) .metric")
       .evaluateAll((cards) =>
         cards.map((card) => card.getAttribute("data-measurement")),
       ),
@@ -863,17 +882,15 @@ test("energy precedes capacity in cards, selectors, settings and review tables",
   ]);
   const selector = page.getByRole("group", { name: "曲线参数", exact: true });
   const labels = await selector.innerText();
-  expect(labels.indexOf("电量 (Wh)")).toBeLessThan(
-    labels.indexOf("容量 (mAh)"),
-  );
+  expect(labels.indexOf("电量")).toBeLessThan(labels.indexOf("容量"));
   await page.getByRole("button", { name: "应用设置", exact: true }).click();
   await page.getByRole("tab", { name: "曲线", exact: true }).click();
   const headings = await page.locator(".curve-settings h2").allTextContents();
   expect(headings.indexOf("电量")).toBeLessThan(headings.indexOf("容量"));
   await page.getByRole("button", { name: "数据记录", exact: true }).click();
   // Click in reverse order: the review table still uses the presentation order.
-  await page.getByRole("checkbox", { name: "容量 (mAh)", exact: true }).check();
-  await page.getByRole("checkbox", { name: "电量 (Wh)", exact: true }).check();
+  await page.getByRole("checkbox", { name: "容量", exact: true }).check();
+  await page.getByRole("checkbox", { name: "电量", exact: true }).check();
   const statistics = await page
     .getByRole("table", { name: "采样统计", exact: true })
     .innerText();
@@ -1014,24 +1031,18 @@ for (const width of [390, 1440]) {
     });
     // Retain the clicked order, rather than sorting axes back into the checkbox order.
     for (const name of [
-      "电压 (V)",
-      "电流 (A)",
-      "功率 (W)",
-      "电阻 (Ω)",
-      "容量 (mAh)",
-      "电量 (Wh)",
-      "CPU 温度 (°C)",
-      "探头温度 (°C)",
-      "MOS 温度 (°C)",
+      "电压",
+      "电流",
+      "功率",
+      "电阻",
+      "容量",
+      "电量",
+      "CPU 温度",
+      "NTC 温度",
+      "MOS 温度",
     ])
       await selector.getByRole("checkbox", { name, exact: true }).uncheck();
-    for (const name of [
-      "电量 (Wh)",
-      "CPU 温度 (°C)",
-      "电压 (V)",
-      "电流 (A)",
-      "探头温度 (°C)",
-    ])
+    for (const name of ["电量", "CPU 温度", "电压", "电流", "NTC 温度"])
       await selector.getByRole("checkbox", { name, exact: true }).check();
     const reordered = await axesAndLabels(page);
     expect(reordered.axes.map((axis) => axis.unit)).toEqual([

@@ -26,6 +26,12 @@ async function fixture(
         __TAURI_INTERNALS__: {
           invoke: async (command: string, args: any) => {
             calls.push({ command, args });
+            if (command === "set_window_theme") return false;
+            if (command === "open_firmware_log") {
+              if ((window as any).firmwareLogError)
+                throw Error("无法打开传输日志");
+              return;
+            }
             if (command === "get_snapshot")
               return {
                 connected: !iap,
@@ -127,6 +133,150 @@ const file = (name = "BW150-test.bin") => ({
   buffer: Buffer.alloc(116, 0x5a),
 });
 
+test("the USB card appears only after inspection and keeps refresh and flash beside the device selector", async ({
+  page,
+}) => {
+  await fixture(page, false, true);
+  await expect(page.locator(".firmware-status")).toHaveCount(0);
+  await expect(page.locator(".firmware-layout > .fui-Card")).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "刷新", exact: true }),
+  ).toHaveCount(0);
+  await page.getByTestId("firmware-input").setInputFiles(file());
+  const card = page.locator(".firmware-status");
+  await expect(
+    card.getByRole("heading", { name: "选择 USB 设备", exact: true }),
+  ).toBeVisible();
+  await expect(
+    card.getByText(/USB 升级与恢复|设备在线|等待连接|^序列号/),
+  ).toHaveCount(0);
+  await expect(card.locator(".fui-Badge")).toHaveCount(0);
+  for (const width of [393, 900, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    // Read the three controls in one layout frame while responsive navigation changes.
+    const { selector, refresh, flash } = await card.evaluate((element) => {
+      const controls = element.querySelector(".firmware-device-controls")!;
+      const [refresh, flash] = controls.querySelectorAll("button");
+      return {
+        selector: controls
+          .querySelector("select")!
+          .getBoundingClientRect()
+          .toJSON(),
+        refresh: refresh.getBoundingClientRect().toJSON(),
+        flash: flash.getBoundingClientRect().toJSON(),
+      };
+    });
+    expect(Math.abs(selector.y - refresh.y)).toBeLessThan(1);
+    expect(Math.abs(selector.y - flash.y)).toBeLessThan(1);
+    expect(refresh.x).toBeGreaterThanOrEqual(selector.x + selector.width);
+    expect(flash.x).toBeGreaterThanOrEqual(refresh.x + refresh.width);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+  }
+  await card.getByRole("button", { name: "刷新", exact: true }).click();
+  await expect(
+    card.getByRole("button", { name: "刷新", exact: true }),
+  ).toBeEnabled();
+  await card.getByRole("button", { name: "刷写", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toContainText("BW150-test.bin");
+  await expect(dialog).not.toContainText(
+    /从第 0|请保持供电|应用态设备会先进入/,
+  );
+  await dialog.getByRole("button", { name: "返回", exact: true }).click();
+  expect(
+    await page.evaluate(() =>
+      (window as any).firmwareCalls.filter(
+        (call: any) => call.command === "start_firmware",
+      ),
+    ),
+  ).toHaveLength(0);
+});
+
+test("firmware status has four full-width rows and its log button opens the native job file", async ({
+  page,
+}, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem("atorch-theme", "dark"));
+  await fixture(page, false, true);
+  await page.getByTestId("firmware-input").setInputFiles(file());
+  await page.getByRole("button", { name: "刷写", exact: true }).click();
+  await page.getByRole("button", { name: "确认并开始", exact: true }).click();
+  const job = page.getByTestId("firmware-job");
+  await expect(job).toContainText("50% 1/2");
+  await page.evaluate(() =>
+    Object.assign((window as any).firmwareJob, {
+      blocks: 3,
+      acknowledgedBlocks: 2,
+    }),
+  );
+  await expect(job).toContainText("67% 2/3");
+  await expect(job).not.toContainText(/\d+\.\d+%/);
+  await page.evaluate(() =>
+    Object.assign((window as any).firmwareJob, {
+      blocks: 2,
+      acknowledgedBlocks: 1,
+    }),
+  );
+  await expect(job).toContainText("50% 1/2");
+  await expect(job.locator(":scope > *")).toHaveCount(4);
+  await expect(job.locator(".firmware-phase")).toHaveText("传输固件");
+  await expect(job.locator(".fui-Badge, details")).toHaveCount(0);
+  await expect(job).not.toContainText("已确认 1 / 2 块");
+  await expect(
+    page.getByRole("button", { name: "停止后续传输", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "停止", exact: true }),
+  ).toBeEnabled();
+  const log = job.getByRole("button", { name: "传输日志", exact: true });
+  await log.click();
+  expect(
+    await page.evaluate(() =>
+      (window as any).firmwareCalls.filter(
+        (call: any) => call.command === "open_firmware_log",
+      ),
+    ),
+  ).toEqual([{ command: "open_firmware_log", args: {} }]);
+  for (const width of [393, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const bounds = await page.locator(".firmware-status").evaluate((card) => {
+      const style = getComputedStyle(card);
+      return {
+        width:
+          card.clientWidth -
+          parseFloat(style.paddingLeft) -
+          parseFloat(style.paddingRight),
+      };
+    });
+    const progress = (await job.getByRole("progressbar").boundingBox())!;
+    expect(Math.abs(progress.width - bounds.width)).toBeLessThan(1);
+    await page.screenshot({
+      path: testInfo.outputPath(`firmware-compact-${width}.png`),
+      fullPage: true,
+    });
+  }
+  await page.evaluate(() => {
+    (window as any).firmwareLogError = true;
+  });
+  await log.click();
+  await expect(
+    page.locator(".fui-Toast").getByText(/无法打开传输日志/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "停止", exact: true }),
+  ).toBeEnabled();
+  await page.evaluate(() =>
+    Object.assign((window as any).firmwareJob, {
+      blocks: 0,
+      acknowledgedBlocks: 0,
+      logPath: "",
+    }),
+  );
+  await expect(job).toContainText("0% 0/0");
+  await expect(log).toBeDisabled();
+});
+
 test("real update requires confirmation and locks other device actions while active", async ({
   page,
 }) => {
@@ -138,7 +288,7 @@ test("real update requires confirmation and locks other device actions while act
     ),
   ).toHaveCount(0);
   const start = page.getByRole("button", {
-    name: "刷写固件…",
+    name: "刷写",
     exact: true,
   });
   await expect(start).toBeEnabled();
@@ -154,17 +304,15 @@ test("real update requires confirmation and locks other device actions while act
   ).toHaveLength(0);
   await start.click();
   await page.getByRole("button", { name: "确认并开始", exact: true }).click();
-  await expect(page.getByTestId("firmware-job")).toContainText("50.0%");
+  await expect(page.getByTestId("firmware-job")).toContainText("50% 1/2");
   await expect(
     page.getByRole("button", { name: "管理设备", exact: true }),
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "选择固件文件", exact: true }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "停止后续传输", exact: true }).click();
-  await expect(page.getByTestId("firmware-job")).toContainText(
-    "设备保留在 IAP",
-  );
+  await page.getByRole("button", { name: "停止", exact: true }).click();
+  await expect(page.locator(".fui-Toast")).toContainText("设备保留在 IAP");
   const actions = await page.evaluate(() =>
     (window as any).firmwareCalls.filter((c: any) =>
       ["start_firmware", "cancel_firmware", "send_command"].includes(c.command),
@@ -183,13 +331,21 @@ test("IAP recovery works without a normal connection and progress survives page 
   await fixture(page, false, true, false, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(
-    page.getByRole("heading", { name: "ATORCH BW150 V1.0.2", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
+    page.getByRole("combobox", { name: "升级 USB 设备", exact: true }),
+  ).toHaveValue("test-usb-path");
+  await expect(
+    page.locator(".firmware-device-controls option:checked"),
+  ).toHaveText("ATORCH BW150 V1.0.2 · 924415");
+  await page.getByRole("button", { name: "刷写", exact: true }).click();
   await page.getByRole("button", { name: "确认并开始", exact: true }).click();
   await expect(page.getByTestId("firmware-job")).toContainText("传输固件");
   await page.getByRole("button", { name: "实时监控", exact: true }).click();
-  await page.getByRole("button", { name: "查看升级进度", exact: true }).click();
+  await expect(page.getByText(/固件升级正在进行：/)).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "查看升级进度", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "设备设置", exact: true }).click();
+  await page.getByRole("tab", { name: "固件更新", exact: true }).click();
   await expect(
     page.getByRole("tab", { name: "固件更新", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
@@ -204,11 +360,11 @@ test("confirmed update can close the current recording without a manual pause", 
 }) => {
   await fixture(page, false, true, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
+  await expect(page.getByText("确认刷写后将保存并结束当前记录。")).toHaveCount(
+    0,
+  );
   await expect(
-    page.getByText("确认刷写后将保存并结束当前记录。"),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "刷写固件…", exact: true }),
+    page.getByRole("button", { name: "刷写", exact: true }),
   ).toBeEnabled();
   expect(
     await page.evaluate(() =>
@@ -217,7 +373,7 @@ test("confirmed update can close the current recording without a manual pause", 
       ),
     ),
   ).toHaveLength(0);
-  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
+  await page.getByRole("button", { name: "刷写", exact: true }).click();
   await page.getByRole("button", { name: "确认并开始", exact: true }).click();
   await expect(page.getByTestId("firmware-job")).toContainText("传输固件");
 });
@@ -232,8 +388,8 @@ test("stopped load with paused automatic recording can confirm firmware maintena
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(
     page.getByText("确认刷写后将保存并结束当前记录。", { exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "刷写", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "确认并开始", exact: true }),
   ).toBeEnabled();
@@ -252,7 +408,7 @@ test("writing cannot be cancelled and FF completion does not claim application v
 }) => {
   await fixture(page, false, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
-  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
+  await page.getByRole("button", { name: "刷写", exact: true }).click();
   await page.getByRole("button", { name: "确认并开始", exact: true }).click();
   await expect(page.getByTestId("firmware-job")).toBeVisible();
   await page.evaluate(() =>
@@ -264,7 +420,7 @@ test("writing cannot be cancelled and FF completion does not claim application v
     }),
   );
   await expect(
-    page.getByRole("button", { name: "停止后续传输", exact: true }),
+    page.getByRole("button", { name: "停止", exact: true }),
   ).toBeDisabled();
   await page.evaluate(() =>
     Object.assign((window as any).firmwareJob, {
@@ -275,7 +431,7 @@ test("writing cannot be cancelled and FF completion does not claim application v
     }),
   );
   await expect(page.getByTestId("firmware-job")).toContainText("升级完成");
-  await expect(page.getByTestId("firmware-job")).toContainText(
+  await expect(page.locator(".fui-Toast")).toContainText(
     "正常应用尚未重新出现",
   );
   await expect(
@@ -285,24 +441,32 @@ test("writing cannot be cancelled and FF completion does not claim application v
   ).toHaveCount(0);
 });
 
-test("firmware inspection and rehearsal are explicit and never send device commands", async ({
+test("firmware inspection keeps file facts and removes rehearsal and packet controls", async ({
   page,
-}) => {
+}, testInfo) => {
   await fixture(page);
   const run = page.getByRole("button", {
     name: "离线预演升级握手",
     exact: true,
   });
-  await expect(run).toBeDisabled();
+  await expect(run).toHaveCount(0);
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(page.locator(".firmware-facts")).toContainText("SHA-256");
+  await expect(
+    page.locator(".firmware-facts dt").filter({ hasText: "CRC16" }),
+  ).toHaveText("CRC16");
   await expect(page.getByText(/封装头不包含已核准的型号标识/)).toHaveCount(0);
   await expect(
     page.getByText(/已恢复的升级流程|已核准 BW150 V1.1.0 原厂文件/),
   ).toHaveCount(0);
   await expect(page.getByText("文件名型号", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/仅从文件名提取/)).toHaveCount(0);
-  await expect(run).toBeEnabled();
+  await expect(
+    page.getByText("确认刷写后将保存并结束当前记录。", { exact: true }),
+  ).toHaveCount(0);
+  await expect(run).toHaveCount(0);
+  await expect(page.getByText("查看握手与首尾分块")).toHaveCount(0);
+  await expect(page.getByTestId("firmware-handshake")).toHaveCount(0);
   expect(
     await page.evaluate(() =>
       (window as any).firmwareCalls.filter(
@@ -310,22 +474,11 @@ test("firmware inspection and rehearsal are explicit and never send device comma
       ),
     ),
   ).toEqual([]);
-  await page.getByText("查看握手与首尾分块").click();
-  await expect(page.getByTestId("firmware-handshake")).toContainText(
-    "AA 07 02 00 00",
-  );
-  await run.click();
-  await expect(page.getByTestId("firmware-rehearsal")).toContainText(
-    "协议预演完成",
-  );
-  await expect(page.getByTestId("firmware-rehearsal")).toContainText(
-    "未向设备发送升级命令",
-  );
   const commands = await page.evaluate(() =>
     (window as any).firmwareCalls.map((c: any) => c.command),
   );
   expect(commands).toContain("inspect_firmware");
-  expect(commands).toContain("rehearse_firmware");
+  expect(commands).not.toContain("rehearse_firmware");
   expect(commands).not.toContain("send_command");
   expect(commands).not.toContain("disconnect_device");
   for (const width of [393, 768, 1440]) {
@@ -335,12 +488,12 @@ test("firmware inspection and rehearsal are explicit and never send device comma
     ).toBeLessThanOrEqual(width);
   }
   await page.screenshot({
-    path: "artifacts/firmware-open-policy/handshake-ui.png",
+    path: testInfo.outputPath("firmware-inspection.png"),
     fullPage: true,
   });
 });
 
-test("inspection errors or oversized images clear prior state and cannot rehearse", async ({
+test("inspection errors or oversized images cannot start flashing", async ({
   page,
 }) => {
   await fixture(page, true);
@@ -350,7 +503,10 @@ test("inspection errors or oversized images clear prior state and cannot rehears
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "离线预演升级握手", exact: true }),
-  ).toBeDisabled();
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "刷写", exact: true }),
+  ).toHaveCount(0);
   await page.getByTestId("firmware-input").setInputFiles({
     name: "BW150-huge.bin",
     mimeType: "application/octet-stream",
@@ -379,13 +535,9 @@ test("custom binaries and other model versions can be selected for hardware flas
   ).toHaveCount(0);
   await expect(page.locator(".firmware-facts")).toContainText("二进制固件");
   await expect(
-    page.getByRole("button", { name: "刷写固件…", exact: true }),
+    page.getByRole("button", { name: "刷写", exact: true }),
   ).toBeEnabled();
-  await page
-    .getByRole("button", { name: "离线预演升级握手", exact: true })
-    .click();
-  await expect(page.getByTestId("firmware-rehearsal")).toBeVisible();
-  await page.getByRole("button", { name: "刷写固件…", exact: true }).click();
+  await page.getByRole("button", { name: "刷写", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("ATORCH BW600 V2.0.5");
   await expect(page.getByRole("dialog")).toContainText("RT1I-experiment.bin");
   await page.getByRole("button", { name: "确认并开始", exact: true }).click();
@@ -396,4 +548,93 @@ test("custom binaries and other model versions can be selected for hardware flas
   );
   expect(calls).toHaveLength(1);
   expect(calls[0].args.name).toBe("RT1I-experiment.bin");
+});
+
+test("verified completion shows one short floating success and closes after three seconds", async ({
+  page,
+}, testInfo) => {
+  await fixture(page, false, true);
+  await page.getByTestId("firmware-input").setInputFiles(file());
+  await page.getByRole("button", { name: "刷写", exact: true }).click();
+  await page.getByRole("button", { name: "确认并开始", exact: true }).click();
+  await expect(page.getByTestId("firmware-job")).toContainText("50% 1/2");
+  await page.evaluate(() => {
+    Object.assign((window as any).firmwareJob, {
+      active: false,
+      cancellable: false,
+      phase: "complete",
+      acknowledgedBlocks: 2,
+      finishedAt: Date.now(),
+      flashConfirmed: true,
+      restoredDevice: { name: "ATORCH BW150 V1.1.0", path: "test-usb-path" },
+      message: "设备确认烧写完成，正常应用回读通过，已恢复只读监测",
+    });
+  });
+  const toast = page.locator(".fui-Toast");
+  await expect(toast).toHaveCount(1);
+  await expect(toast).toContainText("固件升级完成");
+  await expect(page.getByTestId("firmware-job")).toContainText("100% 2/2");
+  await expect(
+    page.getByText(
+      /设备确认烧写完成|设备 FF 完成应答已确认|正常应用回读已通过/,
+    ),
+  ).toHaveCount(0);
+  await expect(page.locator(".fui-Toaster.app-notifications")).toHaveCSS(
+    "position",
+    "fixed",
+  );
+  await expect(page.locator("main .fui-Toast, .fui-MessageBar")).toHaveCount(0);
+  await page.screenshot({
+    path: testInfo.outputPath("firmware-success.png"),
+    fullPage: true,
+  });
+  await toast.hover();
+  await toast.getByRole("button", { name: "关闭", exact: true }).focus();
+  await expect(toast).toHaveCount(0, { timeout: 4000 });
+  await page.getByRole("button", { name: "实时监控", exact: true }).click();
+  await page.getByRole("button", { name: "设备设置", exact: true }).click();
+  await page.getByRole("tab", { name: "固件更新", exact: true }).click();
+  await expect(toast).toHaveCount(0);
+  await expect(page.getByTestId("firmware-job")).toContainText("升级完成");
+});
+
+test("firmware failures persist across polling and navigation without duplicate banners", async ({
+  page,
+}, testInfo) => {
+  await fixture(page, false, true);
+  await page.getByTestId("firmware-input").setInputFiles(file());
+  await page.getByRole("button", { name: "刷写", exact: true }).click();
+  await page.getByRole("button", { name: "确认并开始", exact: true }).click();
+  await expect(page.getByTestId("firmware-job")).toContainText("50% 1/2");
+  await page.getByRole("button", { name: "实时监控", exact: true }).click();
+  await page.evaluate(() =>
+    Object.assign((window as any).firmwareJob, {
+      active: false,
+      cancellable: false,
+      phase: "failed",
+      finishedAt: Date.now(),
+      message: "固件传输超时，请重新连接设备后重试",
+    }),
+  );
+  const toast = page.locator(".fui-Toast");
+  await expect(toast).toHaveCount(1);
+  await expect(toast).toContainText("固件传输超时");
+  await page.clock.install();
+  await page.clock.runFor(6000);
+  await expect(toast).toHaveCount(1);
+  await page.getByRole("button", { name: "设备设置", exact: true }).click();
+  await page.getByRole("tab", { name: "固件更新", exact: true }).click();
+  await expect(page.getByTestId("firmware-job")).toContainText("升级未完成");
+  await expect(page.getByTestId("firmware-job")).not.toContainText(
+    "固件传输超时",
+  );
+  await expect(page.locator(".fui-MessageBar")).toHaveCount(0);
+  await page.screenshot({
+    path: testInfo.outputPath("firmware-failure.png"),
+    fullPage: true,
+  });
+  await toast.getByRole("button", { name: "关闭", exact: true }).click();
+  await expect(toast).toHaveCount(0);
+  await page.clock.runFor(3000);
+  await expect(toast).toHaveCount(0);
 });

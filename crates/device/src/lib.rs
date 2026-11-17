@@ -1,4 +1,6 @@
 //! Serialized device I/O and recording, independent of Tauri and the frontend.
+pub mod auto_recording;
+mod ble_measurements;
 pub mod firmware;
 mod load_control;
 pub mod record_library;
@@ -88,7 +90,13 @@ pub struct Snapshot {
     sampling_clock: sampling::SampleClock,
     #[serde(skip)]
     recording_clock: sampling::SampleClock,
+    #[serde(skip)]
+    ble_measurements: ble_measurements::BleMeasurements,
     pub usb_sample_rate_hz: u8,
+    pub auto_record_on_load: bool,
+    pub auto_recording: auto_recording::Settings,
+    #[serde(skip)]
+    auto_recording_runtime: auto_recording::Runtime,
     pub connected_at: u64,
     pub last_report_at: u64,
     pub recording: Option<String>,
@@ -113,7 +121,11 @@ impl Default for Snapshot {
             sampling_elapsed_ms: 0,
             sampling_clock: sampling::SampleClock::default(),
             recording_clock: sampling::SampleClock::default(),
+            ble_measurements: ble_measurements::BleMeasurements::default(),
             usb_sample_rate_hz: sampling::DEFAULT_USB_HZ,
+            auto_record_on_load: false,
+            auto_recording: auto_recording::Settings::default(),
+            auto_recording_runtime: auto_recording::Runtime::default(),
             connected_at: 0,
             last_report_at: 0,
             recording: None,
@@ -124,6 +136,35 @@ impl Default for Snapshot {
             special_test: None,
             special_results: VecDeque::new(),
             firmware: None,
+        }
+    }
+}
+
+impl Snapshot {
+    fn observe_auto_recording(&mut self, telemetry: &Telemetry) {
+        let usb = self
+            .device
+            .as_ref()
+            .is_some_and(|device| device.transport == TransportKind::Usb);
+        if let Some(enabled) = self.auto_recording_runtime.observe(
+            &self.auto_recording,
+            telemetry,
+            usb,
+            Instant::now(),
+        ) {
+            self.set_sampling_enabled(enabled);
+        }
+    }
+    fn set_sampling_enabled(&mut self, enabled: bool) {
+        self.sampling_paused = !enabled;
+        self.recording_paused = self.recording.is_some() && !enabled;
+        let now = Instant::now();
+        if enabled {
+            self.sampling_clock.resume(now);
+            self.recording_clock.resume(now);
+        } else {
+            self.sampling_clock.pause(now);
+            self.recording_clock.pause(now);
         }
     }
 }
@@ -233,7 +274,13 @@ impl DeviceManager {
     pub fn with_sampling_preferences(path: PathBuf) -> Self {
         let mut manager = Self::default();
         manager.sampling_preferences = Some(path.clone());
-        manager.state.lock().unwrap().usb_sample_rate_hz = sampling::read_usb_rate(&path);
+        let (hz, auto_recording) = sampling::read_preferences(&path);
+        {
+            let mut state = manager.state.lock().unwrap();
+            state.usb_sample_rate_hz = hz;
+            state.auto_record_on_load = auto_recording.mode == auto_recording::Mode::Device;
+            state.auto_recording = auto_recording;
+        }
         manager
     }
     pub fn firmware_active(&self) -> bool {
@@ -264,9 +311,39 @@ impl DeviceManager {
             return Err("BLE 由设备主动上报，不能设置 USB 采样率".into());
         }
         if let Some(path) = &self.sampling_preferences {
-            sampling::save_usb_rate(path, hz)?;
+            sampling::save_preferences(path, hz, &state.auto_recording)?;
         }
         state.usb_sample_rate_hz = hz;
+        Ok(())
+    }
+    pub fn set_auto_record_on_load(&self, enabled: bool) -> Result<(), String> {
+        self.set_auto_recording(auto_recording::Settings::from_legacy(enabled))
+    }
+    pub fn set_auto_recording(&self, settings: auto_recording::Settings) -> Result<(), String> {
+        settings.validate()?;
+        if self.firmware_active() {
+            return Err("固件升级期间不能更改记录设置".into());
+        }
+        let mut state = self.state.lock().unwrap();
+        if let Some(path) = &self.sampling_preferences {
+            sampling::save_preferences(path, state.usb_sample_rate_hz, &settings)?;
+        }
+        let changed = state.auto_recording != settings;
+        state.auto_record_on_load = settings.mode == auto_recording::Mode::Device;
+        state.auto_recording = settings;
+        // Enabling synchronizes an already connected USB load once. Disabling
+        // preserves the current Pause / Continue choice, including for BLE.
+        if changed {
+            state.auto_recording_runtime = auto_recording::Runtime::default();
+            if state.connected {
+                if state.auto_recording.waits_for_start() {
+                    state.set_sampling_enabled(false);
+                }
+                if let Some(telemetry) = state.telemetry.clone() {
+                    state.observe_auto_recording(&telemetry);
+                }
+            }
+        }
         Ok(())
     }
     pub fn set_sampling(&self, enabled: bool) -> Result<(), String> {
@@ -277,14 +354,10 @@ impl DeviceManager {
         if !state.connected {
             return Err("请先连接设备".into());
         }
-        state.sampling_paused = !enabled;
-        state.recording_paused = state.recording.is_some() && !enabled;
-        if enabled {
-            state.sampling_clock.resume(Instant::now());
-            state.recording_clock.resume(Instant::now());
-        } else {
-            state.sampling_clock.pause(Instant::now());
-            state.recording_clock.pause(Instant::now());
+        state.auto_recording_runtime.manual_sampling(enabled);
+        state.set_sampling_enabled(enabled);
+        if let Some(telemetry) = state.telemetry.clone() {
+            state.observe_auto_recording(&telemetry);
         }
         Ok(())
     }
@@ -335,16 +408,24 @@ impl DeviceManager {
     ) -> Result<(), String> {
         self.disconnect();
         let (tx, rx) = mpsc::channel();
-        let firmware = self.state.lock().unwrap().firmware.clone();
-        let usb_sample_rate_hz = self.state.lock().unwrap().usb_sample_rate_hz;
-        *self.state.lock().unwrap() = Snapshot {
+        let mut current = self.state.lock().unwrap();
+        let firmware = current.firmware.clone();
+        let usb_sample_rate_hz = current.usb_sample_rate_hz;
+        let auto_record_on_load = current.auto_record_on_load;
+        let auto_recording = current.auto_recording.clone();
+        let sampling_paused = auto_recording.waits_for_start();
+        *current = Snapshot {
             connected: true,
             device: Some(info),
             connected_at: now_ms(),
             firmware,
             usb_sample_rate_hz,
+            auto_record_on_load,
+            auto_recording,
+            sampling_paused,
             ..Default::default()
         };
+        drop(current);
         self.samples.lock().unwrap().clear();
         let state = Arc::clone(&self.state);
         let samples = Arc::clone(&self.samples);
@@ -495,33 +576,24 @@ fn accept(
 }
 
 fn accept_report(
-    report: Report,
+    mut report: Report,
     state: &Arc<Mutex<Snapshot>>,
     samples: &Arc<Mutex<VecDeque<Sample>>>,
     recorder: &mut recorder::Recorder,
 ) -> Result<Report, String> {
     let mut s = state.lock().unwrap();
     s.last_report_at = now_ms();
+    if let Report::Telemetry(telemetry) = &mut report {
+        if s.device
+            .as_ref()
+            .is_some_and(|device| device.transport == TransportKind::Bluetooth)
+        {
+            s.ble_measurements.update(telemetry);
+        }
+    }
     match &report {
         Report::Telemetry(t) => {
-            // Only first readback and real USB state edges synchronize sampling.
-            // Identical reports must preserve the user's Pause / Continue choice.
-            if s.device
-                .as_ref()
-                .is_some_and(|d| d.transport == TransportKind::Usb)
-                && t.running.is_some()
-                && s.telemetry.as_ref().and_then(|v| v.running) != t.running
-            {
-                s.sampling_paused = t.running == Some(false);
-                let now = Instant::now();
-                if s.sampling_paused {
-                    s.sampling_clock.pause(now);
-                    s.recording_clock.pause(now);
-                } else {
-                    s.sampling_clock.resume(now);
-                    s.recording_clock.resume(now);
-                }
-            }
+            s.observe_auto_recording(t);
             if let Some(mode) = s.settings.as_ref().map(|v| v.mode) {
                 let Snapshot {
                     special_test,
@@ -768,6 +840,13 @@ fn run(
                     }
                     last_ble_write = Some(Instant::now());
                     transport.write(&action.encode())?;
+                    if action == atorch_protocol::ble::Command::ClearEnergy {
+                        let mut snapshot = state.lock().unwrap();
+                        snapshot.ble_measurements = Default::default();
+                        if let Some(telemetry) = &mut snapshot.telemetry {
+                            telemetry.energy = Some(0.0);
+                        }
+                    }
                     Ok(BleCommandResult {
                         action,
                         sent_at: now_ms(),

@@ -8,9 +8,9 @@ export const measurements = {
   energy: { name: "电量", unit: "Wh" },
   capacity: { name: "容量", unit: "mAh" },
   cpuTemperature: { name: "CPU 温度", unit: "°C" },
-  ntcTemperature: { name: "探头温度", unit: "°C" },
   mosTemperature: { name: "MOS 温度", unit: "°C" },
-  fanSpeed: { name: "风扇", unit: "RPM" },
+  ntcTemperature: { name: "NTC 温度", unit: "°C" },
+  fanSpeed: { name: "风扇转速", unit: "RPM" },
 } as const;
 export type MeasurementKey = keyof typeof measurements;
 export const defaultCurveWidth = 1;
@@ -313,7 +313,18 @@ export type SampleSummary = {
   min: number | null;
   max: number | null;
   average: number | null;
+  minCalculated?: boolean;
+  maxCalculated?: boolean;
 };
+export function isCalculatedMeasurement(
+  row: Telemetry,
+  key: MeasurementKey,
+): boolean {
+  return (
+    (key === "energy" && !!row.energyCalculated) ||
+    (key === "capacity" && !!row.capacityCalculated)
+  );
+}
 export type SampleSummaries = Partial<Record<MeasurementKey, SampleSummary>>;
 const summaries = new WeakMap<Telemetry[], SampleSummaries>();
 
@@ -338,18 +349,28 @@ export function summarize(
     sum = 0,
     min = Infinity,
     max = -Infinity;
+  let minCalculated = false,
+    maxCalculated = false;
   for (const row of rows) {
     const value = row[key];
     if (value == null || !Number.isFinite(value)) continue;
     count++;
     if (!cumulative) sum += value;
-    min = Math.min(min, value);
-    max = Math.max(max, value);
+    if (value < min) {
+      min = value;
+      minCalculated = isCalculatedMeasurement(row, key);
+    }
+    if (value > max) {
+      max = value;
+      maxCalculated = isCalculatedMeasurement(row, key);
+    }
   }
   return (cache[key] = {
     count,
     min: count ? min : null,
     max: count ? max : null,
     average: count && !cumulative ? sum / count : null,
+    ...(minCalculated ? { minCalculated: true } : {}),
+    ...(maxCalculated ? { maxCalculated: true } : {}),
   });
 }

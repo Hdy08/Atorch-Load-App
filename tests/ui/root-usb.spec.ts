@@ -100,7 +100,7 @@ test("Root is opt-in and closing an unconnected dialog restores the role", async
   expect(await calls(page)).toEqual([true, false]);
 });
 
-test("denied Root leaves the switch off and shows the error inside the dialog", async ({
+test("denied Root leaves the switch off and shows a floating failure", async ({
   page,
 }) => {
   await fixture(page, { denied: true });
@@ -111,7 +111,7 @@ test("denied Root leaves the switch off and shows the error inside the dialog", 
   await toggle.click();
   await expect(
     page
-      .getByRole("dialog")
+      .locator(".fui-Toast")
       .getByText("Error: Root 授权被拒绝，请检查 Root 管理器", { exact: true }),
   ).toBeVisible();
   await expect(toggle).not.toBeChecked();
@@ -141,7 +141,9 @@ test("a recovery record is shown without automatically requesting Root", async (
   expect(await calls(page)).toEqual([false]);
 });
 
-test("devices without USB Host show a disabled Root option", async ({ page }) => {
+test("devices without USB Host show a disabled Root option", async ({
+  page,
+}) => {
   await fixture(page, { supported: false });
   await expect(
     page.getByRole("switch", { name: "Root USB-C 直连", exact: true }),

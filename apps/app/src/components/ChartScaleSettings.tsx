@@ -1,17 +1,16 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eyedropper20Regular } from "@fluentui/react-icons";
 import {
   Button,
   Card,
   Field,
   Input,
-  MessageBar,
-  MessageBarBody,
   SwatchPicker,
   ColorSwatch,
   type Theme,
 } from "@fluentui/react-components";
 import { chartPalette, measurementColor } from "../lib/theme";
+import { useNotify } from "./Notifications";
 import {
   measurements,
   defaultCurveWidth,
@@ -99,30 +98,60 @@ export function ChartScaleSettings({
   theme,
   onChange,
   onClose,
+  formId,
+  externalActions = false,
 }: {
   selected: MeasurementKey[];
   bounds: ChartBounds;
   theme: Theme;
   onChange: (bounds: ChartBounds) => void;
   onClose?: () => void;
+  formId?: string;
+  externalActions?: boolean;
 }) {
   const [draft, setDraft] = useState(() => makeDraft(selected, bounds, theme));
-  const [error, setError] = useState("");
+  const previousTheme = useRef(theme);
+  useEffect(() => {
+    const previous = previousTheme.current;
+    previousTheme.current = theme;
+    if (previous === theme) return;
+    setDraft((old) =>
+      Object.fromEntries(
+        Object.entries(old).map(([name, value]) => {
+          const key = name as MeasurementKey;
+          return [
+            key,
+            value &&
+            value.color.toLowerCase() ===
+              measurementColor(previous, key).toLowerCase()
+              ? { ...value, color: measurementColor(theme, key) }
+              : value,
+          ];
+        }),
+      ),
+    );
+  }, [theme]);
+  const notify = useNotify();
+  const reportError = (text: string) => notify({ text, error: true });
   const update = (key: MeasurementKey, change: Partial<CurveDraft>) => {
     setDraft((old) => ({ ...old, [key]: { ...old[key]!, ...change } }));
   };
   const save = (next: ChartBounds) => {
     onChange(next);
     setDraft(makeDraft(selected, next, theme));
-    setError("");
     onClose?.();
   };
 
   return (
     <form
+      id={formId}
       className="curve-settings"
       aria-label="曲线与坐标设置"
       noValidate
+      onReset={(event) => {
+        event.preventDefault();
+        setDraft(makeDraft(selected, {}, theme));
+      }}
       onSubmit={(event) => {
         event.preventDefault();
         const next = { ...bounds };
@@ -138,7 +167,7 @@ export function ChartScaleSettings({
             (max !== undefined && !Number.isFinite(max)) ||
             (min !== undefined && max !== undefined && min >= max)
           ) {
-            setError(
+            reportError(
               `${measurements[key].name}的范围无效；最小值必须小于最大值`,
             );
             return;
@@ -149,14 +178,14 @@ export function ChartScaleSettings({
             width < 0.5 ||
             width > 3
           ) {
-            setError(
+            reportError(
               `${measurements[key].name}的颜色或线宽无效；线宽范围为 0.5–3.0`,
             );
             return;
           }
           // Leave untouched automatic channels out of persisted preferences.
           if (!Number.isFinite(opacity) || opacity < 0 || opacity > 100) {
-            setError(
+            reportError(
               `${measurements[key].name}的阴影不透明度无效；范围为 0–100%`,
             );
             return;
@@ -262,31 +291,28 @@ export function ChartScaleSettings({
           </Card>
         ))}
       </div>
-      {error && (
-        <MessageBar intent="error">
-          <MessageBarBody>{error}</MessageBarBody>
-        </MessageBar>
-      )}
-      <div className="curve-settings-actions">
-        {onClose && (
-          <Button type="button" onClick={onClose}>
-            取消
+      {!externalActions && (
+        <div className="curve-settings-actions">
+          {onClose && (
+            <Button type="button" onClick={onClose}>
+              取消
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={() => {
+              const next = { ...bounds };
+              selected.forEach((key) => delete next[key]);
+              save(next);
+            }}
+          >
+            恢复默认
           </Button>
-        )}
-        <Button
-          type="button"
-          onClick={() => {
-            const next = { ...bounds };
-            selected.forEach((key) => delete next[key]);
-            save(next);
-          }}
-        >
-          恢复默认
-        </Button>
-        <Button type="submit" appearance="primary">
-          应用更改
-        </Button>
-      </div>
+          <Button type="submit" appearance="primary">
+            应用更改
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

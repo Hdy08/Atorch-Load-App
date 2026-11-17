@@ -1,6 +1,7 @@
 import { measurementKeys, type SampleSummaries } from "./analysis.ts";
 import type { Telemetry } from "./types";
 import type { ChartIndex } from "./chartData";
+import type { MeasurementPrecision } from "./measurementFormat";
 
 // One transferable buffer avoids cloning hundreds of thousands of JS objects
 // between the worker and WebView. NaN represents an absent optional value.
@@ -56,5 +57,6 @@ export type CsvImportResponse =
       values: Float64Array;
       chart?: ChartIndex;
       summaries: SampleSummaries;
+      precision: MeasurementPrecision;
     }
   | { error: string };

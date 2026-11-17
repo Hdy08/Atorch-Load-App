@@ -92,7 +92,7 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
       { exact: false },
     ),
   ).toBeVisible();
-  for (const name of ["功率 (W)", "电量 (Wh)", "容量 (mAh)"])
+  for (const name of ["功率", "电量", "容量"])
     await page.getByRole("checkbox", { name, exact: true }).check();
   for (const name of ["电量 / Wh", "容量 / mAh"]) {
     const stats = page

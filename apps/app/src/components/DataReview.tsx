@@ -28,6 +28,10 @@ import { sampleElapsedMs, type ChartTimeMode } from "../lib/chartTime";
 import { samplesInChartRange } from "../lib/chartInteraction";
 import { completeRecordCounters } from "../lib/records";
 import { chartRangeSummary } from "../lib/chartData";
+import {
+  formatMeasurement,
+  measurementPrecision,
+} from "../lib/measurementFormat";
 
 const pageSizes = [10, 20, 50, 100];
 const pageSizeStorageKey = "atorch-review-page-size";
@@ -42,13 +46,30 @@ function readPageSize() {
   return 10;
 }
 
-const format = (value: number | null | undefined) =>
-  value == null
-    ? "—"
-    : value.toLocaleString("en-US", {
-        maximumFractionDigits: 3,
-        useGrouping: false,
-      });
+function NumericValue({
+  value,
+  digits,
+  alignTo = digits,
+}: {
+  value: number | null | undefined;
+  digits: number;
+  alignTo?: number;
+}) {
+  if (value == null || !Number.isFinite(value))
+    return <span className="numeric-placeholder">—</span>;
+  const [integer, fraction] = formatMeasurement(value, digits).split(".");
+  return (
+    <span
+      className="aligned-number"
+      style={{ gridTemplateColumns: `auto ${alignTo ? alignTo + 1 : 0}ch` }}
+    >
+      <span className="numeric-integer">{integer}</span>
+      <span className="numeric-fraction">
+        {fraction !== undefined ? `.${fraction}` : ""}
+      </span>
+    </span>
+  );
+}
 
 export function DataReview({
   rows: sourceRows,
@@ -76,6 +97,7 @@ export function DataReview({
   onSelectionChange: (selected: MeasurementKey[]) => void;
 }) {
   const rows = useMemo(() => completeRecordCounters(sourceRows), [sourceRows]);
+  const precision = useMemo(() => measurementPrecision(rows), [rows]);
   const [pageSize, setPageSize] = useState(readPageSize);
   const [page, setPage] = useState(0);
   const [pageText, setPageText] = useState("1");
@@ -111,6 +133,17 @@ export function DataReview({
       capacity: exportRows.some((row) => row.capacityCalculated),
     }),
     [exportRows],
+  );
+  const statisticDigits = (key: MeasurementKey, kind: "min" | "max") =>
+    stats[key]?.[kind === "min" ? "minCalculated" : "maxCalculated"]
+      ? 3
+      : precision[key];
+  const statisticWidth = Math.max(
+    0,
+    ...keys.flatMap((key) => [
+      statisticDigits(key, "min"),
+      statisticDigits(key, "max"),
+    ]),
   );
   const pages = Math.max(1, Math.ceil(exportRows.length / pageSize));
   const currentPage = Math.min(page, pages - 1);
@@ -227,10 +260,26 @@ export function DataReview({
                         (key === "capacity" && calculated.capacity)) &&
                         " (计算)"}
                     </TableCell>
-                    <TableCell>{stats[key]?.count ?? 0}</TableCell>
-                    <TableCell>{format(stats[key]?.min)}</TableCell>
-                    <TableCell>{format(stats[key]?.max)}</TableCell>
-                    <TableCell>{format(stats[key]?.average)}</TableCell>
+                    <TableCell className="numeric-cell">
+                      {stats[key]?.count ?? 0}
+                    </TableCell>
+                    <TableCell className="numeric-cell">
+                      <NumericValue
+                        value={stats[key]?.min}
+                        digits={statisticDigits(key, "min")}
+                        alignTo={statisticWidth}
+                      />
+                    </TableCell>
+                    <TableCell className="numeric-cell">
+                      <NumericValue
+                        value={stats[key]?.max}
+                        digits={statisticDigits(key, "max")}
+                        alignTo={statisticWidth}
+                      />
+                    </TableCell>
+                    <TableCell className="numeric-cell">
+                      <NumericValue value={stats[key]?.average} digits={3} />
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
@@ -294,8 +343,23 @@ export function DataReview({
                     {new Date(row.timestamp).toLocaleString()}
                   </TableCell>
                   {available.map((key) => (
-                    <TableCell className="mono" key={key}>
-                      {format(row[key])}
+                    <TableCell className="numeric-cell" key={key}>
+                      <NumericValue
+                        value={row[key]}
+                        digits={
+                          (key === "energy" && row.energyCalculated) ||
+                          (key === "capacity" && row.capacityCalculated)
+                            ? 3
+                            : precision[key]
+                        }
+                        alignTo={Math.max(
+                          precision[key],
+                          (key === "energy" && calculated.energy) ||
+                            (key === "capacity" && calculated.capacity)
+                            ? 3
+                            : 0,
+                        )}
+                      />
                     </TableCell>
                   ))}
                 </TableRow>

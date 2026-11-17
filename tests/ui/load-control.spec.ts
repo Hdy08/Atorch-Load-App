@@ -33,6 +33,7 @@ async function fixture(page: Page, mode = 0, dark = false) {
         failLoadKind: "",
         __TAURI_INTERNALS__: {
           invoke: async (command: string, args: any) => {
+            if (command === "set_window_theme") return false;
             if (command === "get_history") return [];
             if (command === "get_snapshot")
               return {
@@ -51,7 +52,7 @@ async function fixture(page: Page, mode = 0, dark = false) {
                   energy: 0,
                   capacity: 0,
                   resistance: 0,
-                  running: false,
+                  running: (window as any).loadRunning ?? false,
                   status: 0,
                 },
                 connectedAt: 1,
@@ -67,6 +68,8 @@ async function fixture(page: Page, mode = 0, dark = false) {
               if ((window as any).failLoadKind === args.command.kind)
                 throw new Error("设备未确认此项设置");
               (settings as any)[args.command.kind] = args.command.value;
+              if (args.command.kind === "running")
+                (window as any).loadRunning = args.command.value === 1;
               return;
             }
             throw new Error(`Unexpected load UI fixture command: ${command}`);
@@ -77,7 +80,15 @@ async function fixture(page: Page, mode = 0, dark = false) {
     { mode, dark },
   );
   await page.goto("/");
-  await expect(page.locator(".load-parameters .load-parameter")).toHaveCount(5);
+  await page.getByRole("button", { name: "负载控制设置", exact: true }).click();
+  await expect(page.locator(".load-parameters .load-parameter")).toHaveCount(7);
+  await page.getByRole("dialog").evaluate(async (element) => {
+    await Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        .map((animation) => animation.finished),
+    );
+  });
   await expect(
     page.getByText("运行状态以设备返回为准", { exact: true }),
   ).toHaveCount(0);
@@ -88,12 +99,100 @@ function parameter(page: Page, label: string) {
   return { input, row: page.locator(".load-parameter").filter({ has: input }) };
 }
 
+test("floating controls validate Enter, keep the run icon last, move notifications below and appear only on the live page", async ({
+  page,
+}, testInfo) => {
+  await fixture(page);
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "关闭", exact: true })
+    .click();
+  await expect(page.locator("main .control-card")).toHaveCount(0);
+  const dock = page.getByRole("region", { name: "负载控制", exact: true });
+  const input = dock.getByRole("textbox", {
+    name: "目标电流快速设定",
+    exact: true,
+  });
+  await expect(input).toHaveValue("1.234");
+  await input.fill("1.237");
+  await input.blur();
+  expect(await page.evaluate(() => (window as any).loadCalls)).toEqual([]);
+  await input.press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => (window as any).loadCalls))
+    .toEqual([{ kind: "target", value: 1.237, expectedMode: 0 }]);
+  await expect(input).toBeEnabled();
+  await input.fill("99");
+  await input.press("Enter");
+  const toast = page.locator(".fui-Toast").filter({ hasText: "范围内的数值" });
+  await expect(toast).toBeVisible();
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const bounds = (await dock.boundingBox())!;
+    const notice = (await toast.boundingBox())!;
+    expect(notice.y).toBeGreaterThanOrEqual(bounds.y + bounds.height);
+    const buttons = dock.getByRole("button");
+    await expect(buttons).toHaveCount(3);
+    await expect(buttons.last()).toHaveAccessibleName("启动负载");
+    await expect(buttons.last()).toHaveText("");
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+    expect(bounds.height).toBeLessThanOrEqual(46);
+    const positions = await dock
+      .locator(":scope > *")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => node.getBoundingClientRect().y),
+      );
+    expect(Math.max(...positions) - Math.min(...positions)).toBeLessThan(8);
+    await page.evaluate(() => window.scrollTo(0, 200));
+    expect((await dock.boundingBox())!.y).toBe(bounds.y);
+    await page.screenshot({
+      path: testInfo.outputPath(`floating-${width}.png`),
+      fullPage: true,
+    });
+  }
+  await toast.getByRole("button", { name: "关闭", exact: true }).click();
+  await input.fill("1.237");
+  await page.getByRole("button", { name: "应用设置", exact: true }).click();
+  await expect(dock).toHaveCount(0);
+  await page.getByRole("button", { name: "实时监控", exact: true }).click();
+  await expect(dock).toBeVisible();
+  await dock.getByRole("button", { name: "启动负载", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "启动电子负载", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "确认启动电子负载", exact: true })
+    .click();
+  await expect(dock.getByRole("button").last()).toHaveAccessibleName(
+    "停止负载",
+  );
+  await dock.getByRole("button", { name: "停止负载", exact: true }).click();
+  await expect(dock.getByRole("button").last()).toHaveAccessibleName(
+    "启动负载",
+  );
+  expect(
+    (await page.evaluate(() => (window as any).loadCalls)).map(
+      (call: any) => call.kind,
+    ),
+  ).toEqual(["target", "running", "running"]);
+  await page.getByRole("button", { name: "实时监控", exact: true }).click();
+  await page.screenshot({
+    path: testInfo.outputPath("floating-controls-final.png"),
+    fullPage: true,
+  });
+});
+
 for (const width of [390, 1440]) {
   test(`device settings share continuous sliders, numeric steps and validated limits (${width})`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 1050 });
     await fixture(page, 0, true);
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "关闭", exact: true })
+      .click();
     await page.getByRole("button", { name: "设备设置", exact: true }).click();
     await expect(page.locator(".settings-grid .load-parameter")).toHaveCount(
       11,
@@ -104,7 +203,7 @@ for (const width of [390, 1440]) {
     for (const [label, kind, min, max, step, digits, unit] of [
       ["充电上限电压", "fullVoltage", 0, 100, 0.1, 2, "V"],
       ["充电截止电流", "cutoffCurrent", 0, 20, 0.1, 2, "A"],
-      ["探头温度上限", "ntcLimit", 0, 100, 1, 0, "°C"],
+      ["NTC 温度上限", "ntcLimit", 0, 100, 1, 0, "°C"],
       ["MOS 温度上限", "mosLimit", 0, 100, 1, 0, "°C"],
       ["工作亮度", "brightness", 0, 9, 1, 0, ""],
       ["待机亮度", "standbyBrightness", 0, 9, 1, 0, ""],
@@ -164,9 +263,9 @@ for (const width of [390, 1440]) {
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
-    await mkdir("artifacts/chart-detail-settings", { recursive: true });
+    await mkdir("artifacts/floating-controls-20261117/ui", { recursive: true });
     await page.screenshot({
-      path: `artifacts/chart-detail-settings/device-settings-${width}.png`,
+      path: `artifacts/floating-controls-20261117/ui/device-settings-${width}.png`,
       fullPage: true,
     });
   });
@@ -183,12 +282,12 @@ for (const [mode, label, value, up, down, fine, invalid] of [
   }) => {
     await fixture(page, mode);
     const { input, row } = parameter(page, label);
-    await expect(page.locator(".load-parameters .fui-Slider")).toHaveCount(5);
+    await expect(page.locator(".load-parameters .fui-Slider")).toHaveCount(7);
     await expect(
       page
         .locator(".load-parameters")
         .getByRole("button", { name: "应用", exact: true }),
-    ).toHaveCount(5);
+    ).toHaveCount(7);
     await expect(input).toHaveValue(value);
     await input.press("ArrowUp");
     await expect(input).toHaveValue(up);
@@ -370,7 +469,8 @@ test("failed duration write stops the sequence and reports the actual device fie
   await hours.fill("0");
   await minutes.fill("1");
   await row.getByRole("button", { name: "应用", exact: true }).click();
-  await expect(row).toContainText("设备未确认此项设置");
+  await expect(page.locator(".fui-Toast")).toContainText("设备未确认此项设置");
+  await expect(row).not.toContainText("设备未确认此项设置");
   await expect(hours).toHaveValue("2");
   await expect(minutes).toHaveValue("1");
   expect(
@@ -432,10 +532,16 @@ for (const width of [390, 768, 901, 1024, 1440])
           );
         }
       }
-      await mkdir("artifacts/load-controls", { recursive: true });
-      await card.screenshot({
-        path: `artifacts/load-controls/${dark ? "dark" : "light"}-${width}.png`,
+      await mkdir("artifacts/floating-controls-20261117/ui", {
+        recursive: true,
       });
+      await card.screenshot({
+        path: `artifacts/floating-controls-20261117/ui/${dark ? "dark" : "light"}-${width}.png`,
+      });
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: "关闭", exact: true })
+        .click();
       await page.getByRole("button", { name: "设备设置", exact: true }).click();
       for (const settingsCard of await page
         .locator(".settings-grid > .fui-Card")

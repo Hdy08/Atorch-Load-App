@@ -27,7 +27,7 @@ const deviceParameterRanges = {
     digits: 2,
   },
   ntcLimit: {
-    label: "探头温度上限",
+    label: "NTC 温度上限",
     unit: "°C",
     min: 0,
     max: 100,

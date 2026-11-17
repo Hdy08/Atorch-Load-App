@@ -9,24 +9,45 @@ pub fn valid_usb_rate(hz: u8) -> bool {
     matches!(hz, 1 | 2 | 5)
 }
 
-pub(crate) fn read_usb_rate(path: &Path) -> u8 {
-    std::fs::read(path)
+pub(crate) fn read_preferences(path: &Path) -> (u8, crate::auto_recording::Settings) {
+    let value = std::fs::read(path)
         .ok()
         .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-        .and_then(|value| value["usbSampleRateHz"].as_u64())
+        .unwrap_or_default();
+    let hz = value["usbSampleRateHz"]
+        .as_u64()
         .and_then(|hz| u8::try_from(hz).ok())
         // Retire the old 10 Hz preference until independent updates are verified.
         .map(|hz| if hz == 10 { 5 } else { hz })
         .filter(|hz| valid_usb_rate(*hz))
-        .unwrap_or(DEFAULT_USB_HZ)
+        .unwrap_or(DEFAULT_USB_HZ);
+    let settings = if value.get("autoRecording").is_some() {
+        serde_json::from_value::<crate::auto_recording::Settings>(value["autoRecording"].clone())
+            .ok()
+            .filter(|settings| settings.validate().is_ok())
+            .unwrap_or_default()
+    } else {
+        crate::auto_recording::Settings::from_legacy(
+            value["autoRecordOnLoad"].as_bool().unwrap_or(false),
+        )
+    };
+    (hz, settings)
 }
 
-pub(crate) fn save_usb_rate(path: &Path, hz: u8) -> Result<(), String> {
+pub(crate) fn save_preferences(
+    path: &Path,
+    hz: u8,
+    settings: &crate::auto_recording::Settings,
+) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| format!("采样设置保存失败：{e}"))?;
     }
-    let bytes = serde_json::to_vec(&serde_json::json!({ "usbSampleRateHz": hz }))
-        .map_err(|e| e.to_string())?;
+    let bytes = serde_json::to_vec(&serde_json::json!({
+        "usbSampleRateHz": hz,
+        "autoRecordOnLoad": settings.mode == crate::auto_recording::Mode::Device,
+        "autoRecording": settings,
+    }))
+    .map_err(|e| e.to_string())?;
     std::fs::write(path, bytes).map_err(|e| format!("采样设置保存失败：{e}"))
 }
 

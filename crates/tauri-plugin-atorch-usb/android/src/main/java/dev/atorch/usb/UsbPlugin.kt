@@ -20,6 +20,7 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
@@ -30,6 +31,7 @@ import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.util.concurrent.Executors
 import java.io.ByteArrayOutputStream
+import java.io.File
 
 @InvokeArg class OpenArgs { lateinit var path: String }
 @InvokeArg class WriteArgs { var data: List<Int> = emptyList() }
@@ -114,6 +116,19 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
     override fun load(webView: WebView) { chartFullscreen.load(webView) }
 
     override fun onResume(activity: AppCompatActivity) { chartFullscreen.resume() }
+
+    @Command fun systemAccent(invoke: Invoke) {
+        activity.runOnUiThread {
+            val color = if (Build.VERSION.SDK_INT >= 31) activity.getColor(android.R.color.system_accent1_500)
+            else {
+                val value = android.util.TypedValue()
+                if (activity.theme.resolveAttribute(android.R.attr.colorAccent, value, true)) {
+                    if (value.resourceId != 0) activity.getColor(value.resourceId) else value.data
+                } else android.graphics.Color.rgb(15, 108, 189)
+            }
+            invoke.resolve(JSObject().put("color", String.format("#%06x", color and 0xFFFFFF)))
+        }
+    }
 
     @Command fun setChartFullscreen(invoke: Invoke) {
         val args = invoke.parseArgs(ChartFullscreenArgs::class.java)
@@ -279,6 +294,32 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
     @Command fun close(invoke: Invoke) = perform(invoke) { releaseDevice(); JSObject() }
+
+    @Command fun openFirmwareLog(invoke: Invoke) {
+        val args = invoke.parseArgs(OpenArgs::class.java)
+        // File work stays off the USB executor and UI thread. The provider
+        // exposes a read-only cache snapshot without exposing private app files.
+        files.execute {
+            try {
+                val source = File(args.path)
+                require(source.isFile && source.extension == "jsonl") { "传输日志不存在" }
+                val directory = File(activity.cacheDir, "firmware_logs").apply { mkdirs() }
+                val copy = File(directory, source.name)
+                source.copyTo(copy, overwrite = true)
+                val uri = FileProvider.getUriForFile(activity, "${activity.packageName}.fileprovider", copy)
+                main.post {
+                    try {
+                        val view = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, "text/plain")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        activity.startActivity(Intent.createChooser(view, "传输日志"))
+                        invoke.resolve(JSObject())
+                    } catch (e: Exception) { invoke.reject(e.message ?: "无法打开传输日志") }
+                }
+            } catch (e: Exception) { invoke.reject(e.message ?: "无法读取传输日志") }
+        }
+    }
 
     @Command fun saveCsv(invoke: Invoke) {
         val args = invoke.parseArgs(SaveArgs::class.java)

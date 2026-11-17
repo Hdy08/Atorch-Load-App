@@ -110,7 +110,13 @@ export function useChartFullscreen() {
     viewport,
     fullscreen,
     rotate,
-    chartHeight: rotate ? size.width : size.height,
+    chartHeight:
+      (rotate ? size.width : size.height) /
+      (Number(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--ui-scale",
+        ),
+      ) || 1),
     enter,
     exit: () => setFullscreen(false),
   };

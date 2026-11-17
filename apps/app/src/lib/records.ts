@@ -1,4 +1,5 @@
 import type { Telemetry } from "./types";
+import { copyMeasurementPrecision } from "./measurementFormat.ts";
 
 const valid = (value: number | null | undefined): value is number =>
   value != null && Number.isFinite(value);
@@ -47,5 +48,6 @@ export function completeRecordCounters(rows: Telemetry[]): Telemetry[] {
   });
   completed.set(rows, result);
   completed.set(result, result);
+  copyMeasurementPrecision(rows, result);
   return result;
 }

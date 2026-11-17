@@ -22,6 +22,7 @@ async function fixture(page: Page, { denied = false, desktop = false } = {}) {
         bluetoothCalls: calls,
         __TAURI_INTERNALS__: {
           invoke: async (command: string, args?: { action: string }) => {
+            if (command === "set_window_theme") return false;
             calls.push(command);
             if (command === "get_snapshot")
               return {
@@ -33,9 +34,9 @@ async function fixture(page: Page, { denied = false, desktop = false } = {}) {
                       voltage: 0,
                       current: 0,
                       power: 0,
-                      energy: null,
+                      energy: 0,
                       capacity: 6620,
-                      resistance: null,
+                      resistance: 0,
                       cpuTemperature: null,
                       ntcTemperature: null,
                       mosTemperature: 26,
@@ -133,7 +134,7 @@ test("desktop can select Bluetooth, scan and connect without Android USB diagnos
   await tabs.getByRole("tab", { name: "蓝牙", exact: true }).click();
   await expect(dialog.getByText("BW150_BLE", { exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "连接", exact: true }).click();
-  await expect(page.getByText("蓝牙面板遥控", { exact: true })).toBeVisible();
+  await expect(page.locator(".ble-keys")).toBeVisible();
   const calls = await page.evaluate(
     () => (window as unknown as { bluetoothCalls: string[] }).bluetoothCalls,
   );
@@ -160,8 +161,8 @@ for (const desktop of [true, false]) {
     await expect(
       connection.getByRole("button", { name: "管理设备", exact: true }),
     ).toBeVisible();
-    await expect(connection.locator(".device-connection-status")).toContainText(
-      /蓝牙.*已连接/,
+    await expect(connection.locator(".device-connection-status")).toHaveText(
+      "(BLE)",
     );
     await expect(
       page
@@ -238,30 +239,28 @@ test("BLE discovery connects to the selected device and hides unconfirmed values
     dialog.getByText("00:00:00:17:BB:84 · -60 dBm", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "连接", exact: true }).click();
-  await expect(page.getByText("蓝牙面板遥控", { exact: true })).toBeVisible();
-  await expect(page.getByText("设备状态未知", { exact: true })).toBeVisible();
+  await expect(page.locator(".ble-keys")).toBeVisible();
+  await expect(page.getByText("设备状态未知", { exact: true })).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "确认 OK…", exact: true }),
+    page.getByRole("button", { name: "OK", exact: true }),
   ).toBeEnabled();
   await expect(
     page.locator('.metric[data-measurement="resistance"] .metric-value'),
-  ).toContainText("—");
+  ).toContainText("0.000");
   await expect(
     page.locator('.metric[data-measurement="capacity"]'),
   ).toContainText("6620");
   await expect(
     page.locator('.metric[data-measurement="energy"]'),
-  ).toContainText("—");
+  ).toContainText("0.000");
   await expect(
     page.getByRole("button", { name: "暂停", exact: true }),
   ).toBeEnabled();
-  await page
-    .getByRole("checkbox", { name: "MOS 温度 (°C)", exact: true })
-    .check();
-  await expect(page.locator(".thermal-grid")).toContainText("26.0");
-  await expect(page.locator(".thermal-grid > div")).toHaveCount(4);
+  await page.getByRole("checkbox", { name: "MOS 温度", exact: true }).check();
+  await expect(page.locator(".thermal-metrics")).toContainText("26.0");
+  await expect(page.locator(".thermal-metrics > .metric")).toHaveCount(4);
   await expect(
-    page.locator(".thermal-grid > div").filter({ hasText: "MOS" }),
+    page.locator('.thermal-metrics [data-measurement="mosTemperature"]'),
   ).toContainText("26.0");
   await expect(
     page.getByRole("checkbox", { name: "设备温度 (°C)", exact: true }),
@@ -315,7 +314,7 @@ for (const desktop of [false, true]) {
     for (const width of desktop ? [1440] : [330, 360, 393]) {
       await page.setViewportSize({ width, height: 960 });
       const keys = page.locator(".ble-keys > .fui-Button");
-      await expect(keys).toHaveText(["设置 SET", "减 −", "加 +", "确认 OK…"]);
+      await expect(keys).toHaveText(["SET", "-", "+", "OK"]);
       const boxes = await keys.evaluateAll((buttons) =>
         buttons.map((button) => {
           const box = button.getBoundingClientRect();
@@ -340,7 +339,7 @@ for (const desktop of [false, true]) {
       ).toBeLessThanOrEqual(width);
     }
     await mkdir("artifacts/chart-detail-settings", { recursive: true });
-    await page.locator(".control-card").screenshot({
+    await page.locator(".floating-load-control").screenshot({
       path: `artifacts/chart-detail-settings/ble-remote-${desktop ? "desktop" : "mobile"}.png`,
     });
     await page.getByRole("button", { name: "设备设置", exact: true }).click();
@@ -360,34 +359,25 @@ for (const desktop of [false, true]) {
   });
 }
 
-test("BLE keys send once, OK requires confirmation and clear requires acknowledging data loss", async ({
+test("BLE keys including OK send once without a dialog and clear requires acknowledging data loss", async ({
   page,
 }) => {
   await fixture(page);
   await page.getByRole("button", { name: "连接", exact: true }).click();
-  await page.getByRole("button", { name: "加 +", exact: true }).click();
+  await page.getByRole("button", { name: "+", exact: true }).click();
   await expect(
     page.locator(".fui-Toast").getByText(/按键已发送；设备未提供执行确认/),
   ).toBeVisible();
-  await page.getByRole("button", { name: "确认 OK…", exact: true }).click();
+  await page.getByRole("button", { name: "OK", exact: true }).click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog).toContainText("可能启动或停止负载");
-  await page.waitForTimeout(1100);
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: "取消", exact: true }).click();
+  await expect(dialog).toBeHidden();
   expect(
     await page.evaluate(
       () => (window as unknown as { bluetoothCalls: string[] }).bluetoothCalls,
     ),
-  ).not.toContain("ble:keyOk");
-  await page.getByRole("button", { name: "确认 OK…", exact: true }).click();
-  await dialog
-    .getByRole("button", { name: "发送一次 OK", exact: true })
-    .click();
-  await expect(dialog).toBeHidden();
-  await page
-    .getByRole("button", { name: "清零设备容量…", exact: true })
-    .click();
+  ).toContain("ble:keyOk");
+  await page.getByRole("button", { name: "蓝牙控制设置", exact: true }).click();
+  await page.getByRole("button", { name: "清空容量", exact: true }).click();
   await expect(
     dialog.getByRole("button", { name: "确认清零并发送", exact: true }),
   ).toBeDisabled();
@@ -405,19 +395,22 @@ test("BLE keys send once, OK requires confirmation and clear requires acknowledg
     "ble:clearCapacity",
   ]);
   expect(calls).not.toContain("send_command");
-  await expect(page.getByText("蓝牙面板遥控", { exact: true })).toBeVisible();
+  await expect(page.locator(".ble-keys")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "切换测试模式", exact: true }),
   ).toHaveCount(0);
 });
 
-test("denied Nearby Devices permission is explained inside the BLE dialog", async ({
+test("denied Nearby Devices permission is explained by a floating failure", async ({
   page,
 }) => {
   await fixture(page, { denied: true });
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("蓝牙扫描失败", { exact: true })).toBeVisible();
-  await expect(dialog.getByText(/Error: 未获得蓝牙扫描权限/)).toBeVisible();
+  await expect(
+    page.locator(".fui-Toast").getByText(/Error: 未获得蓝牙扫描权限/),
+  ).toBeVisible();
+  await expect(dialog.getByText(/Error: 未获得蓝牙扫描权限/)).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "重新扫描" })).toBeEnabled();
   await dialog.getByRole("button", { name: "关闭", exact: true }).click();
   await expect(dialog).toBeHidden();

@@ -66,6 +66,7 @@ async function fixture(page: Page) {
       __TAURI_INTERNALS__: {
         invoke: async (command: string, args: any) => {
           state.calls.push({ command, args });
+          if (command === "set_window_theme") return;
           if (command === "get_snapshot")
             return {
               connected: true,
@@ -249,7 +250,7 @@ test("deleting an imported record clears its chart immediately while other recor
   ).toBeVisible();
 });
 
-test("cancelled or invalid imports do not register files and failures float for three seconds", async ({
+test("invalid imports remain as floating failures until manually closed", async ({
   page,
 }) => {
   await fixture(page);
@@ -275,7 +276,22 @@ test("cancelled or invalid imports do not register files and failures float for 
       ),
     ),
   ).toHaveLength(0);
-  await expect(toast).toHaveCount(0, { timeout: 4000 });
+  await page.clock.install();
+  await page.clock.runFor(5000);
+  await expect(toast).toContainText("未找到");
+  await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
+  const failure = toast.filter({ hasText: "未找到" });
+  const success = toast.filter({ hasText: "已导出：" });
+  await expect(success).toBeVisible();
+  await expect(failure).toBeVisible();
+  await page.clock.runFor(3500);
+  await expect(success).toHaveCount(0);
+  await expect(failure).toBeVisible();
+  await failure.getByRole("button", { name: "关闭", exact: true }).click();
+  await expect(toast).toHaveCount(0);
+  await page.getByRole("button", { name: "导入 CSV", exact: true }).click();
+  await expect(toast).toHaveCount(1);
+  await expect(toast).toContainText("未找到");
 });
 
 test("manual export adds a reference, cancellation adds none, and success closes automatically", async ({

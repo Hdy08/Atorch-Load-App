@@ -1,5 +1,10 @@
 import type { Telemetry } from "./types";
 import { completeRecordCounters } from "./records.ts";
+import {
+  cacheMeasurementPrecision,
+  sourceFractionDigits,
+  type MeasurementPrecision,
+} from "./measurementFormat.ts";
 
 export function csvCells(line: string): string[] {
   const cells: string[] = [];
@@ -87,6 +92,7 @@ export function parseCsv(text: string): Telemetry[] {
   const segmentColumn = col(/^SEGMENT_ID$/);
   const temperatureColumn = col(/DEVICE_TEMP/);
   const rows: Telemetry[] = [];
+  const precision: MeasurementPrecision = {};
   let ordered = true;
   for (let i = headerIndex + 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
@@ -121,6 +127,13 @@ export function parseCsv(text: string): Telemetry[] {
       )
         throw new Error(`第 ${i + 1} 行 ${field} 数据无效`);
       row[field] = value;
+      if (value !== null && index >= 0) {
+        const key = field as keyof MeasurementPrecision;
+        precision[key] = Math.max(
+          precision[key] ?? 0,
+          sourceFractionDigits(cells[index]),
+        );
+      }
     }
     if (temperatureColumn >= 0 && cells[temperatureColumn]?.trim()) {
       const value = Number(cells[temperatureColumn]);
@@ -128,7 +141,13 @@ export function parseCsv(text: string): Telemetry[] {
         throw new Error(`第 ${i + 1} 行设备温度数据无效`);
       // Earlier exports used a separate name for the same MOS sensor. Prefer
       // an explicit MOS reading when both columns are present.
-      row.mosTemperature ??= value;
+      if (row.mosTemperature == null) {
+        row.mosTemperature = value;
+        precision.mosTemperature = Math.max(
+          precision.mosTemperature ?? 0,
+          sourceFractionDigits(cells[temperatureColumn]),
+        );
+      }
     }
     if (rows.length && timestamp < rows[rows.length - 1].timestamp)
       ordered = false;
@@ -139,9 +158,9 @@ export function parseCsv(text: string): Telemetry[] {
     rows.push(sample);
   }
   if (rows.length === 0) throw new Error("CSV 没有有效采样数据");
-  return completeRecordCounters(
-    ordered ? rows : rows.sort((a, b) => a.timestamp - b.timestamp),
-  );
+  if (!ordered) rows.sort((a, b) => a.timestamp - b.timestamp);
+  cacheMeasurementPrecision(rows, precision);
+  return completeRecordCounters(rows);
 }
 
 export function exportCsv(rows: Telemetry[]): string {

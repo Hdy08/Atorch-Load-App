@@ -26,6 +26,10 @@ import type { Telemetry } from "../lib/types";
 import { measurementColor } from "../lib/theme";
 import { formatElapsedTime, formatClockTime } from "../lib/chartTime";
 import {
+  formatMeasurement,
+  measurementPrecision,
+} from "../lib/measurementFormat";
+import {
   indexedChartData,
   chartViewportData,
   nearestChartSample,
@@ -35,6 +39,7 @@ import {
   chartTimeline,
   samplesInChartRange,
   zoomAxisRange,
+  pinchAxisRange,
   type ChartTimeRange,
 } from "../lib/chartInteraction";
 import {
@@ -97,6 +102,14 @@ export function TrendChart({
   );
   const pointer = useRef<{ x: number; y: number } | undefined>(undefined);
   const wheel = useRef<(event: WheelEvent) => void>(() => {});
+  const touch = useRef<(event: TouchEvent) => void>(() => {});
+  const pinch = useRef<{
+    distance: number;
+    anchor: number;
+    range: ChartTimeRange;
+    domain: ChartTimeRange;
+    ids: number[];
+  } | null>(null);
   const interacting = useRef(false);
   const [interactionRevision, setInteractionRevision] = useState(0);
   const queuedUpdate = useRef(false);
@@ -149,6 +162,7 @@ export function TrendChart({
     return { startValue, endValue };
   }, [samples, coordinate, elapsedMode, origin]);
   const hasSamples = samples.length > 0;
+  const precision = useMemo(() => measurementPrecision(samples), [samples]);
   const canShowPointer = useRef(false);
   canShowPointer.current = hasSamples && selected.length > 0;
   const showPointer = useCallback(() => {
@@ -339,12 +353,12 @@ export function TrendChart({
     showPointer();
   };
   const rawTooltip = (input: unknown) => {
-    if (!coordinate) return "";
     const first = (Array.isArray(input) ? input[0] : input) as
-      { axisValue?: number; value?: number[] } | undefined;
+      { axisValue?: number; value?: number[]; dataIndex?: number } | undefined;
     const position = pointer.current;
     let row: Telemetry | undefined;
     if (
+      coordinate &&
       position &&
       chart.current?.containPixel({ gridIndex: 0 }, [position.x, position.y])
     )
@@ -353,9 +367,12 @@ export function TrendChart({
         coordinate,
         Number(chart.current.convertFromPixel({ xAxisIndex: 0 }, position.x)),
       );
-    else if (first?.value && first.value[2] >= 0) row = samples[first.value[2]];
-    else if (first?.axisValue !== undefined)
+    else if (coordinate && first?.value && first.value[2] >= 0)
+      row = samples[first.value[2]];
+    else if (coordinate && first?.axisValue !== undefined)
       row = nearestChartSample(samples, coordinate, Number(first.axisValue));
+    else if (!coordinate && first?.dataIndex !== undefined)
+      row = timeline[first.dataIndex]?.row;
     if (!row) return "";
     const time = elapsedMode
       ? formatElapsedTime(sampleElapsedMs(row, origin), true)
@@ -372,20 +389,50 @@ export function TrendChart({
             "'": "&#39;",
           })[c]!,
       );
+    const entries = selected
+      .filter((key) => row[key] != null && Number.isFinite(row[key]))
+      .map((key) => {
+        const axisIndex = axes.findIndex((axis) => axis.keys.includes(key));
+        const y = Number(
+          chart.current?.convertToPixel({ yAxisIndex: axisIndex }, row[key]!),
+        );
+        const digits =
+          (key === "energy" && row.energyCalculated) ||
+          (key === "capacity" && row.capacityCalculated)
+            ? 3
+            : precision[key];
+        const [integer, fraction] = formatMeasurement(row[key], digits).split(
+          ".",
+        );
+        return {
+          key,
+          y: Number.isFinite(y) ? y : Infinity,
+          integer,
+          fraction: fraction ? `.${fraction}` : "",
+        };
+      })
+      .sort((a, b) => a.y - b.y);
+    const integerWidth = Math.max(
+      1,
+      ...entries.map((entry) => entry.integer.length),
+    );
+    const fractionWidth = Math.max(
+      0,
+      ...entries.map((entry) => entry.fraction.length),
+    );
     return (
       `<div>${time}</div>` +
-      selected
-        .filter((key) => row[key] != null && Number.isFinite(row[key]))
+      entries
         .map(
-          (key) =>
-            `<div class="curve-tooltip-row"><span><i style="background:${escape(bounds?.[key]?.color ?? measurementColor(theme, key))}"></i>${seriesInfo[key].name} (${seriesInfo[key].unit})</span><strong>${row[key]!.toLocaleString("en-US", { maximumFractionDigits: 4, useGrouping: false })}</strong></div>`,
+          ({ key, integer, fraction }) =>
+            `<div class="curve-tooltip-row" data-measurement="${key}"><span><i style="background:${escape(bounds?.[key]?.color ?? measurementColor(theme, key))}"></i>${seriesInfo[key].name} (${seriesInfo[key].unit})</span><strong style="grid-template-columns:${integerWidth}ch ${fractionWidth}ch"><span class="numeric-integer">${integer}</span><span class="numeric-fraction">${fraction}</span></strong></div>`,
         )
         .join("")
     );
   };
   wheel.current = (event) => {
     const instance = chart.current;
-    if (!instance || !ref.current || !event.deltaY) return;
+    if (!instance || !ref.current || !event.deltaY || !event.ctrlKey) return;
     const rect = ref.current.getBoundingClientRect();
     const x = rotate
       ? ((event.clientY - rect.top) * instance.getWidth()) / rect.height
@@ -412,7 +459,9 @@ export function TrendChart({
       x <= right &&
       y > bottom &&
       y < instance.getHeight() - (fullscreen ? 0 : 24);
-    if (axisIndex < 0 && !onTimeAxis) return;
+    const inPlot =
+      x >= layout.left && x <= right && y >= gridTop && y <= bottom;
+    if (axisIndex < 0 && !onTimeAxis && !inPlot) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     if (axisIndex >= 0) {
@@ -443,9 +492,77 @@ export function TrendChart({
       instance.dispatchAction({ type: "dataZoom", ...next });
     }
   };
+  touch.current = (event) => {
+    const instance = chart.current;
+    const element = ref.current;
+    if (!instance || !element) return;
+    if (event.touches.length !== 2) {
+      pinch.current = null;
+      return;
+    }
+    const [a, b] = Array.from(event.touches);
+    const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    const ids = [a.identifier, b.identifier].sort((a, b) => a - b);
+    if (
+      !pinch.current ||
+      pinch.current.ids.some((id, index) => id !== ids[index])
+    ) {
+      const rect = element.getBoundingClientRect();
+      const clientX = (a.clientX + b.clientX) / 2;
+      const clientY = (a.clientY + b.clientY) / 2;
+      const x = rotate
+        ? ((clientY - rect.top) * instance.getWidth()) / rect.height
+        : ((clientX - rect.left) * instance.getWidth()) / rect.width;
+      const y = rotate
+        ? ((rect.right - clientX) * instance.getHeight()) / rect.width
+        : ((clientY - rect.top) * instance.getHeight()) / rect.height;
+      if (!instance.containPixel({ gridIndex: 0 }, [x, y]) || distance < 24)
+        return;
+      const timeDomain = { ...domain };
+      if (elapsedMode) {
+        if (elapsed?.fromZero) timeDomain.startValue = 0;
+        timeDomain.endValue = Math.max(
+          elapsed?.current ?? 0,
+          timeDomain.endValue,
+        );
+      }
+      pinch.current = {
+        distance,
+        anchor:
+          (x - layout.left) /
+          (instance.getWidth() - layout.right - layout.left),
+        range: { ...(zoom.current ?? timeDomain) },
+        domain: timeDomain,
+        ids,
+      };
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (event.type !== "touchmove") return;
+    const initial = pinch.current;
+    instance.dispatchAction({
+      type: "dataZoom",
+      ...pinchAxisRange(
+        initial.range,
+        initial.anchor,
+        initial.distance,
+        distance,
+        initial.domain,
+      ),
+    });
+  };
   useEffect(() => {
     if (!ref.current) return;
-    chart.current = init(ref.current, undefined, { renderer: "canvas" });
+    const uiScale =
+      Number(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--ui-scale",
+        ),
+      ) || 1;
+    chart.current = init(ref.current, undefined, {
+      renderer: "canvas",
+      devicePixelRatio: window.devicePixelRatio * uiScale,
+    });
     chart.current.on("datazoom", syncSelectedRange);
     chart.current.getZr().on("mousemove", (event) => {
       pointer.current = { x: event.offsetX, y: event.offsetY };
@@ -456,6 +573,31 @@ export function TrendChart({
       chart.current?.dispatchAction({ type: "hideTip" });
     });
     const onWheel = (event: WheelEvent) => wheel.current(event);
+    let pinchFrame = 0;
+    let pendingTouch: TouchEvent | undefined;
+    const onTouch = (event: TouchEvent) => {
+      if (
+        event.type === "touchmove" &&
+        pinch.current &&
+        event.touches.length === 2
+      ) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        pendingTouch = event;
+        if (!pinchFrame)
+          pinchFrame = requestAnimationFrame(() => {
+            pinchFrame = 0;
+            if (pendingTouch) touch.current(pendingTouch);
+            pendingTouch = undefined;
+          });
+      } else {
+        if (pendingTouch) touch.current(pendingTouch);
+        pendingTouch = undefined;
+        cancelAnimationFrame(pinchFrame);
+        pinchFrame = 0;
+        touch.current(event);
+      }
+    };
     const element = ref.current;
     let releaseFrame = 0;
     const startInteraction = (event: PointerEvent) => {
@@ -491,6 +633,11 @@ export function TrendChart({
       capture: true,
       passive: false,
     });
+    for (const name of ["touchstart", "touchmove", "touchend", "touchcancel"])
+      element.addEventListener(name, onTouch as EventListener, {
+        capture: true,
+        passive: false,
+      });
     const resize = new ResizeObserver(() => {
       if (interacting.current) {
         queuedResize.current = true;
@@ -504,6 +651,8 @@ export function TrendChart({
     return () => {
       resize.disconnect();
       cancelAnimationFrame(releaseFrame);
+      cancelAnimationFrame(pinchFrame);
+      pinch.current = null;
       cancelAnimationFrame(viewportFrame.current);
       clearTimeout(publishTimer.current);
       element.removeEventListener("pointerdown", startInteraction, true);
@@ -511,6 +660,10 @@ export function TrendChart({
       window.removeEventListener("pointercancel", endInteraction, true);
       window.removeEventListener("blur", endInteraction);
       element.removeEventListener("wheel", onWheel, { capture: true });
+      for (const name of ["touchstart", "touchmove", "touchend", "touchcancel"])
+        element.removeEventListener(name, onTouch as EventListener, {
+          capture: true,
+        });
       chart.current?.dispose();
       chart.current = null;
     };
@@ -554,14 +707,7 @@ export function TrendChart({
           confine: true,
           transitionDuration: 0,
           hideDelay: 0,
-          formatter: coordinate ? rawTooltip : undefined,
-          valueFormatter: (value: unknown) =>
-            typeof value === "number"
-              ? value.toLocaleString("en-US", {
-                  maximumFractionDigits: 4,
-                  useGrouping: false,
-                })
-              : "—",
+          formatter: rawTooltip,
           backgroundColor: theme.colorNeutralBackground1,
           borderColor: theme.colorNeutralStroke1,
           borderRadius: Number.parseFloat(theme.borderRadiusMedium),
@@ -662,6 +808,10 @@ export function TrendChart({
             type: "inside",
             xAxisIndex: 0,
             filterMode: "none",
+            // Application handlers own wheel/pinch zoom; ECharts retains dragging.
+            zoomLock: true,
+            zoomOnMouseWheel: false,
+            moveOnMouseWheel: false,
             throttle: coordinate ? 32 : undefined,
             ...zoomRange,
           },
@@ -877,8 +1027,15 @@ export function TrendChart({
         }}
         onPointerMove={(event) => {
           const start = drag.current;
-          if (start?.id === event.pointerId)
-            setChartHeight(start.height + event.clientY - start.y);
+          if (start?.id === event.pointerId) {
+            const scale =
+              Number(
+                getComputedStyle(document.documentElement).getPropertyValue(
+                  "--ui-scale",
+                ),
+              ) || 1;
+            setChartHeight(start.height + (event.clientY - start.y) / scale);
+          }
         }}
         onPointerUp={(event) => {
           if (drag.current?.id === event.pointerId) {

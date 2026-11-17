@@ -34,6 +34,7 @@ async function fixture(
         },
         __TAURI_INTERNALS__: {
           invoke: async (command: string, args?: { path: string }) => {
+            if (command === "set_window_theme") return;
             calls.push({ command, path: args?.path });
             if (command === "get_snapshot")
               return {
@@ -80,6 +81,10 @@ async function fixture(
               if (scenario === "usb-failed" && args?.path === usb.path)
                 throw new Error("USB unavailable");
               device = args?.path === usb.path ? usb : ble;
+              return;
+            }
+            if (command === "disconnect_device") {
+              device = null;
               return;
             }
             throw new Error(
@@ -151,9 +156,19 @@ test("opening device management cancels automatic BLE scanning before manual dis
   page,
 }) => {
   await fixture(page, "cancel");
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          (window as any).autoCalls.some(
+            (call: any) => call.command === "discover_bluetooth",
+          ),
+        ),
+      { timeout: 10_000 },
+    )
+    .toBe(true);
   await expect(page.locator(".device-connection-status")).toHaveText(
-    "正在扫描 BLE…",
-    { timeout: 10_000 },
+    "(未连接)",
   );
   await page.getByRole("button", { name: "连接设备", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -167,4 +182,62 @@ test("opening device management cancels automatic BLE scanning before manual dis
     1,
   );
   expect(calls.filter((c) => c.command === "connect_device")).toHaveLength(0);
+});
+
+test("manual disconnection stays disconnected until a manual connection succeeds", async ({
+  page,
+}) => {
+  await fixture(page, "usb");
+  await page
+    .getByRole("button", { name: "管理设备", exact: true })
+    .click({ timeout: 10_000 });
+  await page.getByRole("button", { name: "断开设备", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".device-connection-status")).toHaveText(
+    "(未连接)",
+  );
+  const scanCount = await page.evaluate(
+    () =>
+      (window as any).autoCalls.filter(
+        (call: any) => call.command === "discover_devices",
+      ).length,
+  );
+  // Cross both the initial scan delay and a complete automatic retry period.
+  await page.waitForTimeout(7000);
+  expect(
+    await page.evaluate(
+      () =>
+        (window as any).autoCalls.filter(
+          (call: any) => call.command === "connect_device",
+        ).length,
+    ),
+  ).toBe(1);
+  expect(
+    await page.evaluate(
+      () =>
+        (window as any).autoCalls.filter(
+          (call: any) => call.command === "discover_devices",
+        ).length,
+    ),
+  ).toBe(scanCount);
+  await page.getByRole("button", { name: "连接设备", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "连接", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".device-connection-status")).toHaveText("(USB)");
+  await page.evaluate(() => (window as any).detachAutoDevice());
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            (window as any).autoCalls.filter(
+              (call: any) => call.command === "connect_device",
+            ).length,
+        ),
+      { timeout: 10_000 },
+    )
+    .toBe(3);
 });

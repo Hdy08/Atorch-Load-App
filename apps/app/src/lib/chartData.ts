@@ -1,6 +1,7 @@
 import {
   measurementKeys,
   summarize,
+  isCalculatedMeasurement,
   type MeasurementKey,
   type SampleSummary,
 } from "./analysis.ts";
@@ -278,6 +279,14 @@ export function chartRangeSummary(
       stats.count && key !== "energy" && key !== "capacity"
         ? stats.sum / stats.count
         : null,
+    ...(stats.count &&
+    isCalculatedMeasurement(rows[view.order?.[stats.min] ?? stats.min], key)
+      ? { minCalculated: true }
+      : {}),
+    ...(stats.count &&
+    isCalculatedMeasurement(rows[view.order?.[stats.max] ?? stats.max], key)
+      ? { maxCalculated: true }
+      : {}),
   };
 }
 export function nearestChartSample(

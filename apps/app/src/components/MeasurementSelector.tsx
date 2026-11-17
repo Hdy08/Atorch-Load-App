@@ -34,7 +34,7 @@ export function MeasurementSelector({
                     bounds[key]?.color ?? measurementColor(theme, key),
                 }}
               />
-              {measurements[key].name} ({measurements[key].unit})
+              {measurements[key].name}
             </span>
           }
           onChange={(_, data) => {

@@ -19,6 +19,7 @@ import {
   timeLimitError,
   type LoadParameterRange,
 } from "../lib/loadControl";
+import { useNotify } from "./Notifications";
 
 function NumberInput({
   label,
@@ -115,6 +116,7 @@ export function LoadParameter({
   onApply: (value: number) => Promise<void>;
 }) {
   const formatted = value?.toFixed(range.digits) ?? "";
+  const notify = useNotify();
   const [text, setText] = useState(formatted);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -182,7 +184,7 @@ export function LoadParameter({
                 await onApply(Number(text));
                 setText(Number(text).toFixed(range.digits));
               } catch (error) {
-                setError(String(error));
+                notify({ text: String(error), error: true });
               } finally {
                 setBusy(false);
               }
@@ -208,6 +210,7 @@ export function LoadTimeLimit({
   onApply: (hours: number, minutes: number) => Promise<void>;
 }) {
   const [h, setHours] = useState(hours?.toString() ?? "");
+  const notify = useNotify();
   const [m, setMinutes] = useState(minutes?.toString() ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -280,7 +283,7 @@ export function LoadTimeLimit({
               try {
                 await onApply(Number(h), Number(m));
               } catch (error) {
-                setError(String(error));
+                notify({ text: String(error), error: true });
               } finally {
                 setBusy(false);
               }

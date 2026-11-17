@@ -1,3 +1,4 @@
+import type { AutoRecordingSettings } from "./autoRecording";
 export interface DeviceInfo {
   path: string;
   name: string;
@@ -114,6 +115,8 @@ export interface Snapshot {
   samplingPaused?: boolean;
   samplingElapsedMs?: number;
   usbSampleRateHz?: 1 | 2 | 5;
+  autoRecordOnLoad?: boolean;
+  autoRecording?: AutoRecordingSettings;
   connectedAt: number;
   lastReportAt: number;
   recording: string | null;

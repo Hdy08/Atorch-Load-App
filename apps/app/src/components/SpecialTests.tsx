@@ -9,10 +9,9 @@ import {
   DialogContent,
   DialogSurface,
   DialogTitle,
-  MessageBar,
-  MessageBarBody,
 } from "@fluentui/react-components";
 import { api } from "../lib/api";
+import { Notification } from "./Notifications";
 import {
   modes,
   type PromptContext,
@@ -146,12 +145,10 @@ export function SpecialTests({
             </p>
           )}
           {mode === 9 && (
-            <MessageBar>
-              <MessageBarBody>
-                CDxn
-                可读取专用状态与记录结果；循环次数和阶段动作尚未核准，请在设备面板启动。
-              </MessageBarBody>
-            </MessageBar>
+            <Notification
+              intent="info"
+              text="CDxn 可读取专用状态与记录结果；循环次数和阶段动作尚未核准，请在设备面板启动。"
+            />
           )}
           {prompt ? (
             <div className="stage-prompt" data-testid="stage-prompt">
