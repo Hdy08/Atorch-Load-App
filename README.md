@@ -18,3 +18,7 @@
 - [开发与构建](docs/development.md)
 - [连接与数据记录](docs/recording.md)
 - [USB 固件更新](docs/usb-update.md)
+
+## 许可证
+
+本项目的原创代码和文档采用 [MIT License](LICENSE)。第三方组件适用各自的许可条款。
