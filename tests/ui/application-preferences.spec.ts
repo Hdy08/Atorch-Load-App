@@ -1,3 +1,4 @@
+import { chooseMenu } from "./menu";
 import { test, expect, type Page } from "@playwright/test";
 import { webDarkTheme, webLightTheme } from "@fluentui/react-components";
 
@@ -174,13 +175,13 @@ const reset = (page: Page) =>
 async function recordingControls(page: Page, screenshot: string) {
   await settings(page);
   await page.getByRole("tab", { name: "记录", exact: true }).click();
-  const mode = page.getByRole("combobox", { name: "自动记录", exact: true });
+  const mode = page.getByRole("button", { name: "自动记录", exact: true });
   await expect(
     page.getByRole("heading", { name: "自动记录", exact: true }),
   ).toBeVisible();
-  await expect(mode).toHaveValue("off");
+  await expect(mode).toHaveAttribute("data-value", "off");
   await expect(page.locator(".auto-recording-rule")).toHaveCount(0);
-  await mode.selectOption("device");
+  await chooseMenu(mode, "device");
   await expect(
     page.getByRole("switch", { name: "启动时开始", exact: true }),
   ).toBeChecked();
@@ -200,40 +201,44 @@ async function recordingControls(page: Page, screenshot: string) {
   await expect(
     page.getByRole("spinbutton", { name: "关闭延迟", exact: true }),
   ).toBeDisabled();
-  await mode.selectOption("threshold");
+  await chooseMenu(mode, "threshold");
   await expect(
     page.getByRole("spinbutton", { name: "开始保持时间", exact: true }),
   ).toHaveValue("0.0");
   for (const name of ["开始阈值", "停止阈值"])
     await page.getByRole("switch", { name, exact: true }).check();
-  await page
-    .getByRole("combobox", { name: "开始参数", exact: true })
-    .selectOption("current");
+  await chooseMenu(
+    page.getByRole("button", { name: "开始参数", exact: true }),
+    "current",
+  );
   await expect(
     page
       .getByRole("spinbutton", { name: "开始阈值", exact: true })
       .locator(".."),
   ).toContainText("A");
-  await page
-    .getByRole("combobox", { name: "开始条件", exact: true })
-    .selectOption("greater");
+  await chooseMenu(
+    page.getByRole("button", { name: "开始条件", exact: true }),
+    "greater",
+  );
   await page
     .getByRole("spinbutton", { name: "开始阈值", exact: true })
     .fill("0.125");
   await page
     .getByRole("spinbutton", { name: "开始保持时间", exact: true })
     .fill("2.5");
-  await page
-    .getByRole("combobox", { name: "停止参数", exact: true })
-    .selectOption("power");
+  await chooseMenu(
+    page.getByRole("button", { name: "停止参数", exact: true }),
+    "power",
+  );
   await expect(
     page
       .getByRole("spinbutton", { name: "停止阈值", exact: true })
       .locator(".."),
   ).toContainText("W");
-  await page
-    .getByRole("combobox", { name: "停止条件", exact: true })
-    .selectOption("less");
+  await chooseMenu(
+    page.getByRole("button", { name: "停止条件", exact: true }),
+    "less",
+  );
   await page
     .getByRole("spinbutton", { name: "停止阈值", exact: true })
     .fill("0.5");
@@ -312,12 +317,12 @@ async function recordingControls(page: Page, screenshot: string) {
   await page.reload();
   await settings(page);
   await page.getByRole("tab", { name: "记录", exact: true }).click();
-  await expect(mode).toHaveValue("threshold");
+  await expect(mode).toHaveAttribute("data-value", "threshold");
   await expect(
     page.getByRole("spinbutton", { name: "开始保持时间", exact: true }),
   ).toHaveValue("2.5");
   await reset(page);
-  await expect(mode).toHaveValue("off");
+  await expect(mode).toHaveAttribute("data-value", "off");
   expect(
     await page.evaluate(
       () => JSON.parse(localStorage.getItem("fixture-recording")!).mode,
@@ -340,17 +345,17 @@ test("appearance drafts only apply on request, follow the system, and restore pe
   await fixture(page);
   await settings(page);
   await expect(
-    page.getByRole("combobox", { name: "主题", exact: true }),
-  ).toHaveValue("system");
+    page.getByRole("button", { name: "主题", exact: true }),
+  ).toHaveAttribute("data-value", "system");
   await expect(
-    page.getByRole("combobox", { name: "侧栏", exact: true }),
-  ).toHaveValue("auto");
+    page.getByRole("button", { name: "侧栏", exact: true }),
+  ).toHaveAttribute("data-value", "auto");
   await expect(
     page.getByRole("spinbutton", { name: "界面缩放", exact: true }),
   ).toHaveValue("100");
-  await expect(page.getByRole("combobox", { name: "强调色来源" })).toHaveValue(
-    "system",
-  );
+  await expect(
+    page.getByRole("button", { name: "强调色来源" }),
+  ).toHaveAttribute("data-value", "system");
   await expect(
     page.getByRole("textbox", { name: "强调色", exact: true }),
   ).toHaveValue("#8764b8");
@@ -358,18 +363,17 @@ test("appearance drafts only apply on request, follow the system, and restore pe
   const background = () =>
     page.locator(".app").evaluate((el) => getComputedStyle(el).backgroundColor);
   const light = await background();
-  await page
-    .getByRole("combobox", { name: "主题", exact: true })
-    .selectOption("dark");
+  await chooseMenu(
+    page.getByRole("button", { name: "主题", exact: true }),
+    "dark",
+  );
   expect(await background()).toBe(light);
   await page.getByRole("tab", { name: "连接", exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "自动连接" })
-    .selectOption("ble-only");
+  await chooseMenu(page.getByRole("button", { name: "自动连接" }), "ble-only");
   await page.getByRole("tab", { name: "外观", exact: true }).click();
   await expect(
-    page.getByRole("combobox", { name: "主题", exact: true }),
-  ).toHaveValue("dark");
+    page.getByRole("button", { name: "主题", exact: true }),
+  ).toHaveAttribute("data-value", "dark");
   await apply(page);
   expect(await background()).not.toBe(light);
   expect(
@@ -382,14 +386,16 @@ test("appearance drafts only apply on request, follow the system, and restore pe
   await page.emulateMedia({ colorScheme: "dark" });
   await expect.poll(background).not.toBe(light);
   await page.getByRole("tab", { name: "连接", exact: true }).click();
-  await expect(page.getByRole("combobox", { name: "自动连接" })).toHaveValue(
+  await expect(page.getByRole("button", { name: "自动连接" })).toHaveAttribute(
+    "data-value",
     "ble-only",
   );
   await apply(page);
   await page.reload();
   await settings(page);
   await page.getByRole("tab", { name: "连接", exact: true }).click();
-  await expect(page.getByRole("combobox", { name: "自动连接" })).toHaveValue(
+  await expect(page.getByRole("button", { name: "自动连接" })).toHaveAttribute(
+    "data-value",
     "ble-only",
   );
 });
@@ -406,15 +412,15 @@ test("system theme apply reads Windows independently of forced WebView media and
     page.locator(".app").evaluate((el) => getComputedStyle(el).backgroundColor);
   await expect.poll(background).toBe("rgb(31, 31, 31)");
   await settings(page);
-  const select = page.getByRole("combobox", { name: "主题", exact: true });
+  const select = page.getByRole("button", { name: "主题", exact: true });
   const count = () =>
     page.evaluate(() => (window as any).themeTransitionCount ?? 0);
   const initial = await count();
-  await select.selectOption("light");
+  await chooseMenu(select, "light");
   await apply(page);
   await expect.poll(background).toBe("rgb(250, 250, 250)");
   expect(await count()).toBe(initial + 1);
-  await select.selectOption("system");
+  await chooseMenu(select, "system");
   await apply(page);
   await expect.poll(background).toBe("rgb(31, 31, 31)");
   expect(await count()).toBe(initial + 2);
@@ -441,7 +447,7 @@ test("system theme apply reads Windows independently of forced WebView media and
   });
   expect(await count()).toBe(initial + 3);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await select.selectOption("dark");
+  await chooseMenu(select, "dark");
   await apply(page);
   await expect.poll(background).toBe("rgb(31, 31, 31)");
   expect(await count()).toBe(initial + 3);
@@ -464,8 +470,8 @@ test("automatic recording rejects invalid active durations and missing threshold
   await fixture(page);
   await settings(page);
   await page.getByRole("tab", { name: "记录", exact: true }).click();
-  const mode = page.getByRole("combobox", { name: "自动记录", exact: true });
-  await mode.selectOption("device");
+  const mode = page.getByRole("button", { name: "自动记录", exact: true });
+  await chooseMenu(mode, "device");
   await page
     .getByRole("spinbutton", { name: "启动延迟", exact: true })
     .fill("-1");
@@ -473,7 +479,7 @@ test("automatic recording rejects invalid active durations and missing threshold
   const toast = page.locator(".fui-Toast");
   await expect(toast).toContainText("启动延迟必须为非负的有效秒数");
   await toast.getByRole("button", { name: "关闭", exact: true }).click();
-  await mode.selectOption("threshold");
+  await chooseMenu(mode, "threshold");
   await page.getByRole("switch", { name: "开始阈值", exact: true }).check();
   await page
     .getByRole("spinbutton", { name: "开始阈值", exact: true })
@@ -525,9 +531,9 @@ test("accent presets and picker apply through Fluent brand tokens and are rememb
   await expect.poll(brand).toBe("#d13438");
   await page.reload();
   await settings(page);
-  await expect(page.getByRole("combobox", { name: "强调色来源" })).toHaveValue(
-    "custom",
-  );
+  await expect(
+    page.getByRole("button", { name: "强调色来源" }),
+  ).toHaveAttribute("data-value", "custom");
   await expect.poll(brand).toBe("#d13438");
 });
 
@@ -618,7 +624,7 @@ for (const percent of [50, 125, 200])
           .evaluate((canvas: HTMLCanvasElement) => canvas.width),
       )
       .toBe(1440);
-    await page.getByRole("button", { name: "退出全屏", exact: true }).click();
+    await page.getByRole("button", { name: "退出", exact: true }).click();
   });
 
 test("desktop margins stay 24px across window widths, including very wide windows", async ({
@@ -651,9 +657,10 @@ test("sidebar can stay expanded or collapsed independently of desktop width", as
     ["auto", 1800, 228],
   ] as const) {
     await page.setViewportSize({ width, height: 1050 });
-    await page
-      .getByRole("combobox", { name: "侧栏", exact: true })
-      .selectOption(choice);
+    await chooseMenu(
+      page.getByRole("button", { name: "侧栏", exact: true }),
+      choice,
+    );
     await apply(page);
     await expect(page.locator(".sidebar")).toHaveCSS("width", `${expected}px`);
   }
@@ -678,11 +685,11 @@ test("curve and recording changes are applied and reset only by their own header
     ).voltage.width,
   ).toBe(2);
   await page.getByRole("tab", { name: "记录", exact: true }).click();
-  const recordingMode = page.getByRole("combobox", {
+  const recordingMode = page.getByRole("button", {
     name: "自动记录",
     exact: true,
   });
-  await recordingMode.selectOption("device");
+  await chooseMenu(recordingMode, "device");
   expect(
     await page.evaluate(() =>
       (window as any).preferenceCalls.filter(
@@ -702,7 +709,7 @@ test("curve and recording changes are applied and reset only by their own header
     )
     .toBe(1);
   await reset(page);
-  await expect(recordingMode).toHaveValue("off");
+  await expect(recordingMode).toHaveAttribute("data-value", "off");
   expect(
     JSON.parse(
       (await page.evaluate(() => localStorage.getItem("atorch-chart-bounds")))!,
@@ -761,9 +768,10 @@ test("off disables scans; connection draft starts scanning only after apply", as
   await fixture(page, { connected: false, preference: "off" });
   await settings(page);
   await page.getByRole("tab", { name: "连接", exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "自动连接" })
-    .selectOption("prefer-ble");
+  await chooseMenu(
+    page.getByRole("button", { name: "自动连接" }),
+    "prefer-ble",
+  );
   await page.waitForTimeout(2000);
   expect(
     await page.evaluate(() =>
@@ -865,7 +873,7 @@ test.describe("mobile safe viewport and navigation", () => {
       if (percent === 200) {
         await page.getByRole("tab", { name: "连接", exact: true }).click();
         await expect(
-          page.getByRole("combobox", { name: "自动连接" }),
+          page.getByRole("button", { name: "自动连接" }),
         ).toBeVisible();
         await page.getByRole("tab", { name: "外观", exact: true }).click();
       }

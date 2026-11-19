@@ -1367,20 +1367,21 @@ fn usb_panel_state_edges_sync_sampling_once_and_preserve_manual_overrides() {
         assert_eq!(manager.snapshot().sampling_paused, !initially_running);
         assert_eq!(manager.snapshot().recording.is_some(), initially_running);
 
-        // Manual pause masks start. Manual continue must still obey stop.
+        // Manual pause masks start. Continuing after the initial automatic stop
+        // stays active until the panel leaves and re-enters the stop state.
         manager.set_sampling(!initially_running).unwrap();
         let overridden_count = manager.snapshot().sample_count;
         for _ in 0..3 {
             let report = manager.snapshot().telemetry.unwrap().timestamp;
             wait(|| manager.snapshot().telemetry.unwrap().timestamp > report);
-            assert!(manager.snapshot().sampling_paused);
+            assert_eq!(manager.snapshot().sampling_paused, initially_running);
         }
         if initially_running {
             assert_eq!(manager.snapshot().sample_count, overridden_count);
             assert!(manager.snapshot().recording_paused);
         } else {
-            assert_eq!(manager.snapshot().sample_count, overridden_count);
-            assert!(manager.snapshot().recording.is_none());
+            assert!(manager.snapshot().sample_count > overridden_count);
+            assert!(manager.snapshot().recording.is_some());
         }
 
         // A physical stop/start transition restores automatic behavior.

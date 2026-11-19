@@ -1,3 +1,4 @@
+import { NumericInput } from "./components/NumericInput";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
@@ -12,10 +13,8 @@ import {
   DialogTitle,
   Field,
   FluentProvider,
-  Input,
   Nav,
   NavItem,
-  Select,
   Spinner,
   Switch,
   Tab,
@@ -67,11 +66,12 @@ import {
 } from "./lib/analysis";
 import { DataReview } from "./components/DataReview";
 import { ChartTimeSelect } from "./components/ChartTimeSelect";
+import { MenuSelect } from "./components/MenuSelect";
+import { ChartAction } from "./components/ChartAction";
 import { readChartTimeMode, sampleElapsedMs } from "./lib/chartTime";
 import { completeRecordCounters } from "./lib/records";
 import { cacheDeviceMeasurementPrecision } from "./lib/measurementFormat";
 import { useAutoConnect } from "./lib/useAutoConnect";
-import { MeasurementSelector } from "./components/MeasurementSelector";
 import { SpecialTests } from "./components/SpecialTests";
 import {
   FirmwareNotification,
@@ -170,17 +170,18 @@ function Parameter({
         validationState={error ? "error" : "none"}
       >
         <div className="parameter-input">
-          <Input
+          <NumericInput
             aria-label={label}
-            type="number"
+
             value={text}
             placeholder="—"
             min={min}
             max={max}
             step={step}
+            precision={fractionDigits}
             disabled={disabled || busy}
             onChange={(_, d) => setText(d.value)}
-            contentAfter={unit}
+            unit={unit}
           />
           <Button
             disabled={disabled || busy || text.trim() === ""}
@@ -989,47 +990,40 @@ export function App() {
                       </div>
                       <div className="chart-toolbar">
                         {!bluetooth && (
-                          <Select
+                          <MenuSelect
                             aria-label="USB 采样率"
                             value={snapshot.usbSampleRateHz ?? 1}
                             disabled={!native || busy}
-                            onChange={(event) => {
-                              const hz = Number(event.target.value);
+                            onChange={(value) => {
+                              const hz = Number(value);
                               void run(async () => {
                                 await api.usbSampleRate(hz);
                                 setSnapshot(await api.snapshot());
                               });
                             }}
-                          >
-                            {[1, 2, 5].map((hz) => (
-                              <option key={hz} value={hz}>
-                                {hz} Hz 采样
-                              </option>
-                            ))}
-                          </Select>
+                            options={[1, 2, 5].map((hz) => ({
+                              value: hz,
+                              label: `${hz} Hz 采样`,
+                            }))}
+                          />
                         )}
                         <ChartTimeSelect
                           value={chartTimeMode}
                           onChange={setChartTimeMode}
                         />
-                        <Select
+                        <MenuSelect
                           aria-label="曲线时间范围"
                           value={range}
-                          onChange={(e) => setRange(e.target.value)}
-                        >
-                          <option value="60">最近 1 分钟</option>
-                          <option value="300">最近 5 分钟</option>
-                          <option value="1800">最近 30 分钟</option>
-                          <option value="all">全部数据</option>
-                        </Select>
+                          onChange={setRange}
+                          options={[
+                            { value: "60", label: "最近 1 分钟" },
+                            { value: "300", label: "最近 5 分钟" },
+                            { value: "1800", label: "最近 30 分钟" },
+                            { value: "all", label: "全部数据" },
+                          ]}
+                        />
                       </div>
                     </div>
-                    <MeasurementSelector
-                      selected={selected}
-                      onChange={setSelected}
-                      bounds={chartBounds}
-                      theme={theme}
-                    />
                     <TrendChart
                       key={`${chartRevision}|${chartTimeMode}`}
                       samples={chartSamples}
@@ -1046,13 +1040,15 @@ export function App() {
                           : undefined
                       }
                       selected={selected}
+                      onSelectionChange={setSelected}
                       theme={theme}
                       bounds={chartBounds}
                       onImage={saveImage}
                       imageBusy={busy}
                       footerActions={
                         <div className="record-actions">
-                          <Button
+                          <ChartAction
+                            label={snapshot.samplingPaused ? "继续" : "暂停"}
                             icon={
                               snapshot.samplingPaused ? (
                                 <Play20Filled />
@@ -1069,10 +1065,9 @@ export function App() {
                                 setSnapshot(await api.snapshot());
                               })
                             }
-                          >
-                            {snapshot.samplingPaused ? "继续" : "暂停"}
-                          </Button>
-                          <Button
+                          />
+                          <ChartAction
+                            label="清空"
                             icon={<Delete20Regular />}
                             disabled={busy}
                             onClick={() => {
@@ -1080,19 +1075,16 @@ export function App() {
                                 setClearDialogOpen(true);
                               else void clearSamples();
                             }}
-                          >
-                            清空
-                          </Button>
+                          />
                         </div>
                       }
                       exportAction={(rows, getCurrentRows) => (
-                        <Button
+                        <ChartAction
+                          label="导出"
                           icon={<ArrowDownload20Regular />}
                           disabled={!rows.length || busy}
                           onClick={() => saveRows(getCurrentRows())}
-                        >
-                          导出
-                        </Button>
+                        />
                       )}
                     />
                   </Card>
@@ -1192,7 +1184,7 @@ export function App() {
                           });
                         }}
                       >
-                        导入 CSV
+                        导入
                       </Button>
                     </div>
                   </div>

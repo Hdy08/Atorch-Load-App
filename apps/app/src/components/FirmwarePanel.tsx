@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MenuSelect } from "./MenuSelect";
 import {
   Button,
   Card,
@@ -9,7 +10,6 @@ import {
   DialogSurface,
   DialogTitle,
   ProgressBar,
-  Select,
 } from "@fluentui/react-components";
 import { ArrowUpload20Regular } from "@fluentui/react-icons";
 import { api, native } from "../lib/api";
@@ -188,19 +188,19 @@ export function FirmwarePanel({
           {(hardware || job) && (
             <>
               <div className="firmware-device-controls">
-                <Select
+                <MenuSelect
                   aria-label="升级 USB 设备"
                   value={selectedPath}
                   disabled={busy || scanning || !hardware}
-                  onChange={(_, d) => setSelectedPath(d.value)}
-                >
-                  <option value="">请选择 USB 设备</option>
-                  {devices.map((device) => (
-                    <option key={device.path} value={device.path}>
-                      {device.name} · {device.serial}
-                    </option>
-                  ))}
-                </Select>
+                  onChange={setSelectedPath}
+                  options={[
+                    { value: "", label: "请选择 USB 设备" },
+                    ...devices.map((device) => ({
+                      value: device.path,
+                      label: `${device.name} · ${device.serial}`,
+                    })),
+                  ]}
+                />
                 <Button
                   disabled={busy || scanning || !native}
                   onClick={() => void scan()}

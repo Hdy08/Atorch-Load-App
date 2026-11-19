@@ -102,8 +102,8 @@ for (const width of [390, 1440]) {
     });
     await expect(cutoff).toHaveValue("2.50");
     await expect(temperature).toHaveValue("1.0000");
-    await expect(temperature).toHaveAttribute("min", "0.5");
-    await expect(temperature).toHaveAttribute("max", "2");
+    await expect(temperature).toHaveAttribute("aria-valuemin", "0.5");
+    await expect(temperature).toHaveAttribute("aria-valuemax", "2");
     await expect(page.getByText("温度补偿", { exact: true })).toHaveCount(0);
     await mkdir("artifacts/parameter-fix", { recursive: true });
     await page.screenshot({

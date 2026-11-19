@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Input } from "@fluentui/react-components";
+import { Button } from "@fluentui/react-components";
+import { NumericInput } from "./NumericInput";
 import {
   Play20Filled,
   Stop20Filled,
@@ -7,7 +8,12 @@ import {
   ReOrderDotsVertical20Regular,
 } from "@fluentui/react-icons";
 import { modes, type Snapshot } from "../lib/types";
-import { loadParameterRange, parameterError } from "../lib/loadControl";
+import {
+  gridBounds,
+  loadParameterRange,
+  parameterError,
+  stepParameter,
+} from "../lib/loadControl";
 import { useNotify } from "./Notifications";
 import { BleControls } from "./BleControls";
 import type { PageLayout } from "../lib/usePageLayout";
@@ -124,9 +130,14 @@ export function FloatingLoadControl({
       style={
         layout && location
           ? {
-              left: location.x / layout.scale,
+              ...(dragged
+                ? { left: location.x / layout.scale, right: "auto" }
+                : {
+                    left: "auto",
+                    right:
+                      (window.innerWidth - layout.contentRight) / layout.scale,
+                  }),
               top: location.y / layout.scale,
-              right: "auto",
               maxWidth: layout.contentWidth / layout.scale,
             }
           : undefined
@@ -237,12 +248,20 @@ export function FloatingLoadControl({
               }}
             >
               <span>{labels[settings.mode]}</span>
-              <Input
+              <NumericInput
                 aria-label={`${range!.label}快速设定`}
-                appearance="underline"
                 inputMode="decimal"
+                focusInputOnStep
                 value={text}
-                contentAfter={range!.unit}
+                unit={range!.unit}
+                min={range!.min}
+                max={range!.max}
+                step={range!.step}
+                precision={range!.digits}
+                spinBounds={gridBounds(range!)}
+                onStep={(value, direction) =>
+                  stepParameter(value, direction, range!)
+                }
                 disabled={disabled}
                 onChange={(_, data) => setText(data.value)}
               />

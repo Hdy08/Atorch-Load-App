@@ -1,3 +1,4 @@
+import { chooseMenu } from "./menu";
 import { expect, test } from "@playwright/test";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -12,7 +13,9 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
   const bytes = path
     ? await readFile(path)
     : Buffer.from(
-        'SUM,4\nDateTime,2026-10-02 17:25:37\n\nTime(D.hh:mm:ss.ms),Voltage(V),Current(A),Power(W),\n="00:00:00.000",0,0,0,\n="00:00:00.100",5.233,-0.0024,0.0124,\n="00:00:00.200",5,-1,5,\n="00:00:00.300",8.9384,-0.0247,0.2209,',
+        // Span more than one second so a zoomed export can start after zero
+        // while respecting the chart's minimum one-second time interval.
+        'SUM,4\nDateTime,2026-10-02 17:25:37\n\nTime(D.hh:mm:ss.ms),Voltage(V),Current(A),Power(W),\n="00:00:00.000",0,0,0,\n="00:00:01.100",5.233,-0.0024,0.0124,\n="00:00:02.200",5,-1,5,\n="00:00:03.300",8.9384,-0.0247,0.2209,',
       );
   const source = bytes.toString("utf8").trim().split(/\r?\n/);
   const rawRows = source
@@ -85,7 +88,7 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
   );
   await page.goto("/");
   await page.getByRole("button", { name: "数据记录", exact: true }).click();
-  await page.getByRole("button", { name: "导入 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导入", exact: true }).click();
   await expect(
     page.getByText(
       `${count.toLocaleString()} / ${count.toLocaleString()} 个采样点`,
@@ -221,9 +224,7 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
   await page
     .locator(".review-card")
     .screenshot({ path: `${folder}/csv-real-time.png` });
-  await page
-    .getByLabel("曲线时间坐标", { exact: true })
-    .selectOption("elapsed");
+  await chooseMenu(page.getByLabel("曲线时间坐标", { exact: true }), "elapsed");
   await expect.poll(async () => (await inspect()).type).toBe("value");
   const elapsed = await inspect();
   expect(elapsed).toMatchObject({
@@ -235,7 +236,7 @@ test("charge CSV uses DateTime for real time, preserves relative time, and expor
     .locator(".review-card")
     .screenshot({ path: `${folder}/csv-relative-time.png` });
   const { range } = await inspect(true);
-  await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导出", exact: true }).click();
   await expect
     .poll(() => page.evaluate(() => (window as any).csvTimeSave.length))
     .toBeGreaterThan(0);

@@ -156,10 +156,12 @@ test("the USB card appears only after inspection and keeps refresh and flash bes
     // Read the three controls in one layout frame while responsive navigation changes.
     const { selector, refresh, flash } = await card.evaluate((element) => {
       const controls = element.querySelector(".firmware-device-controls")!;
-      const [refresh, flash] = controls.querySelectorAll("button");
+      const [refresh, flash] = controls.querySelectorAll(
+        "button:not(.menu-select)",
+      );
       return {
         selector: controls
-          .querySelector("select")!
+          .querySelector(".menu-select")!
           .getBoundingClientRect()
           .toJSON(),
         refresh: refresh.getBoundingClientRect().toJSON(),
@@ -331,10 +333,10 @@ test("IAP recovery works without a normal connection and progress survives page 
   await fixture(page, false, true, false, true);
   await page.getByTestId("firmware-input").setInputFiles(file());
   await expect(
-    page.getByRole("combobox", { name: "升级 USB 设备", exact: true }),
-  ).toHaveValue("test-usb-path");
+    page.getByRole("button", { name: "升级 USB 设备", exact: true }),
+  ).toHaveAttribute("data-value", "test-usb-path");
   await expect(
-    page.locator(".firmware-device-controls option:checked"),
+    page.getByRole("button", { name: "升级 USB 设备", exact: true }),
   ).toHaveText("ATORCH BW150 V1.0.2 · 924415");
   await page.getByRole("button", { name: "刷写", exact: true }).click();
   await page.getByRole("button", { name: "确认并开始", exact: true }).click();

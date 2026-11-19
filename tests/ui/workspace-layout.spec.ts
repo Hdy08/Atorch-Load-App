@@ -1,3 +1,4 @@
+import { chooseMenu } from "./menu";
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
@@ -286,11 +287,11 @@ test("native page animations offer remembered choices and respect reduced motion
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await fixture(page);
   await page.getByRole("button", { name: "应用设置", exact: true }).click();
-  const select = page.getByRole("combobox", { name: "页面过渡动画" });
-  await expect(select).toHaveValue("slide");
+  const select = page.getByRole("button", { name: "页面过渡动画" });
+  await expect(select).toHaveAttribute("data-value", "slide");
   await settle(page);
   for (const choice of ["fade", "scale", "none"]) {
-    await select.selectOption(choice);
+    await chooseMenu(select, choice);
     await page.getByRole("button", { name: "应用更改", exact: true }).click();
     await page.getByRole("button", { name: "设备设置", exact: true }).click();
     const frames = await page
@@ -305,12 +306,12 @@ test("native page animations offer remembered choices and respect reduced motion
     expect(frames.length).toBe(choice === "none" ? 0 : 1);
     await page.getByRole("button", { name: "应用设置", exact: true }).click();
     await settle(page);
-    await expect(select).toHaveValue(choice);
+    await expect(select).toHaveAttribute("data-value", choice);
   }
   await page.reload();
   await page.getByRole("button", { name: "应用设置", exact: true }).click();
-  await expect(select).toHaveValue("none");
-  await select.selectOption("slide");
+  await expect(select).toHaveAttribute("data-value", "none");
+  await chooseMenu(select, "slide");
   await page.getByRole("button", { name: "应用更改", exact: true }).click();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.getByRole("button", { name: "设备设置", exact: true }).click();

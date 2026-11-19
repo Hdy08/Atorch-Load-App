@@ -1,4 +1,4 @@
-import { Select } from "@fluentui/react-components";
+import { MenuSelect } from "./MenuSelect";
 import type { ChartTimeMode } from "../lib/chartTime";
 
 export function ChartTimeSelect({
@@ -9,15 +9,14 @@ export function ChartTimeSelect({
   onChange: (value: ChartTimeMode) => void;
 }) {
   return (
-    <Select
+    <MenuSelect
       aria-label="曲线时间坐标"
       value={value}
-      onChange={(event) =>
-        onChange(event.target.value === "elapsed" ? "elapsed" : "clock")
-      }
-    >
-      <option value="clock">真实时间</option>
-      <option value="elapsed">相对时间</option>
-    </Select>
+      onChange={(value) => onChange(value === "elapsed" ? "elapsed" : "clock")}
+      options={[
+        { value: "clock", label: "绝对时间" },
+        { value: "elapsed", label: "相对时间" },
+      ]}
+    />
   );
 }

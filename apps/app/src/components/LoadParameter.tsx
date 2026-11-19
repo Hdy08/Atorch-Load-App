@@ -1,17 +1,6 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ComponentPropsWithoutRef,
-} from "react";
-import {
-  Button,
-  Field,
-  Slider,
-  SpinButton,
-  Spinner,
-  type SlotRenderFunction,
-} from "@fluentui/react-components";
+import { NumericInput } from "./NumericInput";
+import { useEffect, useState } from "react";
+import { Button, Field, Slider, Spinner } from "@fluentui/react-components";
 import {
   gridBounds,
   parameterError,
@@ -34,72 +23,19 @@ function NumberInput({
   range: LoadParameterRange;
   disabled: boolean;
 }) {
-  const value =
-    text.trim() && Number.isFinite(Number(text)) ? Number(text) : null;
-  const draft = useRef(text);
-  draft.current = text;
-  const change = (next: string) => {
-    draft.current = next;
-    onChange(next);
-  };
-  const stepValue = (direction: 1 | -1) =>
-    stepParameter(value ?? range.min, direction, range);
-  const bounds = gridBounds(range);
-  const renderRoot: SlotRenderFunction<ComponentPropsWithoutRef<"span">> = (
-    Root,
-    props,
-  ) => (
-    <Root {...props}>
-      {props.children}
-      <span className="load-input-unit" aria-hidden="true">
-        {range.unit}
-      </span>
-    </Root>
-  );
   return (
-    <SpinButton
-      root={{ children: renderRoot }}
+    <NumericInput
       aria-label={label}
-      inputMode={range.digits ? "decimal" : "numeric"}
-      value={value}
-      displayValue={text}
+      value={text}
+      unit={range.unit}
       min={range.min}
       max={range.max}
       step={range.step}
-      stepPage={range.step}
       precision={range.digits}
+      spinBounds={gridBounds(range)}
+      onStep={(value, direction) => stepParameter(value, direction, range)}
       disabled={disabled}
-      input={{ onChange: (event) => change(event.target.value) }}
-      onKeyDownCapture={(event) => {
-        if (disabled || bounds.min > bounds.max) return;
-        if (event.key === "Home" || event.key === "End") {
-          event.preventDefault();
-          change(
-            (event.key === "Home" ? bounds.min : bounds.max).toFixed(
-              range.digits,
-            ),
-          );
-        }
-      }}
-      incrementButton={{
-        "aria-label": `增加${label}`,
-        disabled: disabled || bounds.min > bounds.max || stepValue(1) === value,
-      }}
-      decrementButton={{
-        "aria-label": `减少${label}`,
-        disabled:
-          disabled || bounds.min > bounds.max || stepValue(-1) === value,
-      }}
-      onChange={(event, data) => {
-        if (data.value === undefined || data.value === null) return;
-        const previous = Number(draft.current);
-        let next: number;
-        if ("key" in event && (event.key === "Home" || event.key === "End"))
-          next = event.key === "Home" ? bounds.min : bounds.max;
-        else
-          next = stepParameter(previous, data.value > previous ? 1 : -1, range);
-        if (bounds.min <= bounds.max) change(next.toFixed(range.digits));
-      }}
+      onChange={(_, data) => onChange(data.value)}
     />
   );
 }

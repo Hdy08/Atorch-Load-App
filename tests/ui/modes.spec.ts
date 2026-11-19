@@ -97,7 +97,7 @@ test("mode changes wait for confirmation, refresh target units and never start t
     page.getByRole("dialog", { name: "负载控制", exact: true }),
   ).toBeHidden();
   await expect(
-    page.getByRole("textbox", { name: "目标电压快速设定", exact: true }),
+    page.getByRole("spinbutton", { name: "目标电压快速设定", exact: true }),
   ).toHaveValue("5.00");
   await expect(page.locator(".mode-code")).toHaveText("CV");
   await page.getByRole("button", { name: "启动负载", exact: true }).click();

@@ -1,6 +1,35 @@
+import { chooseMenu } from "./menu";
 import { expect, test, type Page } from "@playwright/test";
 import { webDarkTheme, webLightTheme } from "@fluentui/react-components";
 import { mkdir } from "node:fs/promises";
+import { chartColors } from "../../apps/app/src/lib/chartColors";
+
+async function setMeasurements(page: Page, names: string[], checked: boolean) {
+  const more = page.getByRole("button", { name: "更多曲线参数", exact: true });
+  for (const name of names) {
+    const checkbox = page.getByRole("checkbox", { name, exact: true });
+    if (!(await checkbox.isVisible())) await more.click();
+    await checkbox.setChecked(checked);
+  }
+  if (
+    (await more.count()) &&
+    (await more.getAttribute("aria-expanded")) === "true"
+  )
+    await more.click();
+}
+
+const allMeasurements = [
+  "电压",
+  "电流",
+  "功率",
+  "电阻",
+  "电量",
+  "容量",
+  "CPU 温度",
+  "MOS 温度",
+  "NTC 温度",
+  "风扇转速",
+];
 
 // Explicit UI-only IPC fixture. Commands that could touch hardware are rejected.
 async function fixture(page: Page, dark: boolean, sampleCount = 61) {
@@ -175,6 +204,8 @@ for (const dark of [false, true]) {
   const name = dark ? "dark" : "light";
   const theme = dark ? webDarkTheme : webLightTheme;
   const nextTheme = dark ? webLightTheme : webDarkTheme;
+  const colors = chartColors(theme.colorNeutralBackground1);
+  const nextColors = chartColors(nextTheme.colorNeutralBackground1);
 
   test(`stock Fluent theme, control states and chart export (${name})`, async ({
     page,
@@ -269,23 +300,9 @@ for (const dark of [false, true]) {
         tooltip: theme.colorNeutralBackground1,
         grid: theme.colorNeutralStroke2,
         slider: theme.colorNeutralBackground3,
-        series: [
-          theme.colorBrandForeground1,
-          theme.colorPaletteTealBorderActive,
-        ],
+        series: [colors.voltage, colors.current],
       });
-    for (const [key, color] of [
-      ["voltage", theme.colorBrandForeground1],
-      ["current", theme.colorPaletteTealBorderActive],
-      ["power", theme.colorPaletteMarigoldForeground2],
-      ["resistance", theme.colorPalettePurpleBorderActive],
-      ["energy", theme.colorPaletteGoldForeground2],
-      ["capacity", theme.colorPaletteRedForeground1],
-      ["cpuTemperature", theme.colorPaletteMagentaBorderActive],
-      ["ntcTemperature", theme.colorPaletteLightTealBorderActive],
-      ["mosTemperature", theme.colorPaletteDarkOrangeForeground1],
-      ["fanSpeed", theme.colorPaletteForestBorderActive],
-    ]) {
+    for (const [key, color] of Object.entries(colors)) {
       const card = page.locator(`.metric[data-measurement="${key}"]`);
       await expect(card.locator(".metric-number")).toHaveCSS(
         "color",
@@ -312,7 +329,9 @@ for (const dark of [false, true]) {
     // Actual export button; verify the PNG's background, not a second test renderer.
     await page.getByRole("button", { name: "截图", exact: true }).click();
     await expect(
-      page.getByText("曲线图片已保存：fixture/theme-chart.png"),
+      page.getByText("曲线图片已保存：fixture/theme-chart.png", {
+        exact: true,
+      }),
     ).toBeVisible();
     const pixel = await page.evaluate(async () => {
       const image = new Image();
@@ -332,15 +351,16 @@ for (const dark of [false, true]) {
     await page.getByRole("button", { name: "应用设置", exact: true }).click();
     await page.getByRole("tab", { name: "曲线", exact: true }).click();
     await expect(page.getByLabel("电压颜色", { exact: true })).toHaveValue(
-      theme.colorBrandForeground1,
+      colors.voltage,
     );
     await page.getByLabel("电压颜色", { exact: true }).fill("#aa33cc");
     await page.getByRole("button", { name: "应用更改", exact: true }).click();
     await page.getByRole("button", { name: "应用设置", exact: true }).click();
     await page.getByRole("tab", { name: "外观", exact: true }).click();
-    await page
-      .getByRole("combobox", { name: "主题", exact: true })
-      .selectOption(dark ? "light" : "dark");
+    await chooseMenu(
+      page.getByRole("button", { name: "主题", exact: true }),
+      dark ? "light" : "dark",
+    );
     await page.getByRole("button", { name: "应用更改", exact: true }).click();
     await expect(page.locator(".app")).toHaveCSS(
       "background-color",
@@ -356,7 +376,7 @@ for (const dark of [false, true]) {
       .toBe("#aa33cc");
     await expect
       .poll(async () => (await chartStyle(page)).series)
-      .toEqual(["#aa33cc", nextTheme.colorPaletteTealBorderActive]);
+      .toEqual(["#aa33cc", nextColors.current]);
     const voltageCard = page.locator('.metric[data-measurement="voltage"]');
     for (const part of [".metric-number", ".metric-unit", ".metric-symbol"])
       await expect(voltageCard.locator(part)).toHaveCSS(
@@ -370,7 +390,7 @@ for (const dark of [false, true]) {
     );
     await expect
       .poll(async () => (await chartStyle(page)).series)
-      .toEqual(["#aa33cc", nextTheme.colorPaletteTealBorderActive]);
+      .toEqual(["#aa33cc", nextColors.current]);
     for (const part of [".metric-number", ".metric-unit", ".metric-symbol"])
       await expect(voltageCard.locator(part)).toHaveCSS(
         "color",
@@ -383,14 +403,11 @@ for (const dark of [false, true]) {
     await page.getByRole("button", { name: "实时监控", exact: true }).click();
     await expect
       .poll(async () => (await chartStyle(page)).series)
-      .toEqual([
-        nextTheme.colorBrandForeground1,
-        nextTheme.colorPaletteTealBorderActive,
-      ]);
+      .toEqual([nextColors.voltage, nextColors.current]);
     for (const part of [".metric-number", ".metric-unit", ".metric-symbol"])
       await expect(voltageCard.locator(part)).toHaveCSS(
         "color",
-        rgb(nextTheme.colorBrandForeground1),
+        rgb(nextColors.voltage),
       );
   });
 
@@ -427,11 +444,11 @@ for (const dark of [false, true]) {
           const chartBox = await page.locator(".chart-card").boundingBox();
           expect(chartBox!.width).toBeCloseTo(metricsBox!.width, 0);
           for (const select of await page
-            .locator(".chart-toolbar .fui-Select")
+            .locator(".chart-toolbar .menu-select")
             .all()) {
             const root = (await select.boundingBox())!;
             const icon = (await select
-              .locator(".fui-Select__icon")
+              .locator(".fui-Button__icon")
               .boundingBox())!;
             expect(icon.y).toBeGreaterThanOrEqual(root.y);
             expect(icon.y + icon.height).toBeLessThanOrEqual(
@@ -530,7 +547,7 @@ for (const dark of [false, true]) {
             page.getByRole("tab", { name: "参数与维护", exact: true }),
           ).toHaveAttribute("aria-selected", "true");
           await expect(
-            page.getByRole("combobox", { name: "主题", exact: true }),
+            page.getByRole("button", { name: "主题", exact: true }),
           ).toHaveCount(0);
           await expect(
             page
@@ -543,7 +560,7 @@ for (const dark of [false, true]) {
             page.getByRole("tab", { name: "外观", exact: true }),
           ).toHaveAttribute("aria-selected", "true");
           await expect(
-            page.getByRole("combobox", { name: "主题", exact: true }),
+            page.getByRole("button", { name: "主题", exact: true }),
           ).toBeVisible();
           await expect(
             page.getByRole("tablist", { name: "设备设置分类" }),
@@ -695,6 +712,12 @@ for (const dark of [false, true]) {
       exact: true,
     });
     await expect(presets.getByRole("radio")).toHaveCount(10);
+    await page
+      .locator(".axis-card")
+      .first()
+      .screenshot({
+        path: test.info().outputPath(`palette-${dark ? "dark" : "light"}.png`),
+      });
     await presets.getByRole("radio").last().click();
     await expect(page.getByLabel("电压颜色", { exact: true })).toHaveValue(
       colors[9],
@@ -910,11 +933,11 @@ test("live chart defaults to all data and retains an optional recent time window
   page,
 }) => {
   await fixture(page, true, 601);
-  const range = page.getByRole("combobox", {
+  const range = page.getByRole("button", {
     name: "曲线时间范围",
     exact: true,
   });
-  await expect(range).toHaveValue("all");
+  await expect(range).toHaveAttribute("data-value", "all");
   const dataCount = () =>
     page.evaluate(async () => {
       const url = performance
@@ -927,12 +950,12 @@ test("live chart defaults to all data and retains an optional recent time window
         .getOption().series[0].data.length;
     });
   await expect.poll(dataCount).toBe(601);
-  await range.selectOption("300");
+  await chooseMenu(range, "300");
   await expect.poll(dataCount).toBe(301);
-  await range.selectOption("all");
+  await chooseMenu(range, "all");
   await expect.poll(dataCount).toBe(601);
   await page.reload();
-  await expect(range).toHaveValue("all");
+  await expect(range).toHaveAttribute("data-value", "all");
   await expect.poll(dataCount).toBe(601);
 });
 
@@ -943,9 +966,7 @@ for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 1050 });
     await fixture(page, true);
     const selector = page.getByRole("group", { name: "曲线参数", exact: true });
-    await expect(selector.getByRole("checkbox")).toHaveCount(10);
-    for (const checkbox of await selector.getByRole("checkbox").all())
-      await checkbox.check();
+    await setMeasurements(page, allMeasurements, true);
     const result = await axesAndLabels(page);
     expect(result.axes.map((axis) => axis.unit)).toEqual([
       "V",
@@ -967,15 +988,16 @@ for (const width of [390, 1440]) {
       "right",
       "right",
     ]);
+    const colors = chartColors(webDarkTheme.colorNeutralBackground1);
     expect(result.axes.map((axis) => axis.color)).toEqual([
-      webDarkTheme.colorBrandForeground1,
-      webDarkTheme.colorPaletteTealBorderActive,
-      webDarkTheme.colorPaletteMarigoldForeground2,
-      webDarkTheme.colorPalettePurpleBorderActive,
-      webDarkTheme.colorPaletteGoldForeground2,
-      webDarkTheme.colorPaletteRedForeground1,
+      colors.voltage,
+      colors.current,
+      colors.power,
+      colors.resistance,
+      colors.energy,
+      colors.capacity,
       webDarkTheme.colorNeutralForeground3,
-      webDarkTheme.colorPaletteForestBorderActive,
+      colors.fanSpeed,
     ]);
     for (const axis of result.axes) {
       expect(axis.show).toBe(true);
@@ -1030,20 +1052,26 @@ for (const width of [390, 1440]) {
       fullPage: true,
     });
     // Retain the clicked order, rather than sorting axes back into the checkbox order.
-    for (const name of [
-      "电压",
-      "电流",
-      "功率",
-      "电阻",
-      "容量",
-      "电量",
-      "CPU 温度",
-      "NTC 温度",
-      "MOS 温度",
-    ])
-      await selector.getByRole("checkbox", { name, exact: true }).uncheck();
-    for (const name of ["电量", "CPU 温度", "电压", "电流", "NTC 温度"])
-      await selector.getByRole("checkbox", { name, exact: true }).check();
+    await setMeasurements(
+      page,
+      [
+        "电压",
+        "电流",
+        "功率",
+        "电阻",
+        "容量",
+        "电量",
+        "CPU 温度",
+        "NTC 温度",
+        "MOS 温度",
+      ],
+      false,
+    );
+    await setMeasurements(
+      page,
+      ["电量", "CPU 温度", "电压", "电流", "NTC 温度"],
+      true,
+    );
     const reordered = await axesAndLabels(page);
     expect(reordered.axes.map((axis) => axis.unit)).toEqual([
       "RPM",
@@ -1074,8 +1102,7 @@ test.describe("chart height adjustment", () => {
         name: "曲线参数",
         exact: true,
       });
-      for (const checkbox of await selector.getByRole("checkbox").all())
-        await checkbox.check();
+      await setMeasurements(page, allMeasurements, true);
       const handle = page.getByRole("separator", {
         name: "调整曲线高度",
         exact: true,
@@ -1144,7 +1171,7 @@ test.describe("chart height adjustment", () => {
         String(initialHeight + 320),
       );
       await expect(
-        selector.getByRole("checkbox", { checked: true }),
+        selector.getByRole("checkbox", { checked: true, includeHidden: true }),
       ).toHaveCount(10);
       await handle.press("Home");
       await expect(handle).toHaveAttribute("aria-valuenow", "240");

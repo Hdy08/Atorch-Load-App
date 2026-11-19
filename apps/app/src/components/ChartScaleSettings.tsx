@@ -1,3 +1,4 @@
+import { NumericInput } from "./NumericInput";
 import { useEffect, useRef, useState } from "react";
 import { Eyedropper20Regular } from "@fluentui/react-icons";
 import {
@@ -23,6 +24,7 @@ type CurveDraft = {
   max: string;
   color: string;
   width: string;
+  lineOpacity: string;
   opacity: string;
 };
 
@@ -39,6 +41,9 @@ function makeDraft(
         max: bounds[key]?.max?.toString() ?? "",
         color: bounds[key]?.color ?? measurementColor(theme, key),
         width: String(bounds[key]?.width ?? defaultCurveWidth),
+        lineOpacity: String(
+          Number(((bounds[key]?.lineOpacity ?? 1) * 100).toFixed(2)),
+        ),
         opacity: String(
           Number(((bounds[key]?.areaOpacity ?? 0) * 100).toFixed(2)),
         ),
@@ -161,6 +166,9 @@ export function ChartScaleSettings({
           const max = value.max.trim() ? Number(value.max) : undefined;
           const color = value.color;
           const width = Number(value.width);
+          const lineOpacity = value.lineOpacity.trim()
+            ? Number(value.lineOpacity)
+            : NaN;
           const opacity = value.opacity.trim() ? Number(value.opacity) : NaN;
           if (
             (min !== undefined && !Number.isFinite(min)) ||
@@ -183,7 +191,16 @@ export function ChartScaleSettings({
             );
             return;
           }
-          // Leave untouched automatic channels out of persisted preferences.
+          if (
+            !Number.isFinite(lineOpacity) ||
+            lineOpacity < 0 ||
+            lineOpacity > 100
+          ) {
+            reportError(
+              `${measurements[key].name}的曲线不透明度无效；范围为 0–100%`,
+            );
+            return;
+          }
           if (!Number.isFinite(opacity) || opacity < 0 || opacity > 100) {
             reportError(
               `${measurements[key].name}的阴影不透明度无效；范围为 0–100%`,
@@ -197,6 +214,7 @@ export function ChartScaleSettings({
             max === undefined &&
             !customColor &&
             width === defaultCurveWidth &&
+            lineOpacity === 100 &&
             opacity === 0
           ) {
             delete next[key];
@@ -206,6 +224,9 @@ export function ChartScaleSettings({
               max,
               ...(customColor ? { color } : {}),
               ...(width !== defaultCurveWidth ? { width } : {}),
+              ...(lineOpacity !== 100
+                ? { lineOpacity: lineOpacity / 100 }
+                : {}),
               ...(opacity !== 0 ? { areaOpacity: opacity / 100 } : {}),
             };
           }
@@ -227,10 +248,12 @@ export function ChartScaleSettings({
             <div className="axis-inputs">
               {(["min", "max"] as const).map((side) => (
                 <Field key={side} label={side === "min" ? "最小值" : "最大值"}>
-                  <Input
+                  <NumericInput
                     aria-label={`${measurements[key].name}${side === "min" ? "最小值" : "最大值"}`}
-                    type="number"
+
                     placeholder="自动"
+                    unit={measurements[key].unit}
+                    step={0.1}
                     value={draft[key]?.[side] ?? ""}
                     onChange={(_, data) => update(key, { [side]: data.value })}
                   />
@@ -245,9 +268,9 @@ export function ChartScaleSettings({
                 />
               </Field>
               <Field label="线宽（0.5–3.0）">
-                <Input
+                <NumericInput
                   aria-label={`${measurements[key].name}线宽`}
-                  type="number"
+
                   min={0.5}
                   max={3}
                   step={0.5}
@@ -275,14 +298,27 @@ export function ChartScaleSettings({
                   ))}
                 </SwatchPicker>
               </div>
-              <Field label="阴影不透明度" className="axis-opacity">
-                <Input
-                  aria-label={`${measurements[key].name}阴影不透明度`}
-                  type="number"
+              <Field label="曲线不透明度" className="axis-opacity">
+                <NumericInput
+                  aria-label={`${measurements[key].name}曲线不透明度`}
                   min={0}
                   max={100}
                   step={1}
-                  contentAfter="%"
+                  unit="%"
+                  value={draft[key]?.lineOpacity ?? "100"}
+                  onChange={(_, data) =>
+                    update(key, { lineOpacity: data.value })
+                  }
+                />
+              </Field>
+              <Field label="阴影不透明度" className="axis-opacity">
+                <NumericInput
+                  aria-label={`${measurements[key].name}阴影不透明度`}
+
+                  min={0}
+                  max={100}
+                  step={1}
+                  unit="%"
                   value={draft[key]?.opacity ?? "0"}
                   onChange={(_, data) => update(key, { opacity: data.value })}
                 />

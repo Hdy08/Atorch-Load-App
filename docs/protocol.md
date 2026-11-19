@@ -117,11 +117,7 @@ Windows 已在 BW150 V1.1.0、序列号 `924415` 实测以上 10 项，模式值
 
 专用读数使用同一 `05` 帧的已核准字段，当前没有证据支持额外的专用结果帧。结果记录将运行中最后读数与停止时读数分开，不用停止后的 0 覆盖运行读数，不推定最终测得内阻、充放电阶段、完成原因或合格判定。
 
-## 固件 USB 升级实测
-
-已经实现 `AA/BB/CC/DD/EE/FF/11`、58 字节分块、CRC16/Modbus（初值 `FFFF`、多项式 `A001`）以及序号、超时、有限重试和取消状态。完整官方成功记录和新应用实际升级均核准：IAP 是 64 字节无编号 HID，发送为 `55 + 逻辑包前63字节`，接收为 `AA + 应答前63字节`。满块保留全部 58 字节数据和 CRC 低字节，省略 CRC 高字节；新应用核对回显数据及可用 CRC，不把重建字节描述成设备回传。
-
-末块索引 11087 的 EE 替代 DD，FF 必须为 `FF 06 00 00 D0 31` 逻辑内容。Windows / Android 共用实机引擎，只接受固定 SHA-256 的 BW150 V1.1.0 原厂文件，并核对 APP / IAP 制造商、产品、HID 接口与 IAP 描述符；Windows 另外核对 Usage，Android 核对双向 64 字节中断端点。服务独占 USB，不自动重发、不启动负载，升级后正常应用及新遥测回读通过才成功。两平台实测 11,088 块完成、参数保持，Android 直接从 IAP 恢复通过。Android GET_DESCRIPTOR 的原始描述符和 Windows HIDAPI 重建形式仅在零值 LOGICAL_MINIMUM 的编码宽度不同，精确匹配这两种实测字节。BW600 仍为离线范围，真实 `11` 详细载荷与故意断电恢复仍待验证。详细数据、SHA 与复核命令见 `firmware.md`。
+USB 升级的 App 操作见 [USB 固件更新](usb-update.md)。
 
 ## 复核工具
 
@@ -129,8 +125,6 @@ Windows 已在 BW150 V1.1.0、序列号 `924415` 实测以上 10 项，模式值
 - `tools/command_map.py`：枚举已恢复的 Qt 控件槽与命令构造位置。
 - `tools/vendor_flow.py`：为反汇编标注导入函数、UTF-8 / Qt UTF-16 字面文本；只读，不打开设备。
 - `tools/capture_vendor.py`：Frida 被动记录原程序的 HID 收发。输出放在被 Git 忽略的 `captures/`。
-- `tools/capture_firmware.py` / `watch_firmware_capture.py`：固件被动抓包与进程重启后的重新附加；`--minimal` 只记录 HID，避免多层重复挂钩。
-- `tools/analyze_firmware_capture.py`：对原文件逐块核验真实官方记录、应答、重复句柄及 EE / FF；`firmware_replay` 示例同时支持官方抓包及新应用收发日志。
 - `crates/device/examples/probe.rs`：原生 HID 连接与读数；可显式使用 `--verify-command` 测试目标值原值写回。
 
 分析工具按需使用 Python 的 `pefile`、`capstone`、`frida`、`hidapi`，它们不是应用运行依赖。

@@ -109,7 +109,7 @@ test("floating controls validate Enter, keep the run icon last, move notificatio
     .click();
   await expect(page.locator("main .control-card")).toHaveCount(0);
   const dock = page.getByRole("region", { name: "负载控制", exact: true });
-  const input = dock.getByRole("textbox", {
+  const input = dock.getByRole("spinbutton", {
     name: "目标电流快速设定",
     exact: true,
   });
@@ -132,7 +132,7 @@ test("floating controls validate Enter, keep the run icon last, move notificatio
     const notice = (await toast.boundingBox())!;
     expect(notice.y).toBeGreaterThanOrEqual(bounds.y + bounds.height);
     const buttons = dock.getByRole("button");
-    await expect(buttons).toHaveCount(3);
+    await expect(buttons).toHaveCount(5);
     await expect(buttons.last()).toHaveAccessibleName("启动负载");
     await expect(buttons.last()).toHaveText("");
     expect(bounds.x).toBeGreaterThanOrEqual(0);

@@ -5,6 +5,11 @@ import {
   formatAxisValue,
   groupChartAxes,
   resolveChartTicks,
+  zoomChartAxis,
+  pinchChartAxis,
+  panChartAxis,
+  constrainChartAxis,
+  isChartTick,
   chartGridCount,
   readBounds,
   readSharedChartBounds,
@@ -101,6 +106,34 @@ test("curve fill opacity rejects invalid stored values without discarding valid 
       assert.equal(styles.power.areaOpacity, 0);
       for (const key of ["energy", "capacity", "resistance"])
         assert.equal(styles[key].areaOpacity, undefined);
+    },
+  );
+});
+
+test("curve line opacity validates independently from fill and preserves zero and legacy defaults", () => {
+  withStorage(
+    {
+      styles: JSON.stringify({
+        voltage: { lineOpacity: 0, areaOpacity: 0.4 },
+        current: { lineOpacity: 1 },
+        power: { lineOpacity: 0.25, color: "#123456" },
+        energy: { lineOpacity: -0.1, areaOpacity: 0.5 },
+        capacity: { lineOpacity: 1.1 },
+        resistance: { lineOpacity: "0.5" },
+        deviceTemperature: { lineOpacity: 0.6 },
+      }),
+    },
+    () => {
+      const styles = readBounds("styles");
+      assert.equal(styles.voltage.lineOpacity, 0);
+      assert.equal(styles.voltage.areaOpacity, 0.4);
+      assert.equal(styles.current.lineOpacity, 1);
+      assert.equal(styles.power.lineOpacity, 0.25);
+      assert.equal(styles.power.color, "#123456");
+      assert.equal(styles.energy.areaOpacity, 0.5);
+      assert.equal(styles.mosTemperature.lineOpacity, 0.6);
+      for (const key of ["energy", "capacity", "resistance"])
+        assert.equal(styles[key].lineOpacity, undefined);
     },
   );
 });
@@ -260,9 +293,10 @@ test("chart height selects exactly five or ten intervals and keeps signed curren
     voltage: { min: 10, max: 14 },
   });
   const ticks = resolveChartTicks(custom, 10);
-  assert.equal(ticks.min, 10);
-  assert.equal(ticks.max, 14);
-  assert.equal(ticks.interval, 0.4);
+  assert.ok(ticks.min <= 10);
+  assert.ok(ticks.max >= 14);
+  assert.equal(ticks.interval, 5);
+  assert.ok(ticks.labelValues.every(isChartTick));
 });
 
 test("an upper tick of ten switches to integers and numeric columns remain aligned", () => {
@@ -281,6 +315,312 @@ test("an upper tick of ten switches to integers and numeric columns remain align
   assert.ok(voltageTicks.labelValues.every(Number.isInteger));
   const [small] = groupChartAxes(["voltage"], [{ voltage: 2.2 }]);
   assert.equal(resolveChartTicks(small, 5).precision, 1);
+});
+
+test("manual ranges snap tick coordinates to exact legal values instead of rounding labels", () => {
+  const axis = (min, max) =>
+    groupChartAxes(["voltage"], [{ voltage: 12 }], {
+      voltage: { min, max },
+    })[0];
+  const half = resolveChartTicks(axis(1.5, 4), 5);
+  assert.equal(half.precision, 1);
+  assert.deepEqual(
+    half.labelValues.map((v) => formatAxisValue(v, "V", half.precision)),
+    ["1.5 V", "2.0 V", "2.5 V", "3.0 V", "3.5 V", "4.0 V"],
+  );
+  const detailed = resolveChartTicks(axis(11.5, 11.55), 5);
+  assert.equal(detailed.precision, 0);
+  assert.equal(detailed.interval, 5);
+  assert.ok(detailed.min <= 11.5 && detailed.max >= 11.55);
+  for (const value of detailed.labelValues)
+    assert.equal(Number(formatAxisValue(value, "", detailed.precision)), value);
+  const integers = resolveChartTicks(axis(10, 20), 5);
+  assert.equal(integers.precision, 0);
+});
+
+test("tick values use integer half-decades, at most one decimal and zero or two significant digits", () => {
+  for (const value of [
+    0, 0.1, 0.9, 1, 1.5, 9.5, 10, 15, 95, 100, 150, 950, 1000, 1500, 9500,
+  ]) {
+    assert.ok(isChartTick(value), String(value));
+    assert.ok(isChartTick(-value), String(-value));
+  }
+  for (const value of [
+    0.05,
+    0.15,
+    0.25,
+    1.2,
+    11,
+    12,
+    51,
+    50.3,
+    216.1,
+    2039.1,
+    Infinity,
+    NaN,
+  ]) {
+    assert.equal(isChartTick(value), false, String(value));
+    assert.equal(isChartTick(-value), false, String(-value));
+  }
+});
+
+test("each value-axis wheel gesture selects a different legal scale until its limit", () => {
+  const [source] = groupChartAxes(["voltage"], [{ voltage: 12 }]);
+  const initial = resolveChartTicks(source, 5);
+  const outward = zoomChartAxis(initial, 0.5, 120);
+  assert.ok(outward.endValue - outward.startValue > initial.max - initial.min);
+  const expanded = resolveChartTicks(
+    {
+      ...source,
+      min: outward.startValue,
+      max: outward.endValue,
+      customMin: true,
+      customMax: true,
+    },
+    initial.gridCount,
+  );
+  assert.ok(expanded.labelValues.every(isChartTick));
+  const inward = zoomChartAxis(expanded, 0.5, -120);
+  assert.ok(inward.endValue - inward.startValue < expanded.max - expanded.min);
+  const limited = { ...initial, customMin: true, customMax: true };
+  assert.deepEqual(zoomChartAxis(limited, 0.5, -120), {
+    startValue: limited.min,
+    endValue: limited.max,
+  });
+});
+
+test("value-axis zoom skips illegal steps, retains the pointer value and never accumulates invisible motion", () => {
+  for (const value of [0, 0.03, 0.3, 1, 3, 12, 51, 6599, -51]) {
+    for (const count of [5, 10]) {
+      const [source] = groupChartAxes(["voltage"], [{ voltage: value }]);
+      let axis = resolveChartTicks(source, count);
+      for (const direction of [120, 120, -120, -120, -120, 120]) {
+        const anchor = 0.63;
+        const point = axis.min + (axis.max - axis.min) * anchor;
+        const range = zoomChartAxis(axis, anchor, direction);
+        const next = resolveChartTicks(
+          {
+            ...source,
+            min: range.startValue,
+            max: range.endValue,
+            customMin: true,
+            customMax: true,
+          },
+          axis.gridCount,
+        );
+        assert.equal(next.min, range.startValue);
+        assert.equal(next.max, range.endValue);
+        assert.ok(next.labelValues.every(isChartTick));
+        assert.ok(next.interval <= Math.max(0.1, Math.abs(value)));
+        assert.ok(point >= next.min - 1e-8 && point <= next.max + 1e-8);
+        if (next.interval === axis.interval) {
+          assert.equal(next.min, axis.min);
+          assert.equal(next.max, axis.max);
+        } else if (direction > 0) assert.ok(next.interval > axis.interval);
+        else assert.ok(next.interval < axis.interval);
+        axis = next;
+      }
+    }
+  }
+});
+
+test("vertical axis panning translates whole grid cells without applying automatic tick formulas", () => {
+  for (const value of [1, 12, 51, 6599, -51]) {
+    const [source] = groupChartAxes(["voltage"], [{ voltage: value }]);
+    const axis = resolveChartTicks(source, 10);
+    for (const cells of [-3, -1, 0, 1, 3]) {
+      const range = panChartAxis(axis, cells);
+      assert.ok(
+        Math.abs(
+          (range.startValue - axis.min) / axis.interval -
+            Math.round((range.startValue - axis.min) / axis.interval),
+        ) < 1e-8,
+      );
+      assert.ok(
+        Math.abs(range.endValue - range.startValue - (axis.max - axis.min)) <
+          1e-8,
+      );
+      assert.equal(
+        range.startValue,
+        Number((axis.min + cells * axis.interval).toFixed(1)),
+      );
+      const panned = resolveChartTicks(
+        { ...axis, min: range.startValue, max: range.endValue },
+        axis.gridCount,
+        axis.magnitude,
+        true,
+      );
+      assert.equal(panned.interval, axis.interval);
+      for (let i = 0; i <= axis.gridCount; i++)
+        assert.equal(
+          Number(formatAxisValue(panned.labelValues[i], "", panned.precision)),
+          panned.labelValues[i],
+        );
+    }
+  }
+  const [source] = groupChartAxes(["voltage"], [{ voltage: 12 }]);
+  const axis = resolveChartTicks(source, 5);
+  assert.deepEqual(panChartAxis(axis, 1), { startValue: 5, endValue: 30 });
+  assert.deepEqual(panChartAxis(axis, -1), { startValue: -5, endValue: 20 });
+  const frozen = resolveChartTicks(
+    { ...source, min: -10, max: 10, customMin: true, customMax: true },
+    10,
+  );
+  assert.equal(frozen.interval, 2);
+  assert.deepEqual(panChartAxis(frozen, 1), { startValue: -8, endValue: 12 });
+  assert.deepEqual(panChartAxis(frozen, -1), { startValue: -12, endValue: 8 });
+  const beyond = resolveChartTicks(
+    { ...frozen, min: -8, max: 12 },
+    10,
+    frozen.magnitude,
+    true,
+  );
+  assert.equal(beyond.interval, 2);
+  assert.ok(beyond.labelValues.includes(12));
+});
+
+test("value-axis pinch is damped, exact and independent of touch event frequency", () => {
+  const [source] = groupChartAxes(["current"], [{ current: 1 }]);
+  const axis = resolveChartTicks(
+    { ...source, min: -5, max: 5, customMin: true, customMax: true },
+    10,
+  );
+  assert.equal(axis.interval, 1);
+  const target = pinchChartAxis(axis, 0.5, 50, 200);
+  assert.deepEqual(target, { startValue: -2.5, endValue: 2.5 });
+  for (const moves of [2, 20, 100]) {
+    let range;
+    for (let i = 1; i <= moves; i++)
+      range = pinchChartAxis(axis, 0.5, 50, 50 + (150 * i) / moves);
+    assert.deepEqual(range, target);
+  }
+  assert.deepEqual(pinchChartAxis(axis, 0.5, 50, 51), {
+    startValue: axis.min,
+    endValue: axis.max,
+  });
+  const next = resolveChartTicks(
+    { ...axis, min: target.startValue, max: target.endValue },
+    axis.gridCount,
+  );
+  assert.ok(next.labelValues.every(isChartTick));
+  assert.equal(next.interval, 0.5);
+});
+
+test("value-axis pinch honors magnitude limits and retains the anchor across signed scales", () => {
+  for (const value of [0, 0.3, 1, 12, -51, 6599]) {
+    const [source] = groupChartAxes(["voltage"], [{ voltage: value }]);
+    const axis = resolveChartTicks(source, 10);
+    for (const distance of [1, 20, 40, 80, 240, 800]) {
+      const anchor = 0.63;
+      const point = axis.min + (axis.max - axis.min) * anchor;
+      const range = pinchChartAxis(axis, anchor, 80, distance);
+      const next = resolveChartTicks(
+        {
+          ...axis,
+          min: range.startValue,
+          max: range.endValue,
+          customMin: true,
+          customMax: true,
+        },
+        axis.gridCount,
+      );
+      assert.ok(next.labelValues.every(isChartTick));
+      assert.ok(
+        next.interval >= 0.1 && next.interval <= Math.max(0.1, Math.abs(value)),
+      );
+      assert.ok(
+        range.startValue <= point + 1e-8 && range.endValue >= point - 1e-8,
+      );
+    }
+  }
+});
+
+test("value-axis boundaries retain a real sample and allow immediate reverse translation", () => {
+  const [source] = groupChartAxes(["voltage"], [{ voltage: 5 }]);
+  const axis = resolveChartTicks(
+    { ...source, min: -10, max: 10, customMin: true, customMax: true },
+    10,
+  );
+  const high = constrainChartAxis(axis, panChartAxis(axis, 100), 5, true);
+  assert.deepEqual(high, { startValue: 4, endValue: 24 });
+  const translated = resolveChartTicks(
+    { ...axis, min: high.startValue, max: high.endValue },
+    10,
+    axis.magnitude,
+    true,
+  );
+  assert.deepEqual(panChartAxis(translated, -1), {
+    startValue: 2,
+    endValue: 22,
+  });
+  const requested = zoomChartAxis(axis, 1, -120);
+  const limited = constrainChartAxis(axis, requested, 5);
+  assert.ok(limited.startValue <= 5 && limited.endValue >= 5);
+});
+
+test("every Y interval is a decimal 1/2/5 step within the visible magnitude limit", () => {
+  for (const value of [
+    0, 0.00001, 0.09, 0.15, 0.3, 1, 1.5, 7, 12, 51, 124, 6599,
+  ]) {
+    for (const sign of [-1, 1]) {
+      for (const key of ["voltage", "current", "energy", "mosTemperature"]) {
+        const rows = [{ [key]: value * sign }];
+        for (const count of [5, 10]) {
+          const [axis] = groupChartAxes([key], rows);
+          for (const bounds of [
+            axis,
+            { ...axis, min: -50.3, max: -49, customMin: true, customMax: true },
+            { ...axis, min: 0, max: 10000, customMin: true, customMax: true },
+            {
+              ...axis,
+              min: -0.25,
+              max: 0.25,
+              customMin: true,
+              customMax: true,
+            },
+          ]) {
+            const ticks = resolveChartTicks(bounds, count);
+            assert(ticks.interval >= 0.1);
+            assert(ticks.interval <= Math.max(0.1, value) + 1e-8);
+            const scale = 10 ** Math.floor(Math.log10(ticks.interval));
+            assert(
+              [1, 2, 5].some(
+                (multiple) =>
+                  Math.abs(ticks.interval / scale - multiple) < 1e-8,
+              ),
+            );
+            assert.equal(ticks.labelValues.length, ticks.gridCount + 1);
+            assert([5, 10].includes(ticks.gridCount));
+            assert(ticks.precision === 0 || ticks.precision === 1);
+            for (const tick of ticks.labelValues) {
+              assert(isChartTick(tick), String(tick));
+              assert.equal(Number(tick.toFixed(ticks.precision)), tick);
+              if (tick !== 0) {
+                const absolute = Math.abs(tick);
+                const n = Math.floor(Math.log10(absolute) + 1e-10);
+                const k = absolute / (0.5 * 10 ** n);
+                assert(n >= -1 && k >= 2 - 1e-8 && k < 20);
+                assert(Math.abs(k - Math.round(k)) < 1e-8);
+              }
+            }
+            if (!bounds.customMin && !bounds.customMax) {
+              assert(ticks.min <= value * sign && ticks.max >= value * sign);
+              if (key === "current") assert.equal(ticks.min, -ticks.max);
+            }
+            for (let i = 1; i < ticks.labelValues.length; i++) {
+              const previous = Number(
+                ticks.labelValues[i - 1].toFixed(ticks.precision),
+              );
+              const current = Number(
+                ticks.labelValues[i].toFixed(ticks.precision),
+              );
+              assert(Math.abs(current - previous - ticks.interval) < 1e-8);
+            }
+          }
+        }
+      }
+    }
+  }
 });
 
 test("default chart axes include zero and center signed current without clipping", () => {

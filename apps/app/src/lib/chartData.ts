@@ -326,6 +326,68 @@ export function nearestChartSample(
     return;
   return rows[view.order?.[position] ?? position];
 }
+
+/** Query original values, including points omitted by pixel sampling. */
+export function nearestChartValue(
+  rows: Telemetry[],
+  keys: MeasurementKey[],
+  target: number,
+  range?: ChartTimeRange,
+  elapsed = false,
+): number | undefined {
+  let nearest: number | undefined;
+  let distance = Infinity;
+  const add = (value: number | null) => {
+    if (value == null || !Number.isFinite(value)) return;
+    const next = Math.abs(value - target);
+    if (next < distance) {
+      nearest = value;
+      distance = next;
+    }
+  };
+  const index = cache.get(rows);
+  if (!index) {
+    for (const row of rows) {
+      const time = elapsed
+        ? sampleElapsedMs(row, rows[0].timestamp)
+        : row.timestamp;
+      if (range && (time < range.startValue || time > range.endValue)) continue;
+      for (const key of keys) add(row[key]);
+    }
+    return nearest;
+  }
+  const view = elapsed ? index.elapsed : index.clock;
+  const first = range ? lowerBound(view.times, range.startValue) : 0;
+  const last = range
+    ? lowerBound(view.times, range.endValue, true)
+    : rows.length;
+  const value = (position: number, key: MeasurementKey) =>
+    rows[view.order?.[position] ?? position][key];
+  for (const key of keys) {
+    if (!view.channels[key]) continue;
+    const visit = (start: number, end: number) => {
+      if (start >= end || distance === 0) return;
+      const stats = aggregate(rows, view, key, start, end);
+      if (!stats.count) return;
+      const min = value(stats.min, key)!,
+        max = value(stats.max, key)!;
+      if (target < min && min - target >= distance) return;
+      if (target > max && target - max >= distance) return;
+      add(min);
+      add(max);
+      if (target <= min || target >= max || distance === 0) return;
+      if (end - start <= blockSize) {
+        for (let i = start; i < end; i++) add(value(i, key));
+      } else {
+        const middle = (start + end) >>> 1;
+        visit(start, middle);
+        visit(middle, end);
+      }
+    };
+    visit(first, last);
+  }
+  return nearest;
+}
 /** Two extrema per CSS pixel, with extra nulls only for real discontinuities. */
 export function chartViewportData(
   rows: Telemetry[],

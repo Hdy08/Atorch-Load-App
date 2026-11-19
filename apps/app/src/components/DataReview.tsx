@@ -1,9 +1,10 @@
+import { NumericInput } from "./NumericInput";
+import { MenuSelect } from "./MenuSelect";
+import { ChartAction } from "./ChartAction";
 import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
-  Input,
-  Select,
   Table,
   TableBody,
   TableCell,
@@ -22,7 +23,6 @@ import {
   type MeasurementKey,
 } from "../lib/analysis";
 import { TrendChart, type ChartTimeRange } from "./TrendChart";
-import { MeasurementSelector } from "./MeasurementSelector";
 import { ChartTimeSelect } from "./ChartTimeSelect";
 import { sampleElapsedMs, type ChartTimeMode } from "../lib/chartTime";
 import { samplesInChartRange } from "../lib/chartInteraction";
@@ -197,12 +197,6 @@ export function DataReview({
             />
           </div>
         </div>
-        <MeasurementSelector
-          selected={keys}
-          onChange={onSelectionChange}
-          bounds={bounds}
-          theme={theme}
-        />
         <TrendChart
           key={timeMode}
           samples={rows}
@@ -218,19 +212,19 @@ export function DataReview({
               : undefined
           }
           selected={keys}
+          onSelectionChange={onSelectionChange}
           bounds={bounds}
           theme={theme}
           onImage={onImage}
           imageBusy={busy}
           onRangeChange={setChartRange}
           exportAction={(visible, getCurrentRows) => (
-            <Button
+            <ChartAction
+              label="导出"
               icon={<ArrowDownload20Regular />}
               disabled={busy || !visible.length}
               onClick={() => onExport(getCurrentRows())}
-            >
-              导出 CSV
-            </Button>
+            />
           )}
         />
       </Card>
@@ -290,28 +284,27 @@ export function DataReview({
         <div className="section-head details-heading">
           <h2>采样明细</h2>
           <div className="review-page-controls">
-            <Select
+            <MenuSelect
               aria-label="每页条数"
               value={String(pageSize)}
-              onChange={(_, data) => {
-                setPageSize(Number(data.value));
+              onChange={(value) => {
+                setPageSize(Number(value));
                 setPage(0);
                 setPageText("1");
               }}
-            >
-              {pageSizes.map((size) => (
-                <option key={size} value={size}>
-                  每页 {size} 条
-                </option>
-              ))}
-            </Select>
-            <Input
+              options={pageSizes.map((size) => ({
+                value: size,
+                label: `每页 ${size} 条`,
+              }))}
+            />
+            <NumericInput
               aria-label="跳转页码"
-              type="number"
+
               inputMode="numeric"
               min={1}
               max={pages}
               step={1}
+              precision={0}
               value={pageText}
               onChange={(_, data) => setPageText(data.value)}
               onBlur={jumpPage}
@@ -371,7 +364,7 @@ export function DataReview({
           <div className="table-empty">
             {rows.length
               ? "该时间范围内没有采样点"
-              : "导入 CSV、打开本机记录，或连接设备开始采集"}
+              : "导入、打开本机记录，或连接设备开始采集"}
           </div>
         )}
         <div className="review-pagination">

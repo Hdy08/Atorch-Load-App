@@ -5,7 +5,6 @@ import {
   ColorSwatch,
   Field,
   Input,
-  Select,
   Slider,
   SwatchPicker,
   Tab,
@@ -20,6 +19,8 @@ import { ChartScaleSettings } from "./ChartScaleSettings";
 import { useNotify } from "./Notifications";
 import { AutoRecordingForm } from "./AutoRecordingForm";
 import type { AutoRecordingSettings } from "../lib/autoRecording";
+import { MenuSelect } from "./MenuSelect";
+import { NumericInput } from "./NumericInput";
 
 export type ApplicationTab =
   "appearance" | "curves" | "recording" | "connection";
@@ -142,20 +143,21 @@ export function ApplicationSettings({
           <Card>
             <h2>外观</h2>
             <Field label="主题">
-              <Select
+              <MenuSelect
                 aria-label="主题"
                 value={draft.theme}
-                onChange={(_, data) =>
+                onChange={(value) =>
                   setDraft({
                     ...draft,
-                    theme: data.value as Appearance["theme"],
+                    theme: value as Appearance["theme"],
                   })
                 }
-              >
-                <option value="system">跟随系统</option>
-                <option value="light">浅色</option>
-                <option value="dark">深色</option>
-              </Select>
+                options={[
+                  { value: "system", label: "跟随系统" },
+                  { value: "light", label: "浅色" },
+                  { value: "dark", label: "深色" },
+                ]}
+              />
             </Field>
             <Field label="界面缩放">
               <div className="appearance-scale">
@@ -171,68 +173,71 @@ export function ApplicationSettings({
                   }
                   onChange={(_, data) => setScaleText(String(data.value))}
                 />
-                <Input
+                <NumericInput
                   aria-label="界面缩放"
-                  type="number"
                   min={50}
                   max={200}
                   step={1}
                   value={scaleText}
-                  contentAfter="%"
+                  unit="%"
+                  precision={0}
                   onChange={(_, data) => setScaleText(data.value)}
                 />
               </div>
             </Field>
             <Field label="侧栏">
-              <Select
+              <MenuSelect
                 aria-label="侧栏"
                 value={draft.sidebar}
-                onChange={(_, data) =>
+                onChange={(value) =>
                   setDraft({
                     ...draft,
-                    sidebar: data.value as Appearance["sidebar"],
+                    sidebar: value as Appearance["sidebar"],
                   })
                 }
-              >
-                <option value="auto">自动</option>
-                <option value="expanded">始终展开</option>
-                <option value="collapsed">始终收起</option>
-              </Select>
+                options={[
+                  { value: "auto", label: "自动" },
+                  { value: "expanded", label: "始终展开" },
+                  { value: "collapsed", label: "始终收起" },
+                ]}
+              />
             </Field>
             <Field label="页面过渡动画">
-              <Select
+              <MenuSelect
                 aria-label="页面过渡动画"
                 value={draft.transition}
-                onChange={(_, data) =>
+                onChange={(value) =>
                   setDraft({
                     ...draft,
-                    transition: data.value as Appearance["transition"],
+                    transition: value as Appearance["transition"],
                   })
                 }
-              >
-                <option value="slide">平移</option>
-                <option value="fade">淡入</option>
-                <option value="scale">缩放</option>
-                <option value="none">无</option>
-              </Select>
+                options={[
+                  { value: "slide", label: "平移" },
+                  { value: "fade", label: "淡入" },
+                  { value: "scale", label: "缩放" },
+                  { value: "none", label: "无" },
+                ]}
+              />
             </Field>
           </Card>
           <Card>
             <h2>强调色</h2>
             <Field label="强调色来源">
-              <Select
+              <MenuSelect
                 aria-label="强调色来源"
                 value={draft.accent}
-                onChange={(_, data) =>
+                onChange={(value) =>
                   setDraft({
                     ...draft,
-                    accent: data.value as Appearance["accent"],
+                    accent: value as Appearance["accent"],
                   })
                 }
-              >
-                <option value="system">跟随系统</option>
-                <option value="custom">自定义</option>
-              </Select>
+                options={[
+                  { value: "system", label: "跟随系统" },
+                  { value: "custom", label: "自定义" },
+                ]}
+              />
             </Field>
             <SwatchPicker
               aria-label="强调色预设"
@@ -259,6 +264,7 @@ export function ApplicationSettings({
             <Field label="颜色">
               <Input
                 aria-label="强调色"
+                className="accent-color-input"
                 value={
                   draft.accent === "system" ? systemAccent : draft.accentColor
                 }
@@ -358,20 +364,21 @@ export function ApplicationSettings({
           <Card>
             <h2>连接</h2>
             <Field label="自动连接">
-              <Select
+              <MenuSelect
                 aria-label="自动连接"
                 disabled={busy}
                 value={connectionDraft}
-                onChange={(_, data) =>
-                  setConnectionDraft(data.value as AutoConnectPreference)
+                onChange={(value) =>
+                  setConnectionDraft(value as AutoConnectPreference)
                 }
-              >
-                <option value="off">关</option>
-                <option value="prefer-usb">优先 USB</option>
-                <option value="prefer-ble">优先 BLE</option>
-                <option value="usb-only">仅 USB</option>
-                <option value="ble-only">仅 BLE</option>
-              </Select>
+                options={[
+                  { value: "off", label: "关" },
+                  { value: "prefer-usb", label: "优先 USB" },
+                  { value: "prefer-ble", label: "优先 BLE" },
+                  { value: "usb-only", label: "仅 USB" },
+                  { value: "ble-only", label: "仅 BLE" },
+                ]}
+              />
             </Field>
           </Card>
         </form>

@@ -1,3 +1,4 @@
+import { chooseMenu } from "./menu";
 import { expect, test } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 
@@ -49,7 +50,7 @@ test("CSV worker accepts browser files and terminates after a parse failure", as
 
 test("large CSV renders pixel extrema, loads visible detail, preserves raw hover/export and keeps pan gestures", async ({
   page,
-}) => {
+}, info) => {
   test.setTimeout(90_000);
   const count = 250_003;
   const origin = Date.parse("2026-11-14T00:00:00Z");
@@ -142,7 +143,7 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
   );
   await page.goto("/");
   await page.getByRole("button", { name: "数据记录", exact: true }).click();
-  await page.getByRole("button", { name: "导入 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导入", exact: true }).click();
   // Navigation can respond while the worker parses and prepares the full file.
   await expect
     .poll(() => page.evaluate(() => (window as any).csvPerformance.workers))
@@ -202,6 +203,10 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
     },
     { count, origin },
   );
+  await info.attach("csv-import-performance", {
+    body: JSON.stringify(report, null, 2),
+    contentType: "application/json",
+  });
   expect(report.workers).toBe(1);
   expect(report.terminated).toBe(1);
   expect(report.ticks).toBeGreaterThan(5);
@@ -215,7 +220,7 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
     "viewport",
   );
   // Export proves every original row survives the display reduction.
-  await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导出", exact: true }).click();
   const exported = await page.evaluate(
     () => (window as any).csvLodExport as string,
   );
@@ -332,10 +337,41 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
         ),
       )
       .toBeCloseTo(value, 12);
+  await expect(page.locator(".chart-hover-marker")).toHaveCount(6);
+  const dots = await page.evaluate(
+    async ({ values, time }) => {
+      const url = performance
+        .getEntriesByType("resource")
+        .map((e) => e.name)
+        .find((url) => url.includes("/echarts_core.js"))!;
+      const { getInstanceByDom } = await import(url);
+      const chart = getInstanceByDom(document.querySelector(".trend-chart"));
+      const series = chart.getModel().getSeries();
+      return [
+        ...document.querySelectorAll<HTMLElement>(".chart-hover-marker"),
+      ].map((dot) => {
+        const key = dot.dataset.measurement!;
+        const axis = series.find((s: any) => s.id === key).get("yAxisIndex");
+        return {
+          actual: [parseFloat(dot.style.left), parseFloat(dot.style.top)],
+          expected: [
+            chart.convertToPixel({ xAxisIndex: 0 }, time),
+            chart.convertToPixel(
+              { yAxisIndex: axis },
+              values[key as keyof typeof values],
+            ),
+          ],
+        };
+      });
+    },
+    { values: expectedValues, time: origin + hovered.index * 100 },
+  );
+  for (const dot of dots) {
+    expect(dot.actual[0]).toBeCloseTo(dot.expected[0], 2);
+    expect(dot.actual[1]).toBeCloseTo(dot.expected[1], 2);
+  }
   await page.mouse.move(0, 0);
-  await page
-    .getByLabel("曲线时间坐标", { exact: true })
-    .selectOption("elapsed");
+  await chooseMenu(page.getByLabel("曲线时间坐标", { exact: true }), "elapsed");
   await page.evaluate(async () => {
     const url = performance
       .getEntriesByType("resource")
@@ -345,11 +381,11 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
     getInstanceByDom(document.querySelector(".trend-chart")).dispatchAction({
       type: "dataZoom",
       startValue: 12_345_600,
-      endValue: 12_346_000,
+      endValue: 12_346_600,
     });
   });
   await expect(
-    page.getByText(`5 / ${count.toLocaleString()} 个采样点`, { exact: false }),
+    page.getByText(`11 / ${count.toLocaleString()} 个采样点`, { exact: false }),
   ).toBeVisible();
   const power = page
     .getByRole("table", { name: "采样统计" })
@@ -407,6 +443,12 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
       { start, end },
     );
   await coreZoom(30, 70);
+  await expect
+    .poll(async () => {
+      const view = await inspect();
+      return (view.end - view.start) / ((count - 1) * 100);
+    })
+    .toBeCloseTo(0.4, 6);
   const beforeWheel = await inspect();
   await page.evaluate(
     ({ x, y }) => {
@@ -444,7 +486,7 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
       end: 60,
     });
     Array.from(document.querySelectorAll("button"))
-      .find((button) => button.textContent === "重置缩放")!
+      .find((button) => button.textContent === "复原")!
       .click();
   });
   await expect(
@@ -481,6 +523,33 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
       Math.ceil(last.grid.width) * 2 + 4,
     );
   }
+  await coreZoom(30, 70);
+  await page.waitForTimeout(180);
+  const beforeBrush = await inspect();
+  const brushX = beforeBrush.left + beforeBrush.grid.x;
+  await page.mouse.move(
+    brushX + beforeBrush.grid.width * 0.25,
+    beforeBrush.top + 90,
+  );
+  await page.keyboard.down("Control");
+  await page.mouse.down();
+  await page.mouse.move(
+    brushX + beforeBrush.grid.width * 0.75,
+    beforeBrush.top + 120,
+    { steps: 10 },
+  );
+  await expect(page.locator(".chart-range-selection")).toBeVisible();
+  await page.mouse.up();
+  await page.keyboard.up("Control");
+  await expect
+    .poll(async () => {
+      const range = await inspect();
+      return (range.end - range.start) / (beforeBrush.end - beforeBrush.start);
+    })
+    .toBeCloseTo(0.5, 2);
+  await expect
+    .poll(async () => (await inspect()).points.length)
+    .toBeLessThanOrEqual(Math.ceil(beforeBrush.grid.width) * 2 + 4);
   // Export reads the current zoom immediately, before the delayed statistics.
   await page.evaluate(async () => {
     const url = performance
@@ -491,11 +560,11 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
     getInstanceByDom(document.querySelector(".trend-chart")).dispatchAction({
       type: "dataZoom",
       startValue: 12_345_600,
-      endValue: 12_346_000,
+      endValue: 12_346_600,
     });
     (window as any).csvLodExport = "";
     Array.from(document.querySelectorAll("button"))
-      .find((button) => button.textContent === "导出 CSV")!
+      .find((button) => button.textContent === "导出")!
       .click();
   });
   await expect
@@ -505,7 +574,7 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
           (window as any).csvLodExport.split(/\r?\n/).filter(Boolean).length,
       ),
     )
-    .toBe(6);
+    .toBe(12);
   const updateTimes = await page.evaluate(
     () => (window as any).chartLodUpdates as number[],
   );
@@ -515,7 +584,7 @@ test("large CSV renders pixel extrema, loads visible detail, preserves raw hover
   await expect
     .poll(async () => (await inspect()).points.length)
     .toBeLessThanOrEqual(390 * 2 + 4);
-  await page.getByRole("button", { name: "退出全屏", exact: true }).click();
+  await page.getByRole("button", { name: "退出", exact: true }).click();
   await mkdir("artifacts/chart-lod", { recursive: true });
   await writeFile(
     "artifacts/chart-lod/ui-performance.json",

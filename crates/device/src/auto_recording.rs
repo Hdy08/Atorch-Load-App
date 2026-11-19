@@ -156,14 +156,13 @@ pub(crate) struct Runtime {
 
 impl Runtime {
     pub fn manual_sampling(&mut self, enabled: bool) {
-        if enabled {
-            self.stop.consumed = false;
-        } else {
+        if !enabled {
             self.start.consumed = true;
         }
     }
     /// Evaluate only fresh telemetry, even while collection is paused. Each
-    /// start fires once and rearms after becoming false; manual starts recheck stop.
+    /// condition fires once and rearms after becoming false. Manual resume keeps
+    /// a consumed stop consumed, while an unfinished stop hold can still finish.
     pub fn observe(
         &mut self,
         settings: &Settings,
@@ -484,9 +483,41 @@ mod tests {
             assert!(manager.snapshot().recording_paused);
             assert_eq!(manager.samples().len(), 1);
             manager.set_sampling(true).unwrap();
-            assert!(manager.snapshot().sampling_paused);
+            assert!(!manager.snapshot().sampling_paused);
+            assert!(!manager.snapshot().recording_paused);
             assert_eq!(manager.snapshot().telemetry.unwrap().current, 0.0);
-            assert_eq!(std::fs::read_to_string(&path).unwrap().lines().count(), 2);
+            for _ in 0..3 {
+                crate::accept_report(
+                    crate::Report::Telemetry(t.clone()),
+                    &manager.state,
+                    &manager.samples,
+                    &mut recorder,
+                )
+                .unwrap();
+            }
+            assert!(!manager.snapshot().sampling_paused);
+            assert_eq!(manager.samples().len(), 4);
+            assert_eq!(manager.snapshot().recording.as_deref(), Some(path.as_str()));
+            assert_eq!(std::fs::read_to_string(&path).unwrap().lines().count(), 5);
+            t.current = 0.5;
+            crate::accept_report(
+                crate::Report::Telemetry(t.clone()),
+                &manager.state,
+                &manager.samples,
+                &mut recorder,
+            )
+            .unwrap();
+            t.current = 0.0;
+            crate::accept_report(
+                crate::Report::Telemetry(t),
+                &manager.state,
+                &manager.samples,
+                &mut recorder,
+            )
+            .unwrap();
+            assert!(manager.snapshot().sampling_paused);
+            assert!(manager.snapshot().recording_paused);
+            assert_eq!(manager.samples().len(), 5);
             drop(recorder);
             std::fs::remove_dir_all(root).unwrap();
         }
@@ -533,7 +564,7 @@ mod tests {
     }
 
     #[test]
-    fn manual_pause_masks_start_until_false_but_manual_start_rechecks_held_stop() {
+    fn manual_resume_does_not_rearm_a_consumed_stop_and_manual_pause_masks_start() {
         let settings = Settings::from_legacy(true);
         let mut runtime = Runtime::default();
         let now = Instant::now();
@@ -553,7 +584,7 @@ mod tests {
         runtime.manual_sampling(true);
         assert_eq!(
             runtime.observe(&settings, &t, true, now + Duration::from_secs(12)),
-            Some(false)
+            None
         );
         t.running = Some(true);
         assert_eq!(
@@ -569,6 +600,44 @@ mod tests {
         assert_eq!(
             runtime.observe(&settings, &t, true, now + Duration::from_secs(5)),
             None
+        );
+    }
+
+    #[test]
+    fn manual_resume_keeps_an_unfinished_stop_hold_and_false_restarts_it() {
+        let mut settings = Settings::from_legacy(true);
+        settings.stop_on_load.delay_seconds = 1.0;
+        let mut runtime = Runtime::default();
+        let now = Instant::now();
+        let mut t = telemetry();
+        assert_eq!(runtime.observe(&settings, &t, true, now), None);
+        runtime.manual_sampling(true);
+        assert_eq!(
+            runtime.observe(&settings, &t, true, now + Duration::from_millis(500)),
+            None
+        );
+        assert_eq!(
+            runtime.observe(&settings, &t, true, now + Duration::from_secs(1)),
+            Some(false)
+        );
+        runtime.manual_sampling(true);
+        assert_eq!(
+            runtime.observe(&settings, &t, true, now + Duration::from_secs(2)),
+            None
+        );
+        t.running = Some(true);
+        assert_eq!(
+            runtime.observe(&settings, &t, true, now + Duration::from_secs(3)),
+            Some(true)
+        );
+        t.running = Some(false);
+        assert_eq!(
+            runtime.observe(&settings, &t, true, now + Duration::from_secs(4)),
+            None
+        );
+        assert_eq!(
+            runtime.observe(&settings, &t, true, now + Duration::from_secs(5)),
+            Some(false)
         );
     }
 }

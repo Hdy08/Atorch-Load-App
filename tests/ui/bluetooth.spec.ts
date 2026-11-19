@@ -256,7 +256,15 @@ test("BLE discovery connects to the selected device and hides unconfirmed values
   await expect(
     page.getByRole("button", { name: "暂停", exact: true }),
   ).toBeEnabled();
-  await page.getByRole("checkbox", { name: "MOS 温度", exact: true }).check();
+  const mos = page.getByRole("checkbox", { name: "MOS 温度", exact: true });
+  const more = page.getByRole("button", { name: "更多曲线参数", exact: true });
+  if (!(await mos.isVisible())) await more.click();
+  await mos.check();
+  if (
+    (await more.isVisible()) &&
+    (await more.getAttribute("aria-expanded")) === "true"
+  )
+    await more.click();
   await expect(page.locator(".thermal-metrics")).toContainText("26.0");
   await expect(page.locator(".thermal-metrics > .metric")).toHaveCount(4);
   await expect(

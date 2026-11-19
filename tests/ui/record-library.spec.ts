@@ -122,7 +122,7 @@ test("manual imports persist references, deduplicate paths, and delete only sele
   await page.getByRole("tab", { name: "历史记录", exact: true }).click();
   await expect(page.locator(".recording-entry")).toHaveCount(0);
   const importButton = page.getByRole("button", {
-    name: "导入 CSV",
+    name: "导入",
     exact: true,
   });
   await importButton.click();
@@ -163,7 +163,7 @@ test("manual imports persist references, deduplicate paths, and delete only sele
     page.getByText("0 / 0 个采样点", { exact: false }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "导出 CSV", exact: true }),
+    page.getByRole("button", { name: "导出", exact: true }),
   ).toBeDisabled();
   const state = await page.evaluate(() => ({
     disks: (window as any).libraryFixture.disks,
@@ -188,7 +188,7 @@ test("deleting an imported record clears its chart immediately while other recor
 }) => {
   await fixture(page);
   const importButton = page.getByRole("button", {
-    name: "导入 CSV",
+    name: "导入",
     exact: true,
   });
   await importButton.click();
@@ -220,7 +220,7 @@ test("deleting an imported record clears its chart immediately while other recor
     page.getByRole("table", { name: "采样明细" }).locator("tbody tr"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "导出 CSV", exact: true }),
+    page.getByRole("button", { name: "导出", exact: true }),
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "截图", exact: true }),
@@ -257,12 +257,12 @@ test("invalid imports remain as floating failures until manually closed", async 
   await page.evaluate(() => {
     (window as any).libraryFixture.nextPath = null;
   });
-  await page.getByRole("button", { name: "导入 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导入", exact: true }).click();
   await expect(page.locator(".fui-Toast")).toHaveCount(0);
   await page.evaluate(() => {
     (window as any).libraryFixture.nextPath = "D:/measurements/invalid.csv";
   });
-  await page.getByRole("button", { name: "导入 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导入", exact: true }).click();
   const toast = page.locator(".fui-Toast");
   await expect(toast).toContainText("未找到");
   await expect(page.locator(".fui-Toaster.app-notifications")).toHaveCSS(
@@ -279,7 +279,7 @@ test("invalid imports remain as floating failures until manually closed", async 
   await page.clock.install();
   await page.clock.runFor(5000);
   await expect(toast).toContainText("未找到");
-  await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导出", exact: true }).click();
   const failure = toast.filter({ hasText: "未找到" });
   const success = toast.filter({ hasText: "已导出：" });
   await expect(success).toBeVisible();
@@ -289,7 +289,7 @@ test("invalid imports remain as floating failures until manually closed", async 
   await expect(failure).toBeVisible();
   await failure.getByRole("button", { name: "关闭", exact: true }).click();
   await expect(toast).toHaveCount(0);
-  await page.getByRole("button", { name: "导入 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导入", exact: true }).click();
   await expect(toast).toHaveCount(1);
   await expect(toast).toContainText("未找到");
 });
@@ -298,7 +298,7 @@ test("manual export adds a reference, cancellation adds none, and success closes
   page,
 }) => {
   await fixture(page);
-  await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导出", exact: true }).click();
   const toast = page.locator(".fui-Toast");
   await expect(toast).toContainText("已导出：D:/export/selected.csv");
   await expect(page.locator("main .fui-Toast")).toHaveCount(0);
@@ -312,7 +312,7 @@ test("manual export adds a reference, cancellation adds none, and success closes
   await page.evaluate(() => {
     (window as any).libraryFixture.savePath = null;
   });
-  await page.getByRole("button", { name: "导出 CSV", exact: true }).click();
+  await page.getByRole("button", { name: "导出", exact: true }).click();
   await expect(toast).toHaveCount(0);
   await page.getByRole("tab", { name: "历史记录", exact: true }).click();
   await expect(page.locator(".recording-entry")).toHaveCount(1);

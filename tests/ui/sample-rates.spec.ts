@@ -1,3 +1,4 @@
+import { chooseMenu, expectMenuOptions } from "./menu";
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 
@@ -102,8 +103,11 @@ for (const hz of [1, 2, 5]) {
     page,
   }) => {
     await fixture(page);
-    await page.getByLabel("USB 采样率").selectOption(String(hz));
-    await expect(page.getByLabel("USB 采样率")).toHaveValue(String(hz));
+    await chooseMenu(page.getByLabel("USB 采样率"), String(hz));
+    await expect(page.getByLabel("USB 采样率")).toHaveAttribute(
+      "data-value",
+      String(hz),
+    );
     await page.waitForTimeout(650);
     await page.evaluate(async () => {
       const url = performance
@@ -169,11 +173,14 @@ test("rate failures preserve the confirmed rate and BLE exposes no rate write", 
   await page.evaluate(() => {
     (window as any).rateFixture.failRate = true;
   });
-  await page.getByLabel("USB 采样率").selectOption("5");
+  await chooseMenu(page.getByLabel("USB 采样率"), "5");
   await expect(
     page.getByText("Error: 采样率设置失败", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByLabel("USB 采样率")).toHaveValue("1");
+  await expect(page.getByLabel("USB 采样率")).toHaveAttribute(
+    "data-value",
+    "1",
+  );
   expect(
     await page.evaluate(() => localStorage.getItem("fixture-native-rate")),
   ).toBeNull();
@@ -184,16 +191,15 @@ test("sample rate defaults to 1 Hz and reflects the saved native preference on r
 }) => {
   await fixture(page);
   const select = page.getByLabel("USB 采样率");
-  await expect(select).toHaveValue("1");
-  await expect(select.locator("option")).toHaveText([
-    "1 Hz 采样",
-    "2 Hz 采样",
-    "5 Hz 采样",
-  ]);
-  await select.selectOption("5");
-  await expect(select).toHaveValue("5");
+  await expect(select).toHaveAttribute("data-value", "1");
+  await expectMenuOptions(select, ["1 Hz 采样", "2 Hz 采样", "5 Hz 采样"]);
+  await chooseMenu(select, "5");
+  await expect(select).toHaveAttribute("data-value", "5");
   await page.reload();
-  await expect(page.getByLabel("USB 采样率")).toHaveValue("5");
+  await expect(page.getByLabel("USB 采样率")).toHaveAttribute(
+    "data-value",
+    "5",
+  );
 });
 
 test("a saved 10 Hz preference falls back to 5 Hz without exposing a 10 Hz option", async ({
@@ -204,13 +210,8 @@ test("a saved 10 Hz preference falls back to 5 Hz without exposing a 10 Hz optio
   });
   await fixture(page);
   const select = page.getByLabel("USB 采样率");
-  await expect(select).toHaveValue("5");
-  await expect(select.locator('option[value="10"]')).toHaveCount(0);
-  await expect(select.locator("option")).toHaveText([
-    "1 Hz 采样",
-    "2 Hz 采样",
-    "5 Hz 采样",
-  ]);
+  await expect(select).toHaveAttribute("data-value", "5");
+  await expectMenuOptions(select, ["1 Hz 采样", "2 Hz 采样", "5 Hz 采样"]);
 });
 
 test("BLE retains its device cadence without USB rate controls", async ({

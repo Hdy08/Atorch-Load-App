@@ -2,9 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   chartTimeline,
+  nearestTimelineSample,
   samplesInChartRange,
   zoomAxisRange,
   pinchAxisRange,
+  clampChartTimeRange,
+  minimumChartTimeSpan,
 } from "../apps/app/src/lib/chartInteraction.ts";
 import { exportCsv, parseCsv } from "../apps/app/src/lib/csv.ts";
 
@@ -75,6 +78,28 @@ test("legacy CSV gaps are detected without generating synthetic zero measurement
   ]);
 });
 
+test("hover rejects the whole pause gap but keeps both recorded endpoints", () => {
+  const rows = [
+    row(0, 0, 0),
+    row(1000, 1000, 0),
+    row(61_000, 2000, 1),
+    row(62_000, 3000, 1),
+  ];
+  const clock = chartTimeline(rows, false, 0);
+  for (const time of [1001, 10_000, 31_000, 60_999])
+    assert.equal(nearestTimelineSample(clock, time), undefined);
+  assert.equal(nearestTimelineSample(clock, 999), rows[1]);
+  assert.equal(nearestTimelineSample(clock, 1000), rows[1]);
+  assert.equal(nearestTimelineSample(clock, 61_000), rows[2]);
+  assert.equal(nearestTimelineSample(clock, 61_001), rows[2]);
+  assert.equal(nearestTimelineSample(clock, -1), undefined);
+  assert.equal(nearestTimelineSample(clock, 62_001), undefined);
+  assert.equal(nearestTimelineSample([], 0), undefined);
+  assert.equal(nearestTimelineSample(clock, NaN), undefined);
+  const elapsed = chartTimeline(rows, true, 0);
+  assert.equal(nearestTimelineSample(elapsed, 1500), rows[2]);
+});
+
 test("range selection includes endpoints, supports empty gaps and effective coordinates", () => {
   const rows = [row(1000, 0), row(2000, 1000), row(61_000, 2000)];
   assert.equal(samplesInChartRange(rows, undefined, false, 1000), rows);
@@ -133,22 +158,41 @@ test("CSV exports retain pause boundaries and effective time on selected subsets
 });
 
 test("pinch uses damped absolute distance, independent of move count and jitter", () => {
-  const domain = { startValue: 0, endValue: 1000 };
-  const range = { startValue: 200, endValue: 800 };
+  const domain = { startValue: 0, endValue: 10_000 };
+  const range = { startValue: 2000, endValue: 8000 };
   const initial = pinchAxisRange(range, 0.5, 100, 100, domain);
   assert.deepEqual(initial, range);
   const doubled = pinchAxisRange(range, 0.5, 100, 200, domain);
   assert(
-    Math.abs(doubled.endValue - doubled.startValue - 600 / Math.sqrt(2)) <
+    Math.abs(doubled.endValue - doubled.startValue - 6000 / Math.sqrt(2)) <
       1e-10,
   );
-  assert.equal((doubled.startValue + doubled.endValue) / 2, 500);
+  assert.equal((doubled.startValue + doubled.endValue) / 2, 5000);
   const oneMove = pinchAxisRange(range, 0.5, 100, 150, domain);
   let manyMoves;
   for (let distance = 100; distance <= 150; distance++)
     manyMoves = pinchAxisRange(range, 0.5, 100, distance, domain);
   assert.deepEqual(manyMoves, oneMove);
   const jitter = pinchAxisRange(range, 0.5, 100, 100.1, domain);
-  assert(Math.abs(jitter.startValue - range.startValue) < 0.2);
+  assert(Math.abs(jitter.startValue - range.startValue) < 2);
   assert.deepEqual(pinchAxisRange(domain, 0, 100, 10, domain), domain);
+});
+
+test("all horizontal range adjustments stop at one second without requiring samples in that time", () => {
+  const domain = { startValue: 0, endValue: 100_000 };
+  assert.equal(minimumChartTimeSpan, 1000);
+  assert.deepEqual(
+    clampChartTimeRange({ startValue: 20_000, endValue: 20_010 }, domain),
+    { startValue: 19_505, endValue: 20_505 },
+  );
+  assert.deepEqual(
+    clampChartTimeRange({ startValue: 40_000, endValue: 42_000 }, domain),
+    { startValue: 40_000, endValue: 42_000 },
+  );
+  const narrow = pinchAxisRange(domain, 0.5, 100, 1e9, domain);
+  assert.equal(narrow.endValue - narrow.startValue, 1000);
+  assert.deepEqual(
+    clampChartTimeRange({ startValue: -1000, endValue: -999 }, domain),
+    { startValue: 0, endValue: 1000 },
+  );
 });

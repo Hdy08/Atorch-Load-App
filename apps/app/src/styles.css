@@ -188,6 +188,7 @@ html.has-window-titlebar body {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
@@ -285,14 +286,14 @@ main {
 .floating-load-target {
   display: flex;
   align-items: center;
-  gap: var(--spacingHorizontalXS);
+  gap: var(--spacingHorizontalS);
   min-width: 0;
   white-space: nowrap;
 }
-.floating-load-target .fui-Input {
-  width: 110px;
+.floating-load-target .numeric-input.fui-SpinButton {
+  flex: 0 0 120px;
+  width: 120px;
   min-width: 0;
-  padding-inline: var(--spacingHorizontalXS);
 }
 .floating-load-target input {
   width: 100%;
@@ -383,14 +384,16 @@ h2 {
   color: var(--colorNeutralForeground1);
   margin: 0;
 }
-.section-head > div > span:not(.fui-Select):not(.fui-Input) {
+.section-head
+  > div
+  > span:not([hidden]):not(.menu-select):not(.fui-Input):not(.numeric-input) {
   font-size: var(--fontSizeBase200);
   line-height: var(--lineHeightBase200);
   display: block;
   margin-top: 6px;
   color: var(--colorNeutralForeground3);
 }
-.section-head > span:not(.fui-Select) {
+.section-head > span:not(.menu-select) {
   font-size: var(--fontSizeBase200);
   line-height: var(--lineHeightBase200);
 }
@@ -406,12 +409,38 @@ h2 {
 .chart-controls {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 3px;
+  flex-wrap: nowrap;
+  gap: 0;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+  width: 100%;
+  overflow: hidden;
+}
+.measurement-option {
+  flex-shrink: 0;
+  padding-right: 3px;
+}
+.measurement-option .fui-Checkbox,
+.chart-parameter-overflow .fui-Checkbox {
+  white-space: nowrap;
+}
+.chart-parameter-overflow {
+  display: flex;
+  flex-direction: column;
+  max-height: min(360px, calc(100dvh / var(--ui-scale) - 64px));
+  overflow-y: auto;
+}
+.chart-wrap > .chart-controls {
+  margin-bottom: 12px;
 }
 .chart-wrap {
   position: relative;
   min-height: 255px;
+  overflow-anchor: none;
+}
+.main-shell:has(.chart-wrap.resizing) {
+  overflow-anchor: none;
 }
 .chart-scroll {
   display: block;
@@ -446,15 +475,77 @@ h2 {
   transform: rotate(90deg);
   transform-origin: top left;
 }
-.chart-fullscreen-exit {
+.chart-fullscreen-toolbar {
   position: absolute;
   top: max(8px, env(safe-area-inset-top));
   right: max(8px, env(safe-area-inset-right));
-  z-index: 1;
+  left: max(8px, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+}
+.chart-fullscreen-toolbar .chart-controls {
+  flex: 1;
+}
+.chart-fullscreen-rotated .chart-controls {
+  position: relative;
+  overflow: visible;
+}
+.chart-fullscreen-rotated .chart-parameter-overflow {
+  position: absolute !important;
+  left: auto !important;
+  right: 0 !important;
+  top: calc(100% + 4px) !important;
+  transform: none !important;
+}
+.chart-fullscreen-exit {
+  flex-shrink: 0;
 }
 .trend-chart {
   width: 100%;
   touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.trend-chart[data-cursor]:not([data-cursor=""]),
+.trend-chart[data-cursor]:not([data-cursor=""]) > div,
+.trend-chart[data-cursor]:not([data-cursor=""]) canvas {
+  cursor: var(--chart-cursor) !important;
+}
+html[data-chart-dragging-cursor="crosshair"],
+html[data-chart-dragging-cursor="crosshair"] * {
+  cursor: crosshair !important;
+}
+html[data-chart-dragging-cursor="ns-resize"],
+html[data-chart-dragging-cursor="ns-resize"] * {
+  cursor: ns-resize !important;
+}
+html[data-chart-dragging-cursor="grabbing"],
+html[data-chart-dragging-cursor="grabbing"] * {
+  cursor: grabbing !important;
+}
+.chart-range-selection {
+  display: none;
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid var(--colorBrandForeground1);
+  background: color-mix(in srgb, var(--colorBrandForeground1) 16%, transparent);
+  z-index: 2;
+}
+.chart-hover-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.chart-hover-marker {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--colorNeutralBackground1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 .curve-tooltip-row {
   display: flex;
@@ -584,7 +675,7 @@ h2 {
   display: flex;
   gap: 7px;
 }
-.parameter-input > .fui-Input {
+.parameter-input > .numeric-input {
   width: 100%;
   min-width: 0;
 }
@@ -613,27 +704,74 @@ h2 {
   min-width: 0;
   gap: var(--spacingHorizontalXS);
 }
-.load-number-unit > .fui-SpinButton {
-  flex: 1;
+.numeric-input.fui-SpinButton {
   min-width: 0;
   width: 100%;
   grid-template-columns: minmax(0, 1fr) auto 24px;
 }
-.load-number-unit input {
+.load-number-unit > .numeric-input {
+  flex: 1;
+}
+.numeric-input input {
   width: 100%;
   min-width: 0;
   font-variant-numeric: tabular-nums;
 }
-.load-input-unit {
+.numeric-input-unit {
   grid-column: 2;
   grid-row: 1 / 3;
   align-self: center;
   color: var(--colorNeutralForeground3);
   pointer-events: none;
 }
-.load-number-unit .fui-SpinButton__incrementButton,
-.load-number-unit .fui-SpinButton__decrementButton {
+.numeric-input:has(input:disabled) .numeric-input-unit {
+  color: var(--colorNeutralForegroundDisabled);
+}
+.numeric-input .fui-SpinButton__incrementButton,
+.numeric-input .fui-SpinButton__decrementButton {
   grid-column: 3;
+}
+.menu-select.fui-Button {
+  min-width: 0;
+  width: max-content;
+  max-width: 100%;
+  justify-self: start;
+  align-self: start;
+  flex: 0 1 auto;
+  justify-content: space-between;
+  gap: var(--spacingHorizontalS);
+}
+.menu-select-label {
+  display: inline-grid;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.menu-select-label > span {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.menu-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: start;
+}
+.menu-select-option-width {
+  visibility: hidden;
+  pointer-events: none;
+}
+.menu-select-option-width::after {
+  content: attr(data-label);
+}
+.selection-menu.fui-MenuPopover {
+  min-width: 0;
+  max-width: calc(100vw / var(--ui-scale) - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.selection-menu .fui-MenuItemRadio__content {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .load-duration-inputs > .load-number-unit {
   flex: 1;
@@ -734,8 +872,8 @@ h2 {
   gap: 8px;
   margin-left: auto;
 }
-.review-page-controls > .fui-Input {
-  width: 80px;
+.review-page-controls > .numeric-input {
+  width: 96px;
   min-width: 0;
   margin-top: 0;
 }
@@ -753,6 +891,20 @@ h2 {
   justify-content: flex-start;
   gap: 8px;
   padding-top: 6px;
+}
+.chart-action {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.chart-image-actions.icon-only .chart-action {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  padding-inline: 0;
+  gap: 0;
+}
+.chart-image-actions.icon-only .chart-action-label {
+  display: none;
 }
 .chart-view-actions {
   display: flex;
@@ -806,11 +958,11 @@ h2 {
   gap: 12px;
   margin-top: 8px;
 }
-.axis-inputs .fui-Input {
+.axis-inputs :is(.fui-Input, .numeric-input) {
   min-width: 0;
 }
 .axis-opacity {
-  grid-column: 1 / -1;
+  min-width: 0;
 }
 .axis-color-input {
   position: relative;
@@ -1063,14 +1215,14 @@ h2 {
   align-items: center;
   gap: var(--spacingHorizontalS);
 }
-.firmware-device-controls .fui-Select {
-  flex: 1;
+.firmware-device-controls .menu-select {
+  flex: 0 1 auto;
   min-width: 0;
 }
-.firmware-device-controls .fui-Select select {
+.firmware-device-controls .menu-select-label {
   text-overflow: ellipsis;
 }
-.firmware-device-controls .fui-Button {
+.firmware-device-controls .fui-Button:not(.menu-select) {
   flex-shrink: 0;
   min-width: 0;
 }
@@ -1274,13 +1426,15 @@ html.has-window-titlebar .fui-Toaster.app-notifications.with-load-control {
 .mobile-layout .section-head {
   gap: 8px;
 }
-.mobile-layout .section-head > div > span:not(.fui-Select):not(.fui-Input) {
+.mobile-layout
+  .section-head
+  > div
+  > span:not(.menu-select):not(.fui-Input):not(.numeric-input) {
   font-size: var(--fontSizeBase100);
   line-height: var(--lineHeightBase100);
 }
 .mobile-layout .chart-controls {
   gap: 0;
-  flex-wrap: wrap;
 }
 .mobile-layout .mode-display {
   padding: 14px;
@@ -1598,9 +1752,25 @@ html.has-window-titlebar .fui-Toaster.app-notifications.with-load-control {
   min-width: 0;
   width: 100%;
 }
-.appearance-settings .fui-Select,
-.appearance-settings .fui-Input {
+.appearance-settings .menu-select,
+.appearance-settings :is(.fui-Input, .numeric-input) {
   min-width: 0;
+}
+.accent-color-input.fui-Input {
+  width: max-content;
+  max-width: 100%;
+  justify-self: start;
+  padding-left: var(--spacingHorizontalM);
+  padding-right: var(--spacingHorizontalS);
+  column-gap: var(--spacingHorizontalXS);
+}
+.accent-color-input input {
+  flex: 0 0 9ch;
+  width: 9ch;
+  min-width: 9ch;
+  padding: 0;
+  scrollbar-gutter: auto;
+  font-family: var(--fontFamilyMonospace);
 }
 .application-settings-actions {
   display: flex;
@@ -1610,10 +1780,6 @@ html.has-window-titlebar .fui-Toaster.app-notifications.with-load-control {
 }
 .auto-recording-card {
   gap: 16px;
-}
-.auto-recording-mode {
-  width: 220px;
-  max-width: 100%;
 }
 .auto-recording-rules {
   display: grid;
@@ -1637,16 +1803,13 @@ html.has-window-titlebar .fui-Toaster.app-notifications.with-load-control {
   flex: 1 1 420px;
   min-width: 0;
 }
-.record-rule-condition > .fui-Select {
-  width: 100px;
-}
 .record-rule-condition .record-threshold-value {
   width: 140px;
 }
 .record-rule-time {
   white-space: nowrap;
 }
-.record-rule-time .fui-Input {
+.record-rule-time .numeric-input {
   width: 120px;
 }
 .auto-recording-card input {

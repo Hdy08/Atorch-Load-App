@@ -1,5 +1,7 @@
+import { NumericInput } from "./NumericInput";
 import { useEffect, useState } from "react";
-import { Card, Input, Select, Switch } from "@fluentui/react-components";
+import { Card, Switch } from "@fluentui/react-components";
+import { MenuSelect } from "./MenuSelect";
 import {
   defaultAutoRecording,
   type AutoRecordingSettings,
@@ -140,22 +142,23 @@ export function AutoRecordingForm({
     >
       <Card className="auto-recording-card">
         <h2>自动记录</h2>
-        <Select
+        <MenuSelect
           className="auto-recording-mode"
           aria-label="自动记录"
           value={draft.mode}
           disabled={disabled}
-          onChange={(_, data) =>
+          onChange={(value) =>
             setDraft({
               ...draft,
-              mode: data.value as AutoRecordingSettings["mode"],
+              mode: value as AutoRecordingSettings["mode"],
             })
           }
-        >
-          <option value="off">关</option>
-          <option value="device">跟随设备</option>
-          <option value="threshold">设置阈值</option>
-        </Select>
+          options={[
+            { value: "off", label: "关" },
+            { value: "device", label: "跟随设备" },
+            { value: "threshold", label: "设置阈值" },
+          ]}
+        />
         {draft.mode === "device" && (
           <div className="auto-recording-rules">
             {(
@@ -178,12 +181,13 @@ export function AutoRecordingForm({
                 />
                 <label className="record-rule-time">
                   <span>延迟</span>
-                  <Input
+                  <NumericInput
                     aria-label={name}
-                    type="number"
+
                     min={0}
                     step={0.1}
-                    contentAfter="s"
+                    precision={1}
+                    unit="s"
                     value={draft[key].delaySeconds}
                     onBlur={(event) => {
                       const text = timeText(event.target.value);
@@ -226,49 +230,47 @@ export function AutoRecordingForm({
                   }
                 />
                 <div className="record-rule-condition">
-                  <Select
+                  <MenuSelect
                     aria-label={`${label}参数`}
                     value={draft[key].parameter}
                     disabled={disabled || !draft[key].enabled}
-                    onChange={(_, data) =>
+                    onChange={(value) =>
                       setDraft({
                         ...draft,
                         [key]: {
                           ...draft[key],
-                          parameter: data.value as RecordingParameter,
+                          parameter: value as RecordingParameter,
                         },
                       })
                     }
-                  >
-                    {Object.entries(parameters).map(([value, { name }]) => (
-                      <option key={value} value={value}>
-                        {name}
-                      </option>
-                    ))}
-                  </Select>
-                  <Select
+                    options={Object.entries(parameters).map(
+                      ([value, { name }]) => ({ value, label: name }),
+                    )}
+                  />
+                  <MenuSelect
                     aria-label={`${label}条件`}
                     value={draft[key].comparison}
                     disabled={disabled || !draft[key].enabled}
-                    onChange={(_, data) =>
+                    onChange={(value) =>
                       setDraft({
                         ...draft,
                         [key]: {
                           ...draft[key],
-                          comparison: data.value as RecordingComparison,
+                          comparison: value as RecordingComparison,
                         },
                       })
                     }
-                  >
-                    <option value="less">小于</option>
-                    <option value="greater">大于</option>
-                  </Select>
-                  <Input
+                    options={[
+                      { value: "less", label: "小于" },
+                      { value: "greater", label: "大于" },
+                    ]}
+                  />
+                  <NumericInput
                     className="record-threshold-value"
                     aria-label={`${label}阈值`}
-                    type="number"
-                    step="any"
-                    contentAfter={parameters[draft[key].parameter].unit}
+
+                    step={0.001}
+                    unit={parameters[draft[key].parameter].unit}
                     value={draft[key].value}
                     disabled={disabled || !draft[key].enabled}
                     onChange={(_, data) =>
@@ -280,12 +282,13 @@ export function AutoRecordingForm({
                   />
                   <label className="record-rule-time">
                     <span>保持</span>
-                    <Input
+                    <NumericInput
                       aria-label={`${label}保持时间`}
-                      type="number"
+
                       min={0}
                       step={0.1}
-                      contentAfter="s"
+                      precision={1}
+                      unit="s"
                       value={draft[key].holdSeconds}
                       onBlur={(event) => {
                         const text = timeText(event.target.value);

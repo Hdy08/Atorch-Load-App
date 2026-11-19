@@ -13,9 +13,52 @@ import {
   nearestChartSample,
   chartIndexBuffers,
   cacheChartData,
+  nearestChartValue,
 } from "../apps/app/src/lib/chartData.ts";
 import { samplesInChartRange } from "../apps/app/src/lib/chartInteraction.ts";
 import { measurementKeys, summarize } from "../apps/app/src/lib/analysis.ts";
+
+for (const count of [31, 20_003]) {
+  test(`vertical visibility queries use original values and time ranges (${count} rows)`, () => {
+    const rows = fixture(count);
+    for (const [i, row] of rows.entries()) {
+      row.voltage = i % 3 === 0 ? 0 : i % 3 === 1 ? 5 : null;
+      row.mosTemperature = i % 2 ? 25 : null;
+    }
+    indexedChartData(rows);
+    for (const elapsed of [false, true]) {
+      const start = elapsed ? 500 : rows[0].timestamp + 500;
+      const range = { startValue: start, endValue: start + 1000 };
+      const visible = rows.filter((row) => {
+        const time = elapsed ? row.elapsedMs : row.timestamp;
+        return time >= range.startValue && time <= range.endValue;
+      });
+      for (const keys of [["voltage"], ["cpuTemperature", "mosTemperature"]])
+        for (const target of [-100, 0, 2.5, 5, 24, 100]) {
+          const values = visible
+            .flatMap((row) => keys.map((key) => row[key]))
+            .filter((value) => value != null && Number.isFinite(value));
+          const value = nearestChartValue(rows, keys, target, range, elapsed);
+          const nearest = Math.min(...values.map((v) => Math.abs(v - target)));
+          assert.equal(Math.abs(value - target), nearest);
+          assert.ok(values.includes(value));
+        }
+      assert.equal(
+        nearestChartValue(
+          rows,
+          ["voltage"],
+          3,
+          {
+            startValue: start + count * 1000,
+            endValue: start + count * 1000 + 1000,
+          },
+          elapsed,
+        ),
+        undefined,
+      );
+    }
+  });
+}
 
 test("transferable CSV rows retain all samples, duplicate times, nulls, zeros and full precision", () => {
   const source = parseCsv(

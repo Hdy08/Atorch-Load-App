@@ -1,3 +1,4 @@
+import { chooseMenu } from "./menu";
 import { expect, test, type Page } from "@playwright/test";
 import { webDarkTheme, webLightTheme } from "@fluentui/react-components";
 import { mkdir } from "node:fs/promises";
@@ -245,15 +246,15 @@ test("recording settings default off, work without a device and survive restart"
   for (const [index, label] of ["外观", "曲线", "记录", "连接"].entries())
     await expect(tabs.nth(index)).toHaveAccessibleName(label);
   await page.getByRole("tab", { name: "记录", exact: true }).click();
-  const control = page.getByRole("combobox", {
+  const control = page.getByRole("button", {
     name: "自动记录",
     exact: true,
   });
   await expect(control).toBeEnabled();
-  await expect(control).toHaveValue("off");
-  await control.selectOption("device");
+  await expect(control).toHaveAttribute("data-value", "off");
+  await chooseMenu(control, "device");
   await page.getByRole("button", { name: "应用更改", exact: true }).click();
-  await expect(control).toHaveValue("device");
+  await expect(control).toHaveAttribute("data-value", "device");
   await expect(page.getByText("已保存", { exact: true })).toBeVisible();
   expect(
     await page.evaluate(() =>
@@ -265,10 +266,10 @@ test("recording settings default off, work without a device and survive restart"
   await page.reload();
   await page.getByRole("button", { name: "应用设置", exact: true }).click();
   await page.getByRole("tab", { name: "记录", exact: true }).click();
-  await expect(control).toHaveValue("device");
-  await control.selectOption("off");
+  await expect(control).toHaveAttribute("data-value", "device");
+  await chooseMenu(control, "off");
   await page.getByRole("button", { name: "应用更改", exact: true }).click();
-  await expect(control).toHaveValue("off");
+  await expect(control).toHaveAttribute("data-value", "off");
   expect(
     await page.evaluate(() =>
       (window as any).statusFixture.calls.some(
@@ -301,9 +302,10 @@ test("native titlebar follows the sidebar palette on initial load and each theme
     rgb(webLightTheme.colorNeutralBackground3),
   );
   await page.getByRole("button", { name: "应用设置", exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "主题", exact: true })
-    .selectOption("dark");
+  await chooseMenu(
+    page.getByRole("button", { name: "主题", exact: true }),
+    "dark",
+  );
   await page.getByRole("button", { name: "应用更改", exact: true }).click();
   await expect.poll(lastTheme).toEqual({
     dark: true,
@@ -326,9 +328,10 @@ test("native titlebar follows the sidebar palette on initial load and each theme
     fullPage: true,
   });
   await page.getByRole("button", { name: "应用设置", exact: true }).click();
-  await page
-    .getByRole("combobox", { name: "主题", exact: true })
-    .selectOption("light");
+  await chooseMenu(
+    page.getByRole("button", { name: "主题", exact: true }),
+    "light",
+  );
   await page.getByRole("button", { name: "应用更改", exact: true }).click();
   await expect.poll(lastTheme).toEqual({
     dark: false,

@@ -74,6 +74,7 @@ async function chartState(page: Page, zoom = false) {
       range: [option.dataZoom[0].startValue, option.dataZoom[0].endValue],
       slider: option.dataZoom[1].show !== false,
       axes: option.yAxis.map((axis: any) => [axis.id, axis.min, axis.max]),
+      grid: option.grid[0],
       savedHeight: localStorage.getItem("atorch-chart-height"),
     };
   }, zoom);
@@ -118,7 +119,7 @@ test("desktop live and history fill the window, preserving zoom, data and card h
       await page.getByRole("button", { name: "数据记录", exact: true }).click();
     const footer = page.locator(".chart-image-actions");
     const reset = await footer
-      .getByRole("button", { name: "重置缩放" })
+      .getByRole("button", { name: "复原" })
       .boundingBox();
     const full = await footer
       .getByRole("button", { name: "全屏", exact: true })
@@ -129,7 +130,7 @@ test("desktop live and history fill the window, preserving zoom, data and card h
     const box = await page.locator(".trend-chart").boundingBox();
     await page.mouse.move(box!.x + 40, box!.y + box!.height / 2);
     await page.keyboard.down("Control");
-    await page.mouse.wheel(0, -120);
+    await page.mouse.wheel(0, 120);
     await page.keyboard.up("Control");
     const zoomed = await chartState(page);
     expect(zoomed.axes).not.toEqual(before.axes);
@@ -154,7 +155,7 @@ test("desktop live and history fill the window, preserving zoom, data and card h
     expect(fullState.slider).toBe(false);
     expect(
       await page.locator("dialog:modal").getByRole("button").allTextContents(),
-    ).toEqual(["退出全屏"]);
+    ).toEqual(["退出"]);
     if (!history) {
       await page.evaluate(() => (window as any).fullscreenFixture.tick());
       await expect.poll(async () => (await chartState(page)).count).toBe(122);
@@ -256,10 +257,63 @@ test.describe("mobile chart fullscreen", () => {
     );
     await expectScaledFullscreen(page, 390, 844, true);
     await screenshot(page, "mobile-landscape-fallback");
-    await page.getByRole("button", { name: "退出全屏", exact: true }).click();
+    await page.getByRole("button", { name: "退出", exact: true }).click();
     await expect(page.locator("dialog:modal")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "全屏", exact: true }),
     ).toBeVisible();
+  });
+
+  test("rotated fullscreen preserves mouse zoom, pan, hover and overflow parameter selection", async ({
+    page,
+  }, info) => {
+    await fixture(page);
+    await page.getByRole("button", { name: "全屏", exact: true }).click();
+    const dialog = page.locator("dialog:modal");
+    await expect(dialog).toHaveClass(/chart-fullscreen-rotated/);
+    const more = dialog.getByRole("button", { name: "更多曲线参数" });
+    await expect(more).toBeVisible();
+    await more.click();
+    const overflow = dialog.getByRole("group", {
+      name: "更多曲线参数",
+      exact: true,
+    });
+    await expect(overflow).toBeVisible();
+    await page.screenshot({
+      path: info.outputPath("rotated-parameters-open.png"),
+    });
+    await overflow
+      .getByRole("checkbox", { name: "NTC 温度", exact: true })
+      .check({ timeout: 5000 });
+    await more.click();
+    const before = await chartState(page);
+    const rect = (await dialog.locator(".trend-chart").boundingBox())!;
+    const logicalX = (before.grid.left + before.width - before.grid.right) / 2;
+    const logicalY = before.grid.top + 60;
+    const x = rect.x + rect.width - (logicalY / before.height) * rect.width;
+    const y = rect.y + (logicalX / before.width) * rect.height;
+    await page.mouse.move(x, y);
+    await page.keyboard.down("Control");
+    await page.mouse.wheel(0, -120);
+    await page.keyboard.up("Control");
+    await expect
+      .poll(async () => {
+        const s = await chartState(page);
+        return s.range[1] - s.range[0];
+      })
+      .toBeLessThan(before.range[1] - before.range[0]);
+    const zoomed = await chartState(page);
+    await page.mouse.down();
+    await page.mouse.move(x, y + 35, { steps: 8 });
+    await page.mouse.up();
+    await expect
+      .poll(async () => (await chartState(page)).range[0])
+      .toBeLessThan(zoomed.range[0]);
+    await page.mouse.move(x - 10, y + 20);
+    await expect(dialog.locator(".curve-tooltip")).toBeVisible();
+    await expect(dialog.locator(".chart-hover-marker")).toHaveCount(3);
+    await page.screenshot({ path: info.outputPath("rotated-interaction.png") });
+    await dialog.getByRole("button", { name: "退出" }).click();
+    await expect(dialog).toHaveCount(0);
   });
 });
