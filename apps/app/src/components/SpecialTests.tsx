@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Badge,
   Button,
@@ -11,6 +10,7 @@ import {
   DialogTitle,
 } from "@fluentui/react-components";
 import { api } from "../lib/api";
+import { useConfirmation } from "../lib/useConfirmation";
 import { Notification } from "./Notifications";
 import {
   modes,
@@ -42,11 +42,11 @@ export function SpecialTests({
   ) => Promise<void>;
   onTask: (task: () => Promise<unknown>, success?: string) => Promise<void>;
 }) {
-  const [confirmation, setConfirmation] = useState<{
+  const confirmation = useConfirmation<{
     action: StageAction;
     context: PromptContext;
     mode: number;
-  } | null>(null);
+  }>();
   const settings = snapshot.settings;
   const mode = settings?.mode;
   const active =
@@ -139,9 +139,9 @@ export function SpecialTests({
             mode === 8 ||
             (mode === 9 && settings?.cycleCount != null)) && (
             <p>
-              循环设置：放电 {number(settings?.target)} A · 截止{" "}
-              {number(settings?.cutoffVoltage)} V · 充满{" "}
-              {number(settings?.fullVoltage)} V · 充电截止{" "}
+              循环设置：放电 {number(settings?.target)} A · 放电停止电压{" "}
+              {number(settings?.cutoffVoltage)} V · 充电停止电压{" "}
+              {number(settings?.fullVoltage)} V · 充电停止电流{" "}
               {number(settings?.cutoffCurrent)} A
               {mode === 9 ? ` · ${settings?.cycleCount} 次` : ""}。
               {mode === 9
@@ -171,7 +171,7 @@ export function SpecialTests({
                     key={action.value}
                     disabled={!enabled}
                     onClick={() =>
-                      setConfirmation({
+                      confirmation.show({
                         action,
                         context: prompt.context,
                         mode: mode!,
@@ -240,32 +240,32 @@ export function SpecialTests({
         </p>
       )}
       <Dialog
-        open={confirmation !== null}
+        open={confirmation.open}
         onOpenChange={(_, data) => {
-          if (!data.open) setConfirmation(null);
+          if (!data.open) confirmation.close();
         }}
       >
         <DialogSurface>
           <DialogBody>
-            <DialogTitle>{confirmation?.action.label}</DialogTitle>
+            <DialogTitle>{confirmation.data?.action.label}</DialogTitle>
             <DialogContent>
               <p>
-                {confirmation?.action.clearsData
-                  ? "设备将清除数据并启动新一轮放电。请确认接线与电池的充满、放完电压设置。"
-                  : `将向设备发送“${confirmation?.action.label}”阶段动作。`}
+                {confirmation.data?.action.clearsData
+                  ? "设备将清除数据并启动新一轮放电。请确认接线、充电停止电压和放电停止电压。"
+                  : `将向设备发送“${confirmation.data?.action.label}”阶段动作。`}
               </p>
               <p>设备将重新校对当前模式和阶段提示，再执行操作。</p>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setConfirmation(null)}>取消</Button>
+              <Button onClick={confirmation.close}>取消</Button>
               <Button
                 appearance="primary"
                 disabled={busy || !enabled}
                 onClick={() => {
-                  const c = confirmation;
-                  setConfirmation(null);
-                  if (c)
-                    void onCommand("stage", c.action.value, c.mode, c.context);
+                  const c = confirmation.data;
+                  if (!confirmation.open || !c) return;
+                  confirmation.close();
+                  void onCommand("stage", c.action.value, c.mode, c.context);
                 }}
               >
                 确认阶段操作

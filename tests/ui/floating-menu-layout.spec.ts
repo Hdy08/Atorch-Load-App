@@ -180,7 +180,7 @@ for (const mobile of [false, true]) {
       .getByRole("button", { name: "负载控制设置", exact: true })
       .click();
     const parameter = page.locator(".load-parameter .numeric-input").filter({
-      has: page.getByRole("spinbutton", { name: "过流保护", exact: true }),
+      has: page.getByRole("spinbutton", { name: "充放电流上限", exact: true }),
     });
     await expect(parameter).toBeVisible();
     const standardPadding = await parameter.evaluate((element) => {

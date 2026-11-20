@@ -72,7 +72,7 @@ pub fn validate_cycle_start(settings: &DeviceSettings, limits: LoadLimits) -> Re
         let limit = rounded(settings.over_current, 3).min(limits.current);
         // The target here came from a float32 readback, not from typed input.
         if rounded(settings.target.unwrap_or_default(), 3) > limit {
-            return Err(format!("放电电流超过 {limit} A，请核对过流保护"));
+            return Err(format!("放电电流超过 {limit} A，请核对充放电流上限"));
         }
     }
     Ok(())
@@ -108,7 +108,7 @@ pub fn validate(
             _ => return Ok(()),
         },
         "cutoffVoltage" => (
-            "截止电压",
+            "放电停止电压",
             0.0,
             if settings.mode == 1 {
                 rounded(target, 2).min(limits.voltage)
@@ -118,7 +118,7 @@ pub fn validate(
             2,
         ),
         "overCurrent" => (
-            "过流保护",
+            "充放电流上限",
             if settings.mode == 0 || (settings.mode == 9 && settings.cycle_count.is_some()) {
                 rounded(target, 3)
             } else {
@@ -128,7 +128,7 @@ pub fn validate(
             3,
         ),
         "overPower" => (
-            "过功率保护",
+            "充放功率上限",
             if settings.mode == 3 {
                 rounded(target, 1)
             } else {
@@ -137,8 +137,8 @@ pub fn validate(
             limits.power,
             1,
         ),
-        "fullVoltage" => ("充电上限电压", 0.0, 100.0, 2),
-        "cutoffCurrent" => ("充电截止电流", 0.0, 20.0, 2),
+        "fullVoltage" => ("充电停止电压", 0.0, 100.0, 2),
+        "cutoffCurrent" => ("充电停止电流", 0.0, 20.0, 2),
         "ntcLimit" => ("探头温度上限", 0.0, 100.0, 0),
         "mosLimit" => ("MOS 温度上限", 0.0, 100.0, 0),
         "brightness" => ("工作亮度", 0.0, 9.0, 0),
@@ -170,7 +170,7 @@ pub fn validate(
     let value = command.value;
     if !value.is_finite() || value < min || value > max {
         return Err(format!(
-            "{label}范围为 {min}–{max}，请核对目标值、截止电压及保护参数"
+            "{label}范围为 {min}–{max}，请核对目标值、放电停止电压及电流和功率上限"
         ));
     }
     if (value - rounded(value, digits)).abs() > 1e-8 {

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
 for (const width of [390, 1440]) {
-  test(`cutoff voltage and temperature coefficient remain distinct (${width})`, async ({
+  test(`device settings retain calibration during exit and keep readbacks distinct (${width})`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 960 });
@@ -73,7 +73,14 @@ for (const width of [390, 1440]) {
             ) {
               calls.push(args.command);
               settings[args.command.kind] = args.command.value;
-              return;
+              return "confirmed";
+            }
+            if (
+              command === "send_command" &&
+              args.command.kind === "clearCounters"
+            ) {
+              calls.push(args.command);
+              return "sent";
             }
             throw new Error(`Unexpected parameter test command: ${command}`);
           },
@@ -85,7 +92,7 @@ for (const width of [390, 1440]) {
       .getByRole("button", { name: "负载控制设置", exact: true })
       .click();
     await expect(
-      page.getByRole("spinbutton", { name: "截止电压", exact: true }),
+      page.getByRole("spinbutton", { name: "放电停止电压", exact: true }),
     ).toHaveValue("2.50");
     await page
       .getByRole("dialog")
@@ -93,7 +100,7 @@ for (const width of [390, 1440]) {
       .click();
     await page.getByRole("button", { name: "设备设置", exact: true }).click();
     const cutoff = page.getByRole("spinbutton", {
-      name: "截止电压",
+      name: "放电停止电压",
       exact: true,
     });
     const temperature = page.getByRole("spinbutton", {
@@ -125,8 +132,37 @@ for (const width of [390, 1440]) {
     await temperatureRow
       .getByRole("button", { name: "应用", exact: true })
       .click();
-    await expect(page.getByRole("dialog")).toContainText("温度校准系数");
+    const surface = page.locator(".fui-DialogSurface");
+    await expect(surface).toContainText("温度校准系数");
+    // Pause the actual closing animation to inspect its content deterministically.
+    await surface.evaluate(async (element) => {
+      await Promise.all(
+        element.getAnimations().map((animation) => animation.finished),
+      );
+      const animate = element.animate.bind(element);
+      element.animate = (frames, options) => {
+        const animation = animate(frames, options);
+        animation.pause();
+        return animation;
+      };
+    });
     await page.getByRole("button", { name: "取消", exact: true }).click();
+    await expect
+      .poll(() =>
+        surface.evaluate((element) =>
+          element
+            .getAnimations()
+            .some((animation) => animation.playState === "paused"),
+        ),
+      )
+      .toBe(true);
+    await expect(surface).toContainText("写入设备校准");
+    await expect(surface).toContainText("将温度校准系数调整为 1.125");
+    await expect(surface).toContainText("确认写入设备校准");
+    await surface.evaluate((element) => {
+      for (const animation of element.getAnimations()) animation.finish();
+    });
+    await expect(surface).toBeHidden();
     expect(await page.evaluate(() => (window as any).parameterCalls)).toEqual(
       [],
     );
@@ -146,16 +182,28 @@ for (const width of [390, 1440]) {
       .click();
     await expect(cutoff).toHaveValue("2.75");
     await expect(temperature).toHaveValue("1.1250");
+    await page
+      .getByRole("button", { name: "累计数据清零", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "确认累计数据清零", exact: true })
+      .click();
+    await expect(
+      page
+        .locator(".fui-Toast")
+        .getByText("累计数据清零命令已发送。", { exact: true }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "实时监控", exact: true }).click();
     await page
       .getByRole("button", { name: "负载控制设置", exact: true })
       .click();
     await expect(
-      page.getByRole("spinbutton", { name: "截止电压", exact: true }),
+      page.getByRole("spinbutton", { name: "放电停止电压", exact: true }),
     ).toHaveValue("2.75");
     expect(await page.evaluate(() => (window as any).parameterCalls)).toEqual([
       { kind: "temperatureCalibration", value: 1.125 },
       { kind: "cutoffVoltage", value: 2.75, expectedMode: 0 },
+      { kind: "clearCounters", value: 0 },
     ]);
   });
 }

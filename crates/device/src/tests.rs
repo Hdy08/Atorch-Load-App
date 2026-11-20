@@ -2,6 +2,13 @@ use super::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 type CapturedWrites = Arc<Mutex<Vec<Vec<u8>>>>;
 
+enum CounterClear {
+    Zero,
+    KeepSessionTotals,
+    LoseTelemetry,
+    Reject,
+}
+
 struct FakeUsb {
     pending: VecDeque<[u8; 64]>,
     settings: [u8; 64],
@@ -13,6 +20,8 @@ struct FakeUsb {
     panel_running: Option<Arc<AtomicBool>>,
     status: u8,
     stage: u8,
+    totals: Option<[u32; 2]>,
+    counter_clear: CounterClear,
 }
 impl Transport for FakeUsb {
     fn write(&mut self, report: &[u8]) -> Result<(), String> {
@@ -20,9 +29,14 @@ impl Transport for FakeUsb {
         match report[3] {
             3 => self.pending.push_back(self.settings),
             5 => {
+                let Some([energy, capacity]) = self.totals else {
+                    return Ok(());
+                };
                 let mut t = [0; 64];
                 t[..4].copy_from_slice(&[0xaa, 5, 1, 5]);
                 t[62..].copy_from_slice(&[0xee, 0xff]);
+                t[24..28].copy_from_slice(&energy.to_le_bytes());
+                t[28..32].copy_from_slice(&capacity.to_le_bytes());
                 t[52] = self
                     .panel_running
                     .as_ref()
@@ -57,6 +71,17 @@ impl Transport for FakeUsb {
                 self.pending.push_back(ack);
             }
             0x25 if self.readback => self.running = report[4] == 1,
+            0x34 => match self.counter_clear {
+                CounterClear::Zero => self.totals = Some([0, 0]),
+                CounterClear::KeepSessionTotals => {}
+                CounterClear::LoseTelemetry => self.totals = None,
+                CounterClear::Reject => {
+                    let mut ack = [0; 64];
+                    ack[..5].copy_from_slice(&[0xaa, 5, 1, 4, 2]);
+                    ack[8..10].copy_from_slice(&[0xee, 0xff]);
+                    self.pending.push_back(ack);
+                }
+            },
             0x35 => {
                 let mut ack = [0; 64];
                 ack[..5].copy_from_slice(&[0xaa, 5, 1, 4, 1]);
@@ -115,6 +140,8 @@ fn fake(readback: bool) -> (Box<FakeUsb>, CapturedWrites, Arc<AtomicBool>) {
             panel_running: None,
             status: 0,
             stage: 0,
+            totals: Some([0, 0]),
+            counter_clear: CounterClear::Zero,
         }),
         writes,
         removed,
@@ -433,6 +460,53 @@ fn command_without_matching_readback_fails_and_is_not_retried() {
     assert!(manager.snapshot().connected);
     manager.disconnect();
 }
+
+#[test]
+fn counter_clear_distinguishes_zero_readback_from_a_sent_command_and_failures() {
+    for (behavior, expected, totals) in [
+        (
+            CounterClear::Zero,
+            Ok(CommandOutcome::Confirmed),
+            (0.0, 0.0),
+        ),
+        (
+            CounterClear::KeepSessionTotals,
+            Ok(CommandOutcome::Sent),
+            (0.223, 18.618),
+        ),
+        (
+            CounterClear::LoseTelemetry,
+            Err("清零命令已发送，但未读到设备数据。"),
+            (0.223, 18.618),
+        ),
+        (
+            CounterClear::Reject,
+            Err("设备拒绝命令，状态码 2"),
+            (0.223, 18.618),
+        ),
+    ] {
+        let (mut usb, writes, _) = fake(true);
+        usb.totals = Some([223, 18_618]);
+        usb.counter_clear = behavior;
+        let manager = connect_named(usb, "ATORCH BW150 V1.1.0");
+        let result = manager.command(Command {
+            kind: "clearCounters".into(),
+            ..Default::default()
+        });
+        assert_eq!(result.as_ref().copied().map_err(String::as_str), expected);
+        let telemetry = manager.snapshot().telemetry.unwrap();
+        assert_eq!((telemetry.energy.unwrap(), telemetry.capacity), totals);
+        manager.disconnect();
+        let writes = writes.lock().unwrap();
+        let clear_writes: Vec<_> = writes.iter().filter(|report| report[3] == 0x34).collect();
+        assert_eq!(clear_writes.len(), 1);
+        assert_eq!(
+            &clear_writes[0][..10],
+            &[0x55, 5, 1, 0x34, 0, 0, 0, 0, 0xee, 0xff]
+        );
+    }
+}
+
 #[test]
 fn usb_removal_updates_state_and_releases_worker() {
     let (usb, _, removed) = fake(true);
@@ -1314,7 +1388,7 @@ fn ble_panel_commands_are_single_writes_with_no_fake_execution_ack() {
         .ble_command(atorch_protocol::ble::Command::KeyPlus)
         .unwrap();
     assert!(!reply.device_confirmed);
-    assert!(reply.message.contains("未提供执行确认"));
+    assert_eq!(reply.message, "加键 + 已发送。");
     assert_eq!(
         *writes.lock().unwrap(),
         vec![atorch_protocol::ble::Command::KeyPlus.encode().to_vec()]

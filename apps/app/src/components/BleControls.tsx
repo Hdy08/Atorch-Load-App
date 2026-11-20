@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogBody,
@@ -14,6 +13,7 @@ import {
 import { Bluetooth20Regular, Settings20Regular } from "@fluentui/react-icons";
 import { api } from "../lib/api";
 import type { BleAction } from "../lib/types";
+import { useConfirmation } from "../lib/useConfirmation";
 import { useNotify } from "./Notifications";
 
 const clears = [
@@ -46,12 +46,11 @@ export function BleControls({
 }) {
   const notify = useNotify();
   const [open, setOpen] = useState(false);
-  const [confirmation, setConfirmation] = useState<{
+  const confirmation = useConfirmation<{
     action: BleAction;
     title: string;
     text: string;
-  } | null>(null);
-  const [acknowledged, setAcknowledged] = useState(false);
+  }>();
   const disabled = !connected || busy;
   const send = (action: BleAction) =>
     onTask(async () => {
@@ -125,9 +124,8 @@ export function BleControls({
                     key={action}
                     disabled={disabled}
                     onClick={() => {
-                      setAcknowledged(false);
                       setOpen(false);
-                      setConfirmation({ action, title, text });
+                      confirmation.show({ action, title, text });
                     }}
                   >
                     {title}
@@ -142,34 +140,28 @@ export function BleControls({
         </DialogSurface>
       </Dialog>
       <Dialog
-        open={confirmation !== null}
+        open={confirmation.open}
         onOpenChange={(_, data) => {
-          if (!data.open && !busy) setConfirmation(null);
+          if (!data.open && !busy) confirmation.close();
         }}
       >
         <DialogSurface>
           <DialogBody>
-            <DialogTitle>{confirmation?.title}</DialogTitle>
+            <DialogTitle>{confirmation.data?.title}</DialogTitle>
             <DialogContent>
-              <p>{confirmation?.text}</p>
-              <p>每次只发送一次，执行结果请以设备屏幕为准。</p>
-              <Checkbox
-                label="我已保存所需数据，确认清零设备累计值"
-                checked={acknowledged}
-                onChange={(_, data) => setAcknowledged(data.checked === true)}
-              />
+              <p>{confirmation.data?.text}</p>
             </DialogContent>
             <DialogActions>
-              <Button disabled={busy} onClick={() => setConfirmation(null)}>
+              <Button disabled={busy} onClick={confirmation.close}>
                 取消
               </Button>
               <Button
                 appearance="primary"
-                disabled={disabled || !acknowledged}
+                disabled={disabled}
                 onClick={() => {
-                  if (!confirmation) return;
-                  const action = confirmation.action;
-                  setConfirmation(null);
+                  if (!confirmation.open || !confirmation.data) return;
+                  const { action } = confirmation.data;
+                  confirmation.close();
                   void send(action);
                 }}
               >

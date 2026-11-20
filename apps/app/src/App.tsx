@@ -100,6 +100,7 @@ import { usePageLayout } from "./lib/usePageLayout";
 import { usePageTransition } from "./lib/usePageTransition";
 import { useNavigationIndicator } from "./lib/useNavigationIndicator";
 import { usePageScrollbar } from "./lib/usePageScrollbar";
+import { useConfirmation } from "./lib/useConfirmation";
 
 type Page = "live" | "history" | "settings" | "firmware" | "application";
 const nav = [
@@ -340,13 +341,13 @@ export function App() {
   const [archiveError, setArchiveError] = useState("");
   const [archiveRevision, setArchiveRevision] = useState(0);
   const [importRevision, setImportRevision] = useState(0);
-  const [confirm, setConfirm] = useState<{
+  const confirmation = useConfirmation<{
     kind: string;
     value: number;
     title: string;
     text: string;
     expectedMode?: number;
-  } | null>(null);
+  }>();
   const fileRef = useRef<HTMLInputElement>(null);
   const { phase: autoPhase, suspend: suspendAutoConnection } = useAutoConnect(
     native &&
@@ -451,9 +452,23 @@ export function App() {
     expectedPrompt?: PromptContext,
   ) =>
     run(async () => {
-      await api.command(kind, value, expectedMode, expectedPrompt);
+      const outcome = await api.command(
+        kind,
+        value,
+        expectedMode,
+        expectedPrompt,
+      );
       setSnapshot(await api.snapshot());
-    }, "设备已确认设置");
+      setMessage({
+        text:
+          kind === "clearCounters"
+            ? outcome === "confirmed"
+              ? "累计数据已清零。"
+              : "累计数据清零命令已发送。"
+            : "设备已确认设置",
+        error: false,
+      });
+    });
   const applyLoadParameter = async (kind: string, value: number) => {
     setBusy(true);
     try {
@@ -817,7 +832,7 @@ export function App() {
               onToggle={() => {
                 if (t?.running) void command("running", 0);
                 else
-                  setConfirm({
+                  confirmation.show({
                     kind: "running",
                     value: 1,
                     title: "启动电子负载",
@@ -825,8 +840,8 @@ export function App() {
                     text: basicMode
                       ? `设备将按当前 ${mode[1]}、目标值 ${fmt(settings?.target)} ${mode[3]} 启动。请确认负载输入与设备设置。`
                       : cycleMode
-                        ? `设备将执行 ${settings.cycleCount} 次充放电循环。请确认接线、放电电流 ${fmt(settings.target)} A、截止电压 ${fmt(settings.cutoffVoltage)} V、充满电压 ${fmt(settings.fullVoltage)} V 和充电截止电流 ${fmt(settings.cutoffCurrent)} A。`
-                        : `设备将启动 ${mode[0]} · ${mode[1]}，按专用流程控制负载。请确认接线及充满电压 ${fmt(settings?.fullVoltage)} V、截止电压 ${fmt(settings?.cutoffVoltage)} V。`,
+                        ? `设备将执行 ${settings.cycleCount} 次充放电循环。请确认接线、放电电流 ${fmt(settings.target)} A、放电停止电压 ${fmt(settings.cutoffVoltage)} V、充电停止电压 ${fmt(settings.fullVoltage)} V 和充电停止电流 ${fmt(settings.cutoffCurrent)} A。`
+                        : `设备将启动 ${mode[0]} · ${mode[1]}，按专用流程控制负载。请确认接线及充电停止电压 ${fmt(settings?.fullVoltage)} V、放电停止电压 ${fmt(settings?.cutoffVoltage)} V。`,
                   });
               }}
             />
@@ -1498,7 +1513,7 @@ export function App() {
                           max={key === "temperatureCalibration" ? 2 : undefined}
                           disabled={!snapshot.connected || busy || !settings}
                           onApply={async (n) => {
-                            setConfirm({
+                            confirmation.show({
                               kind: key,
                               value: n,
                               title: "写入设备校准",
@@ -1512,13 +1527,13 @@ export function App() {
                       {[
                         [
                           "clearCurrent",
-                          "电流零点校准",
-                          "将以当前输入条件执行电流零点校准。",
+                          "空载电流清零",
+                          "将以当前电流读数作为空载零点。",
                         ],
                         [
                           "clearCounters",
-                          "清空设备累计数据",
-                          "将清空设备上的电量与容量累计数据。",
+                          "累计数据清零",
+                          "将清零设备累计的电量与容量。",
                         ],
                         [
                           "factoryReset",
@@ -1530,7 +1545,7 @@ export function App() {
                           key={kind}
                           disabled={!snapshot.connected || busy || bluetooth}
                           onClick={() =>
-                            setConfirm({ kind, value: 0, title, text })
+                            confirmation.show({ kind, value: 0, title, text })
                           }
                         >
                           {title}
@@ -2056,29 +2071,30 @@ export function App() {
           </DialogSurface>
         </Dialog>
         <Dialog
-          open={confirm !== null}
+          open={confirmation.open}
           onOpenChange={(_, d) => {
-            if (!d.open) setConfirm(null);
+            if (!d.open) confirmation.close();
           }}
         >
           <DialogSurface>
             <DialogBody>
-              <DialogTitle>{confirm?.title}</DialogTitle>
+              <DialogTitle>{confirmation.data?.title}</DialogTitle>
               <DialogContent>
-                <p>{confirm?.text}</p>
+                <p>{confirmation.data?.text}</p>
               </DialogContent>
               <DialogActions>
-                <Button onClick={() => setConfirm(null)}>取消</Button>
+                <Button onClick={confirmation.close}>取消</Button>
                 <Button
                   appearance="primary"
                   disabled={busy}
                   onClick={() => {
-                    const c = confirm;
-                    setConfirm(null);
-                    if (c) void command(c.kind, c.value, c.expectedMode);
+                    const c = confirmation.data;
+                    if (!confirmation.open || !c) return;
+                    confirmation.close();
+                    void command(c.kind, c.value, c.expectedMode);
                   }}
                 >
-                  确认{confirm?.title}
+                  确认{confirmation.data?.title}
                 </Button>
               </DialogActions>
             </DialogBody>

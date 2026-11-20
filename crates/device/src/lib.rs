@@ -243,13 +243,20 @@ pub fn open_hid(info: &DeviceInfo) -> Result<Box<dyn Transport>, String> {
 
 enum Request {
     Stop,
-    Command(Command, mpsc::Sender<Result<(), String>>),
+    Command(Command, mpsc::Sender<Result<CommandOutcome, String>>),
     BleCommand(
         atorch_protocol::ble::Command,
         mpsc::Sender<Result<BleCommandResult, String>>,
     ),
     Record(Option<PathBuf>, mpsc::Sender<Result<(), String>>),
     ClearSamples(mpsc::Sender<Result<(), String>>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CommandOutcome {
+    Confirmed,
+    Sent,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -464,7 +471,7 @@ impl DeviceManager {
             .map(|w| w.tx.clone())
             .ok_or_else(|| "设备未连接".into())
     }
-    pub fn command(&self, cmd: Command) -> Result<(), String> {
+    pub fn command(&self, cmd: Command) -> Result<CommandOutcome, String> {
         if self.firmware_active() {
             return Err("固件升级期间禁止设备控制".into());
         }
@@ -828,6 +835,7 @@ fn run(
                     transport.write(&atorch_protocol::query(1, 5))?;
                     let deadline = Instant::now() + Duration::from_secs(2);
                     let mut next_query = Instant::now() + Duration::from_millis(250);
+                    let mut telemetry_seen = false;
                     while Instant::now() < deadline {
                         if Instant::now() >= next_query {
                             transport.write(&atorch_protocol::query(1, 3))?;
@@ -842,11 +850,12 @@ fn run(
                             accept(&buffer[..n], model, state, samples, &mut recorder)?
                         {
                             last_valid = Instant::now();
+                            telemetry_seen |= matches!(report, Report::Telemetry(_));
                             if command.matches(&report)
                                 && (!load_control::requires_settings(&command.kind)
                                     || matches!(report, Report::Settings(_)))
                             {
-                                return Ok(());
+                                return Ok(CommandOutcome::Confirmed);
                             }
                             if let Report::Ack { status, .. } = report {
                                 if status != 1 {
@@ -854,6 +863,15 @@ fn run(
                                 }
                             }
                         }
+                    }
+                    if command.kind == "clearCounters" {
+                        // BW150 clears stored totals without an ACK; the monitor may
+                        // still report the current session's accumulated values.
+                        return if telemetry_seen {
+                            Ok(CommandOutcome::Sent)
+                        } else {
+                            Err("清零命令已发送，但未读到设备数据。".into())
+                        };
                     }
                     Err("未收到设备确认，请读取设备状态后再操作".into())
                 })();
@@ -867,8 +885,11 @@ fn run(
                         command.value,
                         result
                             .as_ref()
-                            .map(|_| "设备已确认".to_string())
-                            .unwrap_or_else(|e: &String| e.clone())
+                            .map(|outcome| match outcome {
+                                CommandOutcome::Confirmed => "设备已确认",
+                                CommandOutcome::Sent => "累计数据清零命令已发送。",
+                            })
+                            .unwrap_or_else(|e: &String| e.as_str())
                     ),
                 );
                 drop(s);
@@ -903,10 +924,7 @@ fn run(
                         action,
                         sent_at: now_ms(),
                         device_confirmed: false,
-                        message: format!(
-                            "{}已发送；设备未提供执行确认，请核对设备屏幕。",
-                            action.label()
-                        ),
+                        message: format!("{} 已发送。", action.label()),
                     })
                 })();
                 let mut s = state.lock().unwrap();

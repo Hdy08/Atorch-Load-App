@@ -104,7 +104,7 @@ pub fn validate_cycle_settings(s: &DeviceSettings) -> Result<(), String> {
         || !s.cutoff_current.is_finite()
         || s.cutoff_current <= 0.0
     {
-        return Err("请先核对放电电流、截止电压、充满电压和充电截止电流".into());
+        return Err("请先核对放电电流、放电停止电压、充电停止电压和充电停止电流".into());
     }
     Ok(())
 }

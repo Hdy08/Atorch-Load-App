@@ -203,10 +203,10 @@ test("DL24 exposes only its four load modes and excludes charging settings", asy
     .getByLabel("设备设置", { exact: true })
     .click();
   await expect(
-    page.getByRole("spinbutton", { name: "截止电压", exact: true }),
+    page.getByRole("spinbutton", { name: "放电停止电压", exact: true }),
   ).toBeEnabled();
   await expect(
-    page.getByRole("spinbutton", { name: /充电上限电压|充电截止电流/ }),
+    page.getByRole("spinbutton", { name: /充电停止电压|充电停止电流/ }),
   ).toHaveCount(0);
 });
 

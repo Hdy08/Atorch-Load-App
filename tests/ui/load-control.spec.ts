@@ -201,8 +201,8 @@ for (const width of [390, 1440]) {
       page.getByText("校准前请准备参考仪表；修改将写入设备。", { exact: true }),
     ).toHaveCount(0);
     for (const [label, kind, min, max, step, digits, unit] of [
-      ["充电上限电压", "fullVoltage", 0, 100, 0.1, 2, "V"],
-      ["充电截止电流", "cutoffCurrent", 0, 20, 0.1, 2, "A"],
+      ["充电停止电压", "fullVoltage", 0, 100, 0.1, 2, "V"],
+      ["充电停止电流", "cutoffCurrent", 0, 20, 0.1, 2, "A"],
       ["NTC 温度上限", "ntcLimit", 0, 100, 1, 0, "°C"],
       ["MOS 温度上限", "mosLimit", 0, 100, 1, 0, "°C"],
       ["工作亮度", "brightness", 0, 9, 1, 0, ""],
@@ -331,13 +331,13 @@ test("dependent ranges and protections prevent invalid writes and update after r
 }) => {
   await fixture(page);
   const target = parameter(page, "目标电流");
-  const protection = parameter(page, "过流保护");
+  const protection = parameter(page, "充放电流上限");
   for (const [control, invalid] of [
     [target, "16.201"],
     [protection, "1.233"],
     [protection, "20.001"],
-    [parameter(page, "过功率保护"), "400.1"],
-    [parameter(page, "截止电压"), "100.01"],
+    [parameter(page, "充放功率上限"), "400.1"],
+    [parameter(page, "放电停止电压"), "100.01"],
   ] as const) {
     await control.input.fill(invalid);
     await control.row
@@ -368,7 +368,7 @@ test("CV cutoff and target stay ordered and CR coarse controls do not reach off-
 }) => {
   await fixture(page, 1);
   const target = parameter(page, "目标电压"),
-    cutoff = parameter(page, "截止电压");
+    cutoff = parameter(page, "放电停止电压");
   for (const [control, text] of [
     [target, "2.54"],
     [target, "100.01"],

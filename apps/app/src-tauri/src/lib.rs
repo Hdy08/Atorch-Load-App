@@ -448,7 +448,10 @@ fn clear_samples(manager: State<'_, Devices>) -> Result<(), String> {
     manager.clear_samples()
 }
 #[tauri::command]
-async fn send_command(manager: State<'_, Devices>, command: Command) -> Result<(), String> {
+async fn send_command(
+    manager: State<'_, Devices>,
+    command: Command,
+) -> Result<atorch_device::CommandOutcome, String> {
     let manager = manager.inner().clone();
     tauri::async_runtime::spawn_blocking(move || manager.command(command))
         .await

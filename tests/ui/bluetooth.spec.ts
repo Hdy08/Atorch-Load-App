@@ -91,11 +91,18 @@ async function fixture(
             }
             if (command === "send_ble_command") {
               calls.push(`ble:${args?.action}`);
+              const names: Record<string, string> = {
+                keySet: "设置键 SET",
+                keyPlus: "加键 +",
+                keyMinus: "减键 −",
+                keyOk: "确认键 OK",
+                clearCapacity: "容量清零",
+              };
               return {
                 action: args?.action,
                 sentAt: Date.now(),
                 deviceConfirmed: false,
-                message: "按键已发送；设备未提供执行确认，请核对 BW150 屏幕。",
+                message: `${names[args?.action ?? ""] ?? "操作"} 已发送。`,
               };
             }
             if (command === "stop_bluetooth_scan") return;
@@ -292,7 +299,7 @@ test("BLE discovery connects to the selected device and hides unconfirmed values
     )
     .toBe(26);
   await page.getByRole("button", { name: "设备设置", exact: true }).click();
-  for (const name of ["电流零点校准", "清空设备累计数据", "恢复出厂设置"])
+  for (const name of ["空载电流清零", "累计数据清零", "恢复出厂设置"])
     await expect(
       page.getByRole("button", { name, exact: true }),
     ).toBeDisabled();
@@ -370,14 +377,16 @@ for (const desktop of [false, true]) {
   });
 }
 
-test("BLE keys including OK send once without a dialog and clear requires acknowledging data loss", async ({
+test("BLE keys show short notifications and clearing needs just one confirmation", async ({
   page,
 }) => {
   await fixture(page, { name: "DL24_BLE" });
   await page.getByRole("button", { name: "连接", exact: true }).click();
-  await page.getByRole("button", { name: "+", exact: true }).click();
+  await page.getByRole("button", { name: "SET", exact: true }).click();
   await expect(
-    page.locator(".fui-Toast").getByText(/按键已发送；设备未提供执行确认/),
+    page
+      .locator(".fui-Toast")
+      .getByText("设置键 SET 已发送。", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "OK", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -387,13 +396,20 @@ test("BLE keys including OK send once without a dialog and clear requires acknow
       () => (window as unknown as { bluetoothCalls: string[] }).bluetoothCalls,
     ),
   ).toContain("ble:keyOk");
-  await page.getByRole("button", { name: "蓝牙控制设置", exact: true }).click();
-  await page.getByRole("button", { name: "清空容量", exact: true }).click();
-  await expect(
-    dialog.getByRole("button", { name: "确认清零并发送", exact: true }),
-  ).toBeDisabled();
-  await dialog.getByRole("checkbox").check();
-  await dialog
+  const openClear = async () => {
+    await page
+      .getByRole("button", { name: "蓝牙控制设置", exact: true })
+      .click();
+    await page.getByRole("button", { name: "清空容量", exact: true }).click();
+  };
+  const clear = page.getByRole("dialog", { name: "清空容量" });
+  await openClear();
+  await expect(clear.getByRole("checkbox")).toHaveCount(0);
+  await expect(clear.getByText(/每次只发送一次/)).toHaveCount(0);
+  await clear.getByRole("button", { name: "取消", exact: true }).click();
+  await expect(clear).toBeHidden();
+  await openClear();
+  await clear
     .getByRole("button", { name: "确认清零并发送", exact: true })
     .click();
   await expect(dialog).toBeHidden();
@@ -401,7 +417,7 @@ test("BLE keys including OK send once without a dialog and clear requires acknow
     () => (window as unknown as { bluetoothCalls: string[] }).bluetoothCalls,
   );
   expect(calls.filter((c) => c.startsWith("ble:"))).toEqual([
-    "ble:keyPlus",
+    "ble:keySet",
     "ble:keyOk",
     "ble:clearCapacity",
   ]);

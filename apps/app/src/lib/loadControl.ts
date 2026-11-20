@@ -19,7 +19,7 @@ const deviceParameterRanges = {
     digits: 0,
   },
   fullVoltage: {
-    label: "充电上限电压",
+    label: "充电停止电压",
     unit: "V",
     min: 0,
     max: 100,
@@ -27,7 +27,7 @@ const deviceParameterRanges = {
     digits: 2,
   },
   cutoffCurrent: {
-    label: "充电截止电流",
+    label: "充电停止电流",
     unit: "A",
     min: 0,
     max: 20,
@@ -137,7 +137,7 @@ export function loadParameterRange(
       }
     case "cutoffVoltage":
       return {
-        label: "截止电压",
+        label: "放电停止电压",
         unit: "V",
         min: 0,
         max:
@@ -149,7 +149,7 @@ export function loadParameterRange(
       };
     case "overCurrent":
       return {
-        label: "过流保护",
+        label: "充放电流上限",
         unit: "A",
         min:
           settings.mode === 0 || settings.mode === 9 ? rounded(target, 3) : 0,
@@ -159,7 +159,7 @@ export function loadParameterRange(
       };
     case "overPower":
       return {
-        label: "过功率保护",
+        label: "充放功率上限",
         unit: "W",
         min: settings.mode === 3 ? rounded(target, 1) : 0,
         max: limits.power,

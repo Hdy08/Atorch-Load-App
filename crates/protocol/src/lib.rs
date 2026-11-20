@@ -249,11 +249,11 @@ impl Command {
                 "language" => close(s.language as f64),
                 _ => false,
             },
-            // Mode, stage, run state and cycle count require a matching readback.
+            // These commands require a matching readback to confirm their effect.
             Report::Ack { status, .. } => {
                 !matches!(
                     self.kind.as_str(),
-                    "mode" | "stage" | "cycleCount" | "running"
+                    "mode" | "stage" | "cycleCount" | "running" | "clearCounters"
                 ) && *status == 1
             }
         }

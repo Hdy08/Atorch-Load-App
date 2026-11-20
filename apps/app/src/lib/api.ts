@@ -63,7 +63,7 @@ export const api = {
     expectedMode?: number,
     expectedPrompt?: PromptContext,
   ) =>
-    invoke<void>("send_command", {
+    invoke<"confirmed" | "sent">("send_command", {
       command: { kind, value, expectedMode, expectedPrompt },
     }),
   bleCommand: (action: BleAction) =>
