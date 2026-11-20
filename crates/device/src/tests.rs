@@ -49,6 +49,7 @@ impl Transport for FakeUsb {
                 2 => self.settings[54] = report[4],
                 _ => {}
             },
+            0x37 if self.readback => self.settings[55] = report[7],
             0x21..=0x31 if self.acknowledge_parameters => {
                 let mut ack = [0; 64];
                 ack[..5].copy_from_slice(&[0xaa, 5, 1, 4, 1]);
@@ -120,12 +121,15 @@ fn fake(readback: bool) -> (Box<FakeUsb>, CapturedWrites, Arc<AtomicBool>) {
     )
 }
 fn connect(transport: Box<dyn Transport>) -> DeviceManager {
+    connect_named(transport, "test")
+}
+fn connect_named(transport: Box<dyn Transport>, name: &str) -> DeviceManager {
     let manager = DeviceManager::default();
     manager
         .connect(
             DeviceInfo {
                 path: "fake".into(),
-                name: "test".into(),
+                name: name.into(),
                 serial: "".into(),
                 vendor_id: 0,
                 product_id: 0,
@@ -145,6 +149,120 @@ fn wait(mut predicate: impl FnMut() -> bool) {
     while !predicate() {
         assert!(Instant::now() < end, "worker did not reach expected state");
         thread::sleep(Duration::from_millis(10));
+    }
+}
+
+#[test]
+fn dl24_accepts_load_modes_and_discharge_settings_but_rejects_charging_writes() {
+    let (usb, writes, _) = fake(true);
+    let manager = connect_named(usb, "ATORCH DL24 V1.1.0");
+    let send = |kind: &str, value| {
+        manager.command(Command {
+            kind: kind.into(),
+            value,
+            ..Default::default()
+        })
+    };
+    for mode in [1, 2, 3, 0] {
+        send("mode", f64::from(mode)).unwrap();
+        assert_eq!(manager.snapshot().settings.unwrap().mode, mode);
+    }
+    send("cutoffVoltage", 2.5).unwrap();
+    assert_eq!(manager.snapshot().settings.unwrap().cutoff_voltage, 2.5);
+    let count = writes.lock().unwrap().len();
+    for (kind, value) in [
+        ("mode", 4.0),
+        ("mode", 7.0),
+        ("fullVoltage", 4.2),
+        ("cutoffCurrent", 0.05),
+        ("stage", 5.0),
+    ] {
+        let error = send(kind, value).unwrap_err();
+        assert!(error.starts_with("DL24"), "{error}");
+    }
+    assert!(writes.lock().unwrap()[count..]
+        .iter()
+        .all(|frame| matches!(frame[3], 3 | 5)));
+}
+
+#[test]
+fn bw600_controls_use_device_protection_and_extended_ranges() {
+    let (mut usb, writes, _) = fake(true);
+    usb.settings[32..36].copy_from_slice(&30f32.to_be_bytes());
+    usb.settings[36..40].copy_from_slice(&600f32.to_be_bytes());
+    let manager = connect_named(usb, "ATORCH BW600 V2.0.5");
+    let send = |kind: &str, value| {
+        manager.command(Command {
+            kind: kind.into(),
+            value,
+            ..Default::default()
+        })
+    };
+    send("target", 25.0).unwrap();
+    assert!(send("target", 31.0).is_err());
+    send("mode", 1.0).unwrap();
+    send("target", 150.0).unwrap();
+    assert!(send("target", 201.0).is_err());
+    send("mode", 3.0).unwrap();
+    send("target", 500.0).unwrap();
+    assert!(send("target", 601.0).is_err());
+    assert!(send("overPower", 1201.0).is_err());
+    assert!(send("overCurrent", 50.1).is_err());
+    assert_eq!(
+        writes
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|r| r[3] == 0x21)
+            .count(),
+        3
+    );
+}
+
+#[test]
+fn bw600_cycle_configuration_and_start_require_the_supported_firmware_readback() {
+    for (version, byte) in [("V2.0.5", 10), ("V2.0.3", 0x66)] {
+        let (mut usb, writes, _) = fake(true);
+        usb.settings[20..24].copy_from_slice(&2.5f32.to_be_bytes());
+        usb.settings[24..28].copy_from_slice(&4.2f32.to_be_bytes());
+        usb.settings[28..32].copy_from_slice(&0.05f32.to_be_bytes());
+        usb.settings[55] = byte;
+        let manager = connect_named(usb, &format!("ATORCH BW600 {version}"));
+        let send = |kind: &str, value, expected_mode| {
+            manager.command(Command {
+                kind: kind.into(),
+                value,
+                expected_mode,
+                ..Default::default()
+            })
+        };
+        send("mode", 9.0, Some(0)).unwrap();
+        if byte == 0x66 {
+            assert!(send("cycleCount", 12.0, Some(9)).is_err());
+            assert!(send("running", 1.0, Some(9)).is_err());
+            assert!(!writes
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|r| matches!(r[3], 0x37 | 0x25)));
+        } else {
+            send("cycleCount", 12.0, Some(9)).unwrap();
+            assert_eq!(manager.snapshot().settings.unwrap().cycle_count, Some(12));
+            send("running", 1.0, Some(9)).unwrap();
+            assert_eq!(manager.snapshot().telemetry.unwrap().running, Some(true));
+            assert!(send("cycleCount", 14.0, Some(9)).is_err());
+            send("running", 0.0, Some(9)).unwrap();
+            assert_eq!(manager.snapshot().telemetry.unwrap().running, Some(false));
+            assert_eq!(
+                writes
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|r| r[3] == 0x37)
+                    .count(),
+                1
+            );
+        }
     }
 }
 

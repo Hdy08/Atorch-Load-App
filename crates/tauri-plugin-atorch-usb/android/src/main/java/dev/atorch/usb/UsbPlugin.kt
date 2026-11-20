@@ -81,7 +81,7 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
                 perform(pending.second) { openWithCleanup(pending.first); JSObject() }
             } else perform(pending.second) {
                 releaseDevice()
-                error("未获得 USB 访问权限，请重新连接并允许访问 BW150")
+                error("未获得 USB 访问权限，请重新连接并允许访问 ATORCH USB 设备")
             }
         }
     }
@@ -142,7 +142,7 @@ class UsbPlugin(private val activity: Activity) : Plugin(activity) {
         val list = JSArray()
         manager.deviceList.values.filter(::supported).forEach { d ->
             val serial = if (manager.hasPermission(d)) runCatching { d.serialNumber }.getOrNull() ?: "" else ""
-            list.put(JSObject().put("path", d.deviceName).put("name", d.productName ?: "ATORCH BW150")
+            list.put(JSObject().put("path", d.deviceName).put("name", d.productName ?: "ATORCH USB 设备")
                 .put("serial", serial).put("vendorId", d.vendorId).put("productId", d.productId))
         }
         JSObject().put("devices", list)

@@ -54,7 +54,9 @@ export function FloatingLoadControl({
   const bluetooth = snapshot.device?.transport === "bluetooth";
   const basic =
     !!settings && settings.mode >= 0 && settings.mode <= 3 && !bluetooth;
-  const range = basic ? loadParameterRange("target", settings) : undefined;
+  const range = basic
+    ? loadParameterRange("target", settings, snapshot.loadLimits)
+    : undefined;
   const formatted = basic
     ? (settings.target?.toFixed(range!.digits) ?? "")
     : "";

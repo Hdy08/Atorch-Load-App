@@ -1,7 +1,13 @@
 package dev.atorch.ble
 
-/** Exact BW150 whitelist. A GATT write is never an arbitrary USB tunnel. */
+/** Only known load names and the vendor's panel commands are accepted. */
 internal object BlePacket {
+    private val loadName = Regex("(?:ATORCH[\\s_-]+)?(?:DL24P?|BW600)(?:[\\s_-].*)?", RegexOption.IGNORE_CASE)
+
+    fun isSupportedName(name: String): Boolean = name.trim().let {
+        it.startsWith("BW150", ignoreCase = true) || loadName.matches(it)
+    }
+
     fun validate(data: ByteArray) {
         require(data.size == 10) { "蓝牙面板命令长度错误" }
         require(data[0].toInt() and 255 == 255 && data[1].toInt() and 255 == 0x55 &&

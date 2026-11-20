@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     unnamed += usize::from(p.local_name.is_none());
                     if p.local_name
                         .as_ref()
-                        .is_some_and(|n| n.to_ascii_uppercase().starts_with("BW150"))
+                        .is_some_and(|name| atorch_protocol::ble::is_supported_name(name))
                         || (!address.is_empty()
                             && p.address.to_string().eq_ignore_ascii_case(&address))
                     {

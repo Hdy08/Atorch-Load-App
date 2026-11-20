@@ -1,13 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
-async function fixture(page: Page, { denied = false, desktop = false } = {}) {
+async function fixture(
+  page: Page,
+  { denied = false, desktop = false, name = "BW150_BLE" } = {},
+) {
   await page.setViewportSize({ width: desktop ? 1440 : 393, height: 900 });
   await page.addInitScript(
-    ({ denied, desktop }) => {
+    ({ denied, desktop, name }) => {
       const device = {
         path: "ble://00:00:00:17:BB:84",
-        name: "BW150_BLE",
+        name,
         serial: "",
         vendorId: 0,
         productId: 0,
@@ -101,7 +104,7 @@ async function fixture(page: Page, { denied = false, desktop = false } = {}) {
         },
       });
     },
-    { denied, desktop },
+    { denied, desktop, name },
   );
   await page.goto("/");
   await page.getByRole("button", { name: "连接设备", exact: true }).click();
@@ -114,7 +117,7 @@ async function fixture(page: Page, { denied = false, desktop = false } = {}) {
 test("desktop can select Bluetooth, scan and connect without Android USB diagnostics", async ({
   page,
 }) => {
-  await fixture(page, { desktop: true });
+  await fixture(page, { desktop: true, name: "BW600_BLE" });
   const dialog = page.getByRole("dialog");
   const tabs = dialog.getByRole("tablist", { name: "连接方式" });
   await expect(
@@ -123,16 +126,16 @@ test("desktop can select Bluetooth, scan and connect without Android USB diagnos
   await expect(
     tabs.getByRole("tab", { name: "蓝牙", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
-  await expect(dialog.getByText("BW150_BLE", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("BW600_BLE", { exact: true })).toBeVisible();
   await expect(
     dialog.getByRole("switch", { name: "Root USB-C 直连", exact: true }),
   ).toHaveCount(0);
   await tabs.getByRole("tab", { name: "USB", exact: true }).click();
   await expect(
-    dialog.getByText("未发现 ATORCH 设备", { exact: true }),
+    dialog.getByText("未发现 ATORCH USB 设备", { exact: true }),
   ).toBeVisible();
   await tabs.getByRole("tab", { name: "蓝牙", exact: true }).click();
-  await expect(dialog.getByText("BW150_BLE", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("BW600_BLE", { exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "连接", exact: true }).click();
   await expect(page.locator(".ble-keys")).toBeVisible();
   const calls = await page.evaluate(
@@ -162,7 +165,7 @@ for (const desktop of [true, false]) {
       connection.getByRole("button", { name: "管理设备", exact: true }),
     ).toBeVisible();
     await expect(connection.locator(".device-connection-status")).toHaveText(
-      "(BLE)",
+      "BLE",
     );
     await expect(
       page
@@ -370,7 +373,7 @@ for (const desktop of [false, true]) {
 test("BLE keys including OK send once without a dialog and clear requires acknowledging data loss", async ({
   page,
 }) => {
-  await fixture(page);
+  await fixture(page, { name: "DL24_BLE" });
   await page.getByRole("button", { name: "连接", exact: true }).click();
   await page.getByRole("button", { name: "+", exact: true }).click();
   await expect(

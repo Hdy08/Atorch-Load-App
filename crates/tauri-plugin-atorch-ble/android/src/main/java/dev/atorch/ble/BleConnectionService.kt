@@ -15,7 +15,7 @@ class BleConnectionService : Service() {
         val pending = launch?.let { PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT) }
         val notification = NotificationCompat.Builder(this, "atorch_ble")
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-            .setContentTitle("Atorch Load · BW150 蓝牙已连接")
+            .setContentTitle("Atorch Load · ATORCH 蓝牙已连接")
             .setContentText("正在接收设备数据；点击返回应用，断开设备即可结束。")
             .setContentIntent(pending).setOngoing(true).setSilent(true).build()
         startForeground(150, notification)

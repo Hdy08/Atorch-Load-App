@@ -303,20 +303,18 @@ for (const mobile of [false, true])
     await fixture(page, mobile);
     await page.getByRole("button", { name: "应用设置", exact: true }).click();
     const scale = page.getByRole("spinbutton", {
-      name: "界面缩放",
+      name: "缩放",
       exact: true,
     });
     await scale.press("ArrowUp");
     await expect(scale).toHaveValue(mobile ? "76" : "101");
     await scale.fill("200");
     await expect(
-      page.getByRole("button", { name: "增加界面缩放", exact: true }),
+      page.getByRole("button", { name: "增加缩放", exact: true }),
     ).toBeDisabled();
     await scale.press("ArrowDown");
     await expect(scale).toHaveValue("199");
-    await page
-      .getByRole("button", { name: "减少界面缩放", exact: true })
-      .click();
+    await page.getByRole("button", { name: "减少缩放", exact: true }).click();
     await expect(scale).toHaveValue("198");
     const scaleRoot = page.locator(".numeric-input").filter({ has: scale });
     await expect(scaleRoot.locator(".numeric-input-unit")).toHaveText("%");

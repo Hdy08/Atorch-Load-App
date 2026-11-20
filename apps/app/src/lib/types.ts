@@ -86,6 +86,12 @@ export interface DeviceSettings {
   standbySeconds: number;
   limitHours: number;
   limitMinutes: number;
+  cycleCount?: number;
+}
+export interface LoadLimits {
+  voltage: number;
+  current: number;
+  power: number;
 }
 export interface LogEntry {
   timestamp: number;
@@ -111,6 +117,7 @@ export interface Snapshot {
   device: DeviceInfo | null;
   telemetry: Telemetry | null;
   settings: DeviceSettings | null;
+  loadLimits?: LoadLimits;
   sampleCount: number;
   samplingPaused?: boolean;
   samplingElapsedMs?: number;

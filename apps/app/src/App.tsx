@@ -384,6 +384,12 @@ export function App() {
   const rootUsb = usbDiagnostics?.rootUsb;
   const t = snapshot.telemetry;
   const bluetooth = snapshot.device?.transport === "bluetooth";
+  const dl24 =
+    !bluetooth &&
+    /^(?:ATORCH[\s_-]+)?DL24P?(?:[\s_-]|$)/i.test(
+      snapshot.device?.name.trim() ?? "",
+    );
+  const deviceModes = dl24 ? modes.slice(0, 4) : modes;
   const deviceError = connectionError || snapshot.error;
   const deviceName =
     snapshot.device?.name.replace(/^ATORCH\s+/i, "").trim() ?? "";
@@ -406,13 +412,17 @@ export function App() {
     "",
   ];
   const basicMode = !!settings && settings.mode <= 3;
+  const cycleMode = settings?.mode === 9 && settings.cycleCount != null;
+  const canQuickSet = basicMode || cycleMode || (!settings && !bluetooth);
   useEffect(() => {
-    if ((settings && !basicMode) || bluetooth) setLoadTab("modes");
-  }, [settings?.mode, basicMode, bluetooth]);
-  const startableMode = !!settings && settings.mode <= 8;
+    if (!canQuickSet) setLoadTab("modes");
+  }, [canQuickSet]);
+  const startableMode =
+    !!settings && (settings.mode <= (dl24 ? 3 : 8) || cycleMode);
   const stagePending =
-    !!snapshot.specialTest?.reading.prompt &&
-    snapshot.specialTest.reading.mode === settings?.mode;
+    (!!snapshot.specialTest?.reading.prompt &&
+      snapshot.specialTest.reading.mode === settings?.mode) ||
+    (cycleMode && !!t?.status && (t.stageCode ?? 0) >= 10);
   const canSwitchMode =
     snapshot.connected &&
     !bluetooth &&
@@ -800,9 +810,7 @@ export function App() {
               }
               onSettings={() => {
                 setModeError("");
-                setLoadTab(
-                  basicMode || (!settings && !bluetooth) ? "quick" : "modes",
-                );
+                setLoadTab(canQuickSet ? "quick" : "modes");
                 setLoadDialogOpen(true);
               }}
               onApply={(value) => applyLoadParameter("target", value)}
@@ -816,7 +824,9 @@ export function App() {
                     expectedMode: settings?.mode,
                     text: basicMode
                       ? `设备将按当前 ${mode[1]}、目标值 ${fmt(settings?.target)} ${mode[3]} 启动。请确认负载输入与设备设置。`
-                      : `设备将启动 ${mode[0]} · ${mode[1]}，按专用流程控制负载。请确认接线及充满电压 ${fmt(settings?.fullVoltage)} V、截止电压 ${fmt(settings?.cutoffVoltage)} V。`,
+                      : cycleMode
+                        ? `设备将执行 ${settings.cycleCount} 次充放电循环。请确认接线、放电电流 ${fmt(settings.target)} A、截止电压 ${fmt(settings.cutoffVoltage)} V、充满电压 ${fmt(settings.fullVoltage)} V 和充电截止电流 ${fmt(settings.cutoffCurrent)} A。`
+                        : `设备将启动 ${mode[0]} · ${mode[1]}，按专用流程控制负载。请确认接线及充满电压 ${fmt(settings?.fullVoltage)} V、截止电压 ${fmt(settings?.cutoffVoltage)} V。`,
                   });
               }}
             />
@@ -853,18 +863,17 @@ export function App() {
                 <div className="device-info">
                   <div className="small-label">当前设备</div>
                   <div className="sidebar-device-name">
-                    {deviceName && (
-                      <>
-                        <strong>{deviceName}</strong>{" "}
-                      </>
-                    )}
-                    <span
-                      className={`device-connection-status ${deviceConnected ? "connected" : "disconnected"}`}
+                    {deviceName && <strong>{deviceName}</strong>}
+                    <Badge
+                      className="device-connection-status"
                       id="device-connection-status"
                       role="status"
+                      appearance="tint"
+                      size="small"
+                      color={deviceConnected ? "success" : "danger"}
                     >
-                      ({deviceStatus})
-                    </span>
+                      {deviceStatus}
+                    </Badge>
                   </div>
                 </div>
                 <NavItem
@@ -1132,12 +1141,14 @@ export function App() {
                       />
                     ))}
                   </div>
-                  <SpecialTests
-                    snapshot={snapshot}
-                    busy={busy}
-                    onCommand={command}
-                    onTask={run}
-                  />
+                  {!dl24 && (
+                    <SpecialTests
+                      snapshot={snapshot}
+                      busy={busy}
+                      onCommand={command}
+                      onTask={run}
+                    />
+                  )}
                 </>
               )}
 
@@ -1410,15 +1421,25 @@ export function App() {
                           "mosLimit",
                           "ntcLimit",
                         ] as const
-                      ).map((key) => (
-                        <LoadParameter
-                          key={key}
-                          range={loadParameterRange(key, loadSettings)}
-                          value={settings?.[key]}
-                          disabled={!snapshot.connected || busy || !settings}
-                          onApply={(value) => applyLoadParameter(key, value)}
-                        />
-                      ))}
+                      )
+                        .filter(
+                          (key) =>
+                            !dl24 ||
+                            (key !== "fullVoltage" && key !== "cutoffCurrent"),
+                        )
+                        .map((key) => (
+                          <LoadParameter
+                            key={key}
+                            range={loadParameterRange(
+                              key,
+                              loadSettings,
+                              snapshot.loadLimits,
+                            )}
+                            value={settings?.[key]}
+                            disabled={!snapshot.connected || busy || !settings}
+                            onApply={(value) => applyLoadParameter(key, value)}
+                          />
+                        ))}
                     </Card>
                     <Card>
                       <div className="section-head">
@@ -1434,7 +1455,11 @@ export function App() {
                       ).map((key) => (
                         <LoadParameter
                           key={key}
-                          range={loadParameterRange(key, loadSettings)}
+                          range={loadParameterRange(
+                            key,
+                            loadSettings,
+                            snapshot.loadLimits,
+                          )}
                           value={settings?.[key]}
                           disabled={!snapshot.connected || busy || !settings}
                           onApply={(value) => applyLoadParameter(key, value)}
@@ -1633,13 +1658,10 @@ export function App() {
                   selectedValue={loadTab}
                   onTabSelect={(_, data) => setLoadTab(String(data.value))}
                 >
-                  {(basicMode || (!settings && !bluetooth)) && (
-                    <Tab value="quick">快速设定</Tab>
-                  )}
+                  {canQuickSet && <Tab value="quick">快速设定</Tab>}
                   <Tab value="modes">模式切换</Tab>
                 </TabList>
-                {loadTab === "quick" &&
-                (basicMode || (!settings && !bluetooth)) ? (
+                {loadTab === "quick" && canQuickSet ? (
                   <div
                     className="load-parameters"
                     key={`${snapshot.connectedAt}-${settings?.mode}`}
@@ -1648,15 +1670,31 @@ export function App() {
                       [
                         "target",
                         "cutoffVoltage",
+                        ...(cycleMode
+                          ? ([
+                              "fullVoltage",
+                              "cutoffCurrent",
+                              "cycleCount",
+                            ] as const)
+                          : []),
                         "overCurrent",
                         "overPower",
                       ] as const
                     ).map((kind) => (
                       <LoadParameter
                         key={kind}
-                        range={loadParameterRange(kind, loadSettings)}
+                        range={loadParameterRange(
+                          kind,
+                          loadSettings,
+                          snapshot.loadLimits,
+                        )}
                         value={settings?.[kind] ?? undefined}
-                        disabled={!snapshot.connected || busy || !settings}
+                        disabled={
+                          !snapshot.connected ||
+                          busy ||
+                          !settings ||
+                          (kind === "cycleCount" && t?.running !== false)
+                        }
                         onApply={(value) => applyLoadParameter(kind, value)}
                       />
                     ))}
@@ -1669,7 +1707,11 @@ export function App() {
                     {(["mosLimit", "ntcLimit"] as const).map((kind) => (
                       <LoadParameter
                         key={kind}
-                        range={loadParameterRange(kind, loadSettings)}
+                        range={loadParameterRange(
+                          kind,
+                          loadSettings,
+                          snapshot.loadLimits,
+                        )}
                         value={settings?.[kind]}
                         disabled={!snapshot.connected || busy || !settings}
                         onApply={(value) => applyLoadParameter(kind, value)}
@@ -1694,7 +1736,7 @@ export function App() {
                     )}
                     <Notification text={modeError} error />
                     <div className="mode-grid">
-                      {modes.map(([code, name, desc], index) => (
+                      {deviceModes.map(([code, name, desc], index) => (
                         <Tooltip
                           key={code}
                           content={desc}
@@ -1826,7 +1868,7 @@ export function App() {
                       {!rootUsb.supported
                         ? "此设备不支持 USB Host，无法使用 Root 直连。"
                         : rootUsb.enabled
-                          ? "已启用。连接 BW150 后允许 USB 访问；断开设备或关闭此功能时恢复原 USB 角色。"
+                          ? "已启用。连接 ATORCH 设备后允许 USB 访问；断开设备或关闭此功能时恢复原 USB 角色。"
                           : "C-C 直连无法识别时可尝试启用。需要在 Root 管理器中授权本应用；普通 OTG 连接无需开启。"}
                     </p>
                     {rootBusy && (
@@ -1854,8 +1896,8 @@ export function App() {
                     <Spinner
                       label={
                         connectionType === "bluetooth"
-                          ? "正在扫描 BW150 蓝牙设备…"
-                          : "正在扫描 USB 设备…"
+                          ? "正在扫描 ATORCH 蓝牙设备…"
+                          : "正在扫描 ATORCH USB 设备…"
                       }
                     />
                   </div>
@@ -1912,12 +1954,12 @@ export function App() {
                   <div className="dialog-empty">
                     <Bluetooth20Regular />
                     <strong>
-                      {scanError ? "蓝牙扫描失败" : "未发现 BW150 蓝牙设备"}
+                      {scanError ? "蓝牙扫描失败" : "未发现 ATORCH 蓝牙设备"}
                     </strong>
                   </div>
                 ) : (
                   <div className="dialog-empty">
-                    <PlugDisconnected20Regular />
+                    <UsbPlug20Regular />
                     <strong>
                       {scanError
                         ? "扫描失败"
@@ -1925,7 +1967,7 @@ export function App() {
                           ? "此设备不支持 USB Host"
                           : usbDiagnostics?.devices.length === 0
                             ? "Android 尚未识别到 USB 外设"
-                            : "未发现 ATORCH 设备"}
+                            : "未发现 ATORCH USB 设备"}
                     </strong>
                     {!scanError && (!native || usbDiagnostics) && (
                       <span>
@@ -1934,9 +1976,9 @@ export function App() {
                           : usbDiagnostics && !usbDiagnostics.hostSupported
                             ? "请使用支持 USB Host / OTG 的 Android 设备。"
                             : usbDiagnostics?.devices.length === 0
-                              ? "请检查 OTG 连接、数据线与 BW150 供电。USB-C 直连无法识别时，可改用手机 OTG 转接头接 USB-A 数据线。"
+                              ? "请检查 OTG 连接、数据线与设备供电。USB-C 直连无法识别时，可改用手机 OTG 转接头接 USB-A 数据线。"
                               : usbDiagnostics
-                                ? "系统已识别 USB 外设，但没有匹配到 BW150。请确认连接的是设备的数据接口。"
+                                ? "系统已识别 USB 外设，但没有匹配到 ATORCH USB 设备。请确认连接的是设备的数据接口。"
                                 : null}
                       </span>
                     )}

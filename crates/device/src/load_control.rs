@@ -1,5 +1,31 @@
-//! Application limits for the BW150 load controls, checked against fresh settings.
-use atorch_protocol::{Command, DeviceSettings};
+//! Load models and application limits checked before USB writes.
+use atorch_protocol::{Command, DeviceSettings, LoadModel};
+use serde::Serialize;
+
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct LoadLimits {
+    pub voltage: f64,
+    pub current: f64,
+    pub power: f64,
+}
+
+impl LoadLimits {
+    pub fn for_model(model: LoadModel) -> Self {
+        match model {
+            // USB identifies the family without identifying the installed power modules.
+            LoadModel::Bw600 => Self {
+                voltage: 200.0,
+                current: 50.0,
+                power: 1200.0,
+            },
+            _ => Self {
+                voltage: 100.0,
+                current: 20.0,
+                power: 400.0,
+            },
+        }
+    }
+}
 
 pub fn requires_settings(kind: &str) -> bool {
     matches!(
@@ -10,6 +36,7 @@ pub fn requires_settings(kind: &str) -> bool {
             | "overPower"
             | "limitHours"
             | "limitMinutes"
+            | "cycleCount"
             | "fullVoltage"
             | "cutoffCurrent"
             | "ntcLimit"
@@ -20,27 +47,62 @@ pub fn requires_settings(kind: &str) -> bool {
     )
 }
 
+pub fn validate_dl24(command: &Command, settings: Option<&DeviceSettings>) -> Result<(), String> {
+    match command.kind.as_str() {
+        "mode" if command.value > 3.0 => Err("DL24 支持 CC、CV、CR、CP 四种模式".into()),
+        "fullVoltage" | "cutoffCurrent" | "stage" => Err("DL24 不支持充电设置或阶段控制".into()),
+        "target" | "running"
+            if !(command.kind == "running" && command.value == 0.0)
+                && settings.is_some_and(|settings| settings.mode > 3) =>
+        {
+            Err("请先将 DL24 切回 CC、CV、CR 或 CP 模式".into())
+        }
+        _ => Ok(()),
+    }
+}
+
 fn rounded(value: f64, digits: i32) -> f64 {
     let scale = 10_f64.powi(digits);
     (value * scale).round() / scale
 }
 
-pub fn validate(command: &Command, settings: &DeviceSettings) -> Result<(), String> {
+pub fn validate_cycle_start(settings: &DeviceSettings, limits: LoadLimits) -> Result<(), String> {
+    atorch_protocol::special::validate_cycle_settings(settings)?;
+    if settings.mode == 9 {
+        let limit = rounded(settings.over_current, 3).min(limits.current);
+        // The target here came from a float32 readback, not from typed input.
+        if rounded(settings.target.unwrap_or_default(), 3) > limit {
+            return Err(format!("放电电流超过 {limit} A，请核对过流保护"));
+        }
+    }
+    Ok(())
+}
+
+pub fn validate(
+    command: &Command,
+    settings: &DeviceSettings,
+    limits: LoadLimits,
+) -> Result<(), String> {
     let target = settings.target.unwrap_or(0.0);
     let (label, min, max, digits) = match command.kind.as_str() {
         "target" => match settings.mode {
-            0 => (
+            0 | 9 => (
                 "目标电流",
                 0.0,
-                rounded(settings.over_current, 3).min(20.0),
+                rounded(settings.over_current, 3).min(limits.current),
                 3,
             ),
-            1 => ("目标电压", rounded(settings.cutoff_voltage, 2), 100.0, 2),
+            1 => (
+                "目标电压",
+                rounded(settings.cutoff_voltage, 2),
+                limits.voltage,
+                2,
+            ),
             2 => ("目标电阻", 0.01, 9999.99, 2),
             3 => (
                 "目标功率",
                 0.0,
-                rounded(settings.over_power, 1).min(400.0),
+                rounded(settings.over_power, 1).min(limits.power),
                 1,
             ),
             _ => return Ok(()),
@@ -49,20 +111,20 @@ pub fn validate(command: &Command, settings: &DeviceSettings) -> Result<(), Stri
             "截止电压",
             0.0,
             if settings.mode == 1 {
-                rounded(target, 2).min(100.0)
+                rounded(target, 2).min(limits.voltage)
             } else {
-                100.0
+                limits.voltage
             },
             2,
         ),
         "overCurrent" => (
             "过流保护",
-            if settings.mode == 0 {
+            if settings.mode == 0 || (settings.mode == 9 && settings.cycle_count.is_some()) {
                 rounded(target, 3)
             } else {
                 0.0
             },
-            20.0,
+            limits.current,
             3,
         ),
         "overPower" => (
@@ -72,7 +134,7 @@ pub fn validate(command: &Command, settings: &DeviceSettings) -> Result<(), Stri
             } else {
                 0.0
             },
-            400.0,
+            limits.power,
             1,
         ),
         "fullVoltage" => ("充电上限电压", 0.0, 100.0, 2),

@@ -20,12 +20,12 @@ const clears = [
   [
     "clearEnergy",
     "清空电量",
-    "将发送电量清零操作。BW150 按当前测试页面决定清除哪组电量累计；请先保存需要的数据。",
+    "将发送电量清零操作。设备按当前测试页面决定清除哪组电量累计；请先保存需要的数据。",
   ],
   [
     "clearCapacity",
     "清空容量",
-    "将发送容量清零操作。BW150 按当前测试页面决定清除哪组容量累计；请先保存需要的数据。",
+    "将发送容量清零操作。设备按当前测试页面决定清除哪组容量累计；请先保存需要的数据。",
   ],
   [
     "clearTime",
@@ -152,7 +152,7 @@ export function BleControls({
             <DialogTitle>{confirmation?.title}</DialogTitle>
             <DialogContent>
               <p>{confirmation?.text}</p>
-              <p>每次只发送一次，执行结果请以 BW150 屏幕为准。</p>
+              <p>每次只发送一次，执行结果请以设备屏幕为准。</p>
               <Checkbox
                 label="我已保存所需数据，确认清零设备累计值"
                 checked={acknowledged}

@@ -167,13 +167,11 @@ test("opening device management cancels automatic BLE scanning before manual dis
       { timeout: 10_000 },
     )
     .toBe(true);
-  await expect(page.locator(".device-connection-status")).toHaveText(
-    "(未连接)",
-  );
+  await expect(page.locator(".device-connection-status")).toHaveText("未连接");
   await page.getByRole("button", { name: "连接设备", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(
-    page.getByText("未发现 ATORCH 设备", { exact: true }),
+    page.getByText("未发现 ATORCH USB 设备", { exact: true }),
   ).toBeVisible();
   const calls = await page.evaluate(
     () => (window as any).autoCalls as { command: string }[],
@@ -193,9 +191,7 @@ test("manual disconnection stays disconnected until a manual connection succeeds
     .click({ timeout: 10_000 });
   await page.getByRole("button", { name: "断开设备", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.locator(".device-connection-status")).toHaveText(
-    "(未连接)",
-  );
+  await expect(page.locator(".device-connection-status")).toHaveText("未连接");
   const scanCount = await page.evaluate(
     () =>
       (window as any).autoCalls.filter(
@@ -226,7 +222,7 @@ test("manual disconnection stays disconnected until a manual connection succeeds
     .getByRole("button", { name: "连接", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.locator(".device-connection-status")).toHaveText("(USB)");
+  await expect(page.locator(".device-connection-status")).toHaveText("USB");
   await page.evaluate(() => (window as any).detachAutoDevice());
   await expect
     .poll(

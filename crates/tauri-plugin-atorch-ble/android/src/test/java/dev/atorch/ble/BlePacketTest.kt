@@ -1,5 +1,7 @@
 package dev.atorch.ble
 
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BlePacketTest {
@@ -7,6 +9,14 @@ class BlePacketTest {
         val data = byteArrayOf(-1, 0x55, 0x11, 2, code.toByte(), 0, 0, 0, 0, 0)
         data[9] = ((0x11 + 2 + code) xor 0x44).toByte()
         return data
+    }
+    @Test fun recognizesSupportedLoadAdvertisedNames() {
+        listOf("DL24", "DL24_BLE", "dl24p-ble", "ATORCH DL24", "BW150_BLE", "BW600_BLE", "ATORCH BW600-DK").forEach {
+            assertTrue(it, BlePacket.isSupportedName(it))
+        }
+        listOf("DL240", "DL24EW", "BW6000", "HMSoft", "Not DL24", "ATORCH").forEach {
+            assertFalse(it, BlePacket.isSupportedName(it))
+        }
     }
     @Test fun knownPanelCommandsAreAccepted() {
         listOf(1, 2, 3, 0x31, 0x32, 0x33, 0x34).forEach { BlePacket.validate(frame(it)) }

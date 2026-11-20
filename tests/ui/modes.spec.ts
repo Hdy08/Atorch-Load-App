@@ -3,18 +3,33 @@ import { mkdir } from "node:fs/promises";
 
 async function fixture(
   page: Page,
-  options: { running?: boolean; bluetooth?: boolean; fail?: boolean } = {},
+  options: {
+    running?: boolean;
+    bluetooth?: boolean;
+    fail?: boolean;
+    name?: string;
+    cycleCount?: number;
+    loadLimits?: { voltage: number; current: number; power: number };
+  } = {},
 ) {
   await page.addInitScript(
-    ({ running = false, bluetooth = false, fail = false }) => {
+    ({
+      running = false,
+      bluetooth = false,
+      fail = false,
+      name = "BW150",
+      cycleCount,
+      loadLimits,
+    }) => {
       const settings = {
         mode: 0,
         target: 1,
         cutoffVoltage: 1,
         fullVoltage: 4.2,
         cutoffCurrent: 0.05,
-        overCurrent: 16,
-        overPower: 400,
+        overCurrent: loadLimits ? 30 : 16,
+        overPower: loadLimits ? 600 : 400,
+        cycleCount,
         brightness: 9,
         standbyBrightness: 4,
         standbySeconds: 60,
@@ -34,10 +49,11 @@ async function fixture(
                 connected: true,
                 device: {
                   path: "fixture",
-                  name: "BW150",
+                  name,
                   transport: bluetooth ? "bluetooth" : "usb",
                 },
                 settings: bluetooth ? null : { ...settings },
+                loadLimits,
                 telemetry: {
                   timestamp: Date.now(),
                   voltage: 0,
@@ -65,6 +81,8 @@ async function fixture(
                 settings.mode = args.command.value;
                 settings.target = settings.mode ? 5 : 1;
               }
+              if (args.command.kind === "cycleCount")
+                settings.cycleCount = args.command.value;
               return;
             }
             throw Error(`Unexpected mode command: ${command}`);
@@ -168,6 +186,67 @@ test("mode cards contain only code and title, expose descriptions on hover, and 
       (window as any).modeCalls.map((call: any) => call.value),
     ),
   ).toEqual([1, 2]);
+});
+
+test("DL24 exposes only its four load modes and excludes charging settings", async ({
+  page,
+}) => {
+  await fixture(page, { name: "ATORCH DL24 V1.1.0" });
+  await expect(page.locator(".test-mode")).toHaveCount(4);
+  await page.getByRole("button", { name: "切换到 CP", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(
+    page.getByRole("spinbutton", { name: "目标功率快速设定", exact: true }),
+  ).toHaveValue("5.0");
+  await page
+    .getByRole("navigation", { name: "主导航" })
+    .getByLabel("设备设置", { exact: true })
+    .click();
+  await expect(
+    page.getByRole("spinbutton", { name: "截止电压", exact: true }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("spinbutton", { name: /充电上限电压|充电截止电流/ }),
+  ).toHaveCount(0);
+});
+
+test("BW600 uses its USB limits and exposes CDxn settings only when the device supplies them", async ({
+  page,
+}) => {
+  await fixture(page, {
+    name: "ATORCH BW600 V2.0.5",
+    cycleCount: 10,
+    loadLimits: { voltage: 200, current: 50, power: 1200 },
+  });
+  await page.getByRole("button", { name: "切换到 CV", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(
+    page.getByRole("spinbutton", { name: "目标电压快速设定", exact: true }),
+  ).toHaveAttribute("aria-valuemax", "200");
+  await openModes(page);
+  await page.getByRole("button", { name: "切换到 CDxn", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await page.getByRole("button", { name: "负载控制设置", exact: true }).click();
+  const count = page.getByRole("spinbutton", { name: "循环次数", exact: true });
+  await expect(count).toHaveValue("10");
+  await count.fill("15");
+  await page
+    .locator(".load-parameter")
+    .filter({ has: count })
+    .getByRole("button", { name: "应用", exact: true })
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => (window as any).modeCalls.at(-1)))
+    .toMatchObject({ kind: "cycleCount", value: 15, expectedMode: 9 });
+  await expect(page.getByTestId("special-test")).toContainText("15 次");
+  await page
+    .getByRole("dialog", { name: "负载控制" })
+    .getByRole("button", { name: "关闭", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await page.getByRole("button", { name: "启动专用测试", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("15 次充放电循环");
+  await page.getByRole("button", { name: "取消", exact: true }).click();
 });
 
 test("failed mode selection retains the actual mode and can be retried", async ({

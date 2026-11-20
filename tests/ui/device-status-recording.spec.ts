@@ -112,25 +112,32 @@ test("connection status is inline, uses the four requested labels and hides the 
   await fixture(page);
   const name = page.locator(".sidebar-device-name");
   const status = name.locator(".device-connection-status");
-  await expect(name).toHaveText("BW150 V1.1.0 (USB)");
+  await expect(name.locator("strong")).toHaveText("BW150 V1.1.0");
+  await expect(status).toHaveText("USB");
+  await expect(status).toHaveClass(/fui-Badge/);
   await expect(status).toHaveCSS(
     "color",
-    rgb(webLightTheme.colorStatusSuccessForeground1),
+    rgb(webLightTheme.colorPaletteGreenForeground1),
   );
   const labelBox = (await name.locator("strong").boundingBox())!;
   const statusBox = (await status.boundingBox())!;
-  expect(Math.abs(labelBox.y - statusBox.y)).toBeLessThan(2);
+  expect(statusBox.x).toBeGreaterThan(labelBox.x + labelBox.width);
+  expect(
+    Math.abs(
+      labelBox.y + labelBox.height / 2 - statusBox.y - statusBox.height / 2,
+    ),
+  ).toBeLessThan(2);
   await page.evaluate(() => {
     (window as any).statusFixture.device.transport = "bluetooth";
   });
-  await expect(status).toHaveText("(BLE)");
+  await expect(status).toHaveText("BLE");
   await page.evaluate(() => {
     (window as any).statusFixture.error = "设备没有连接。 (os error 1167)";
   });
-  await expect(status).toHaveText("(异常)");
+  await expect(status).toHaveText("异常");
   await expect(status).toHaveCSS(
     "color",
-    rgb(webLightTheme.colorStatusDangerForeground1),
+    rgb(webLightTheme.colorPaletteRedForeground1),
   );
   await expect(page.locator(".device-error")).toHaveCount(0);
   await expect(
@@ -142,14 +149,15 @@ test("connection status is inline, uses the four requested labels and hides the 
       error: null,
     });
   });
-  await expect(name).toHaveText("BW150 V1.1.0 (未连接)");
+  await expect(name.locator("strong")).toHaveText("BW150 V1.1.0");
+  await expect(status).toHaveText("未连接");
   await page.evaluate(() => {
     (window as any).statusFixture.device = null;
   });
-  await expect(name).toHaveText("(未连接)");
+  await expect(name).toHaveText("未连接");
   await expect(status).toHaveCSS(
     "color",
-    rgb(webLightTheme.colorStatusDangerForeground1),
+    rgb(webLightTheme.colorPaletteRedForeground1),
   );
 });
 

@@ -20,6 +20,7 @@ export type MenuOption = {
 export function MenuSelect({
   value,
   options,
+  placeholder,
   onChange,
   className = "",
   ...props
@@ -27,13 +28,14 @@ export function MenuSelect({
   Pick<ButtonProps, "size" | "appearance"> & {
     value: string | number;
     options: readonly MenuOption[];
+    placeholder?: string;
     onChange: (value: string) => void;
   }) {
   const selected = String(value);
   const option = options.find((item) => String(item.value) === selected);
   return (
     <Menu
-      checkedValues={{ selection: [selected] }}
+      checkedValues={{ selection: option ? [selected] : [] }}
       onCheckedValueChange={(_, data) => {
         if (data.checkedItems[0] !== undefined) onChange(data.checkedItems[0]);
       }}
@@ -55,7 +57,16 @@ export function MenuSelect({
           iconPosition="after"
         >
           <span className="menu-select-label">
-            <span className="menu-select-value">{option?.label}</span>
+            <span className="menu-select-value">
+              {option?.label ?? placeholder}
+            </span>
+            {placeholder && (
+              <span
+                className="menu-select-option-width"
+                aria-hidden="true"
+                data-label={placeholder}
+              />
+            )}
             {options.map((item) => (
               <span
                 key={item.value}

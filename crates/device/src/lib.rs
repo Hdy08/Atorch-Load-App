@@ -10,7 +10,7 @@ pub mod sampling;
 pub mod special;
 #[cfg(test)]
 mod tests;
-use atorch_protocol::{Command, DeviceSettings, Report, Telemetry};
+use atorch_protocol::{Command, DeviceSettings, LoadModel, Report, Telemetry};
 #[cfg(not(target_os = "android"))]
 use atorch_protocol::{PRODUCT_ID, VENDOR_ID};
 use serde::{Deserialize, Serialize};
@@ -42,6 +42,12 @@ pub struct DeviceInfo {
     pub transport: TransportKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rssi: Option<i16>,
+}
+
+impl DeviceInfo {
+    fn load_model(&self) -> LoadModel {
+        LoadModel::from_name(&self.name)
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -83,6 +89,7 @@ pub struct Snapshot {
     pub device: Option<DeviceInfo>,
     pub telemetry: Option<Telemetry>,
     pub settings: Option<DeviceSettings>,
+    load_limits: load_control::LoadLimits,
     pub sample_count: u64,
     pub sampling_paused: bool,
     pub sampling_elapsed_ms: u64,
@@ -116,6 +123,7 @@ impl Default for Snapshot {
             device: None,
             telemetry: None,
             settings: None,
+            load_limits: load_control::LoadLimits::for_model(LoadModel::Standard),
             sample_count: 0,
             sampling_paused: false,
             sampling_elapsed_ms: 0,
@@ -416,6 +424,7 @@ impl DeviceManager {
         let sampling_paused = auto_recording.waits_for_start();
         *current = Snapshot {
             connected: true,
+            load_limits: load_control::LoadLimits::for_model(info.load_model()),
             device: Some(info),
             connected_at: now_ms(),
             firmware,
@@ -487,7 +496,7 @@ impl DeviceManager {
                 .device
                 .is_some_and(|d| d.transport == TransportKind::Bluetooth)
         {
-            return Err("请先连接 BW150 蓝牙设备".into());
+            return Err("请先连接 ATORCH 蓝牙设备".into());
         }
         let (tx, rx) = mpsc::channel();
         self.sender()?
@@ -565,11 +574,12 @@ fn csv_row(t: &Telemetry) -> String {
 
 fn accept(
     bytes: &[u8],
+    model: LoadModel,
     state: &Arc<Mutex<Snapshot>>,
     samples: &Arc<Mutex<VecDeque<Sample>>>,
     recorder: &mut recorder::Recorder,
 ) -> Result<Option<Report>, String> {
-    let Ok(report) = atorch_protocol::parse(bytes, 1, now_ms()) else {
+    let Ok(report) = atorch_protocol::parse_for_model(bytes, 1, now_ms(), model) else {
         return Ok(None);
     };
     accept_report(report, state, samples, recorder).map(Some)
@@ -594,7 +604,16 @@ fn accept_report(
     match &report {
         Report::Telemetry(t) => {
             s.observe_auto_recording(t);
-            if let Some(mode) = s.settings.as_ref().map(|v| v.mode) {
+            if let Some(mode) = s
+                .settings
+                .as_ref()
+                .filter(|_| {
+                    !s.device
+                        .as_ref()
+                        .is_some_and(|device| device.load_model() == LoadModel::Dl24)
+                })
+                .map(|settings| settings.mode)
+            {
                 let Snapshot {
                     special_test,
                     special_results,
@@ -642,6 +661,12 @@ fn run(
     let mut recorder = recorder::Recorder::new(recording_dir);
     let mut buffer = [0; 256];
     let bluetooth = transport.kind() == TransportKind::Bluetooth;
+    let model = state
+        .lock()
+        .unwrap()
+        .device
+        .as_ref()
+        .map_or(LoadModel::Standard, DeviceInfo::load_model);
     let mut ble_decoder = atorch_protocol::ble::Decoder::default();
     let mut schedule =
         sampling::UsbSchedule::new(Instant::now(), state.lock().unwrap().usb_sample_rate_hz);
@@ -682,7 +707,7 @@ fn run(
                         if n == 0 {
                             break;
                         }
-                        accept(&buffer[..n], state, samples, &mut recorder)?;
+                        accept(&buffer[..n], model, state, samples, &mut recorder)?;
                     }
                     if command.kind == "mode"
                         || command.kind == "stage"
@@ -706,7 +731,7 @@ fn run(
                                 continue;
                             }
                             if let Some(report) =
-                                accept(&buffer[..n], state, samples, &mut recorder)?
+                                accept(&buffer[..n], model, state, samples, &mut recorder)?
                             {
                                 settings_seen |= matches!(report, Report::Settings(_));
                                 telemetry_seen |= matches!(report, Report::Telemetry(_));
@@ -721,6 +746,9 @@ fn run(
                     }
                     {
                         let s = state.lock().unwrap();
+                        if model == LoadModel::Dl24 {
+                            load_control::validate_dl24(&command, s.settings.as_ref())?;
+                        }
                         if let Some(expected) = command.expected_mode {
                             if s.settings.as_ref().map(|v| v.mode) != Some(expected) {
                                 return Err("设备模式已变化，请核对新模式及目标值后再操作".into());
@@ -744,29 +772,51 @@ fn run(
                         }
                         if load_control::requires_settings(&command.kind) {
                             let settings = s.settings.as_ref().ok_or("请先读取设备参数")?;
-                            load_control::validate(&command, settings)?;
+                            load_control::validate(&command, settings, s.load_limits)?;
+                            if command.kind == "cycleCount" {
+                                if settings.cycle_count.is_none() {
+                                    return Err("当前固件不支持通过 USB 设置循环次数".into());
+                                }
+                                if !s
+                                    .telemetry
+                                    .as_ref()
+                                    .is_some_and(|t| t.running == Some(false))
+                                {
+                                    return Err("请先停止负载，再修改循环次数".into());
+                                }
+                            }
                         }
                         if command.kind == "running" && command.value == 1.0 {
                             let settings = s.settings.as_ref().ok_or("请先读取设备模式")?;
-                            if settings.mode > 8 {
+                            if settings.mode > 8
+                                && !(settings.mode == 9 && settings.cycle_count.is_some())
+                            {
                                 return Err(
                                     "此模式的专用测试启动参数尚未核准，请在设备面板启动".into()
                                 );
                             }
-                            if matches!(settings.mode, 7 | 8) {
-                                atorch_protocol::special::validate_cycle_settings(settings)?;
+                            if matches!(settings.mode, 7..=9) {
+                                load_control::validate_cycle_start(settings, s.load_limits)?;
                                 if s.telemetry.as_ref().is_some_and(|t| {
                                     atorch_protocol::special::prompt(settings.mode, t).is_some()
+                                        || (settings.mode == 9
+                                            && t.status != 0
+                                            && t.stage_code.is_some_and(|code| code >= 10))
                                 }) {
-                                    return Err("设备正在等待阶段选择，请使用阶段控制操作".into());
+                                    let message = if settings.mode == 9 {
+                                        "设备正在等待阶段选择，请在设备面板操作"
+                                    } else {
+                                        "设备正在等待阶段选择，请使用阶段控制操作"
+                                    };
+                                    return Err(message.into());
                                 }
                             }
                         }
                         if command.kind == "target"
-                            && !s
-                                .settings
-                                .as_ref()
-                                .is_some_and(|v| matches!(v.mode, 0..=3 | 7 | 8))
+                            && !s.settings.as_ref().is_some_and(|v| {
+                                matches!(v.mode, 0..=3 | 7 | 8)
+                                    || (v.mode == 9 && v.cycle_count.is_some())
+                            })
                         {
                             return Err(
                                 "此模式不使用普通目标值，请在设备面板设置专用测试参数".into()
@@ -788,7 +838,9 @@ fn run(
                         if n == 0 {
                             continue;
                         }
-                        if let Some(report) = accept(&buffer[..n], state, samples, &mut recorder)? {
+                        if let Some(report) =
+                            accept(&buffer[..n], model, state, samples, &mut recorder)?
+                        {
                             last_valid = Instant::now();
                             if command.matches(&report)
                                 && (!load_control::requires_settings(&command.kind)
@@ -852,7 +904,7 @@ fn run(
                         sent_at: now_ms(),
                         device_confirmed: false,
                         message: format!(
-                            "{}已发送；设备未提供执行确认，请核对 BW150 屏幕。",
+                            "{}已发送；设备未提供执行确认，请核对设备屏幕。",
                             action.label()
                         ),
                     })
@@ -893,7 +945,7 @@ fn run(
                     accept_report(Report::Telemetry(t), state, samples, &mut recorder)?;
                     last_valid = Instant::now();
                 }
-            } else if accept(&buffer[..n], state, samples, &mut recorder)?.is_some() {
+            } else if accept(&buffer[..n], model, state, samples, &mut recorder)?.is_some() {
                 last_valid = Instant::now();
             }
         }

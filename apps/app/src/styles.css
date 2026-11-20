@@ -163,6 +163,10 @@ html.has-window-titlebar body {
   margin-bottom: var(--spacingVerticalXS);
 }
 .sidebar-device-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacingVerticalXXS) var(--spacingHorizontalSNudge);
   color: var(--colorNeutralForeground1);
   line-height: var(--lineHeightBase300);
   overflow-wrap: anywhere;
@@ -174,12 +178,6 @@ html.has-window-titlebar body {
   font-weight: var(--fontWeightSemibold);
   font-size: var(--fontSizeBase300);
   line-height: var(--lineHeightBase300);
-}
-.device-connection-status.connected {
-  color: var(--colorStatusSuccessForeground1);
-}
-.device-connection-status.disconnected {
-  color: var(--colorStatusDangerForeground1);
 }
 .main-shell {
   width: calc(100% - 228px);
@@ -1561,6 +1559,12 @@ html.has-window-titlebar .fui-Toaster.app-notifications.with-load-control {
 }
 .firmware-status .firmware-phase {
   color: var(--colorNeutralForeground1);
+}
+.firmware-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacingHorizontalS);
+  font-variant-numeric: tabular-nums;
 }
 .firmware-job .mono,
 .firmware-digest {

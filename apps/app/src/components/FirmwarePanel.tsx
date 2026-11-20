@@ -191,15 +191,15 @@ export function FirmwarePanel({
                 <MenuSelect
                   aria-label="升级 USB 设备"
                   value={selectedPath}
-                  disabled={busy || scanning || !hardware}
+                  disabled={busy || scanning || !hardware || !devices.length}
+                  placeholder="请选择 USB 设备"
                   onChange={setSelectedPath}
-                  options={[
-                    { value: "", label: "请选择 USB 设备" },
-                    ...devices.map((device) => ({
-                      value: device.path,
-                      label: `${device.name} · ${device.serial}`,
-                    })),
-                  ]}
+                  options={devices.map((device) => ({
+                    value: device.path,
+                    label: device.serial
+                      ? `${device.name} · ${device.serial}`
+                      : device.name,
+                  }))}
                 />
                 <Button
                   disabled={busy || scanning || !native}
@@ -218,9 +218,6 @@ export function FirmwarePanel({
                   {job?.active ? "停止" : "刷写"}
                 </Button>
               </div>
-              {otherConnection && (
-                <p>请先断开当前设备，再选择另一个升级目标。</p>
-              )}
             </>
           )}
           {job && (
@@ -234,8 +231,11 @@ export function FirmwarePanel({
                 aria-label="固件传输进度"
                 value={job.blocks ? job.acknowledgedBlocks / job.blocks : 0}
               />
-              <p>
-                {percentage}% {job.acknowledgedBlocks}/{job.blocks}
+              <p className="firmware-progress">
+                <span>{percentage}%</span>{" "}
+                <span>
+                  {job.acknowledgedBlocks}/{job.blocks}
+                </span>
               </p>
               <div>
                 <Button

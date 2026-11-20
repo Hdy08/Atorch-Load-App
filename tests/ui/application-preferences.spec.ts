@@ -351,7 +351,7 @@ test("appearance drafts only apply on request, follow the system, and restore pe
     page.getByRole("button", { name: "侧栏", exact: true }),
   ).toHaveAttribute("data-value", "auto");
   await expect(
-    page.getByRole("spinbutton", { name: "界面缩放", exact: true }),
+    page.getByRole("spinbutton", { name: "缩放", exact: true }),
   ).toHaveValue("100");
   await expect(
     page.getByRole("button", { name: "强调色来源" }),
@@ -544,7 +544,7 @@ for (const percent of [50, 125, 200])
     await fixture(page);
     await settings(page);
     const input = page.getByRole("spinbutton", {
-      name: "界面缩放",
+      name: "缩放",
       exact: true,
     });
     await input.fill(String(percent));
@@ -855,7 +855,7 @@ test.describe("mobile safe viewport and navigation", () => {
     await settings(page);
     for (const percent of [50, 200, 100]) {
       await page
-        .getByRole("spinbutton", { name: "界面缩放", exact: true })
+        .getByRole("spinbutton", { name: "缩放", exact: true })
         .fill(String(percent));
       await apply(page);
       const app = (await page.locator(".app").boundingBox())!;
@@ -991,7 +991,7 @@ test.describe("compact Android headers", () => {
     await expect(page.locator("body")).toHaveCSS("zoom", "0.75");
     await settings(page);
     const scale = page.getByRole("spinbutton", {
-      name: "界面缩放",
+      name: "缩放",
       exact: true,
     });
     await expect(scale).toHaveValue("75");
@@ -1130,7 +1130,7 @@ test("right-click menus are suppressed on charts, inputs and portal dialogs", as
   await page.locator(".trend-chart canvas").click({ button: "right" });
   await settings(page);
   await page
-    .getByRole("spinbutton", { name: "界面缩放", exact: true })
+    .getByRole("spinbutton", { name: "缩放", exact: true })
     .click({ button: "right" });
   await page.getByRole("button", { name: "管理设备", exact: true }).click();
   await page.locator(".fui-DialogSurface").click({ button: "right" });
@@ -1144,7 +1144,7 @@ test("browser refresh and navigation shortcuts are disabled while text editing r
 }) => {
   await fixture(page);
   await settings(page);
-  const input = page.getByRole("spinbutton", { name: "界面缩放", exact: true });
+  const input = page.getByRole("spinbutton", { name: "缩放", exact: true });
   await input.fill("137");
   let navigations = 0;
   page.on("framenavigated", () => navigations++);

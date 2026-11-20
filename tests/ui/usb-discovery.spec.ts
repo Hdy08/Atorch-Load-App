@@ -33,7 +33,7 @@ const cases = [
       ],
     },
     devices: [],
-    expected: "未发现 ATORCH 设备",
+    expected: "未发现 ATORCH USB 设备",
     detail: "USB Hub · 1234:5750",
   },
   {

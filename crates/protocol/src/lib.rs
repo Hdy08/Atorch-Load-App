@@ -10,6 +10,35 @@ pub const VENDOR_ID: u16 = 0x0483;
 pub const PRODUCT_ID: u16 = 0x5750;
 pub const REPORT_SIZE: usize = 64;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LoadModel {
+    Standard,
+    Dl24,
+    Bw600,
+}
+
+impl LoadModel {
+    /// Extract the model from USB product strings and BLE advertisements.
+    pub fn from_name(name: &str) -> Self {
+        let mut tokens = name
+            .split(|c: char| c.is_ascii_whitespace() || c == '_' || c == '-')
+            .filter(|part| !part.is_empty());
+        let token = match tokens.next() {
+            Some(token) if token.eq_ignore_ascii_case("ATORCH") => tokens.next(),
+            token => token,
+        };
+        match token {
+            Some(token) if token.eq_ignore_ascii_case("BW600") => Self::Bw600,
+            Some(token)
+                if token.eq_ignore_ascii_case("DL24") || token.eq_ignore_ascii_case("DL24P") =>
+            {
+                Self::Dl24
+            }
+            _ => Self::Standard,
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum ProtocolError {
     #[error("Invalid report length, header, address or terminator")]
@@ -62,6 +91,9 @@ pub struct DeviceSettings {
     pub standby_seconds: u8,
     pub limit_hours: u8,
     pub limit_minutes: u8,
+    /// Advertised by BW600 firmware with the CDxn USB extension.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cycle_count: Option<u8>,
 }
 
 #[derive(Debug, Clone)]
@@ -78,6 +110,15 @@ pub fn query(address: u8, report_type: u8) -> [u8; REPORT_SIZE] {
 }
 
 pub fn parse(data: &[u8], address: u8, timestamp: u64) -> Result<Report, ProtocolError> {
+    parse_for_model(data, address, timestamp, LoadModel::Standard)
+}
+
+pub fn parse_for_model(
+    data: &[u8],
+    address: u8,
+    timestamp: u64,
+    model: LoadModel,
+) -> Result<Report, ProtocolError> {
     if data.len() != REPORT_SIZE || data[..2] != [0xaa, 0x05] || data[2] != address {
         return Err(ProtocolError::InvalidFrame);
     }
@@ -116,7 +157,12 @@ pub fn parse(data: &[u8], address: u8, timestamp: u64) -> Result<Report, Protoco
             stage_code: Some(data[54]),
         })),
         3 => {
-            let has_target = matches!(data[48], 0..=3 | 7 | 8);
+            // BW600 V2.0.3 leaves this byte at the 0x66 fill value. V2.0.5
+            // sends the configured CDxn count, with the panel range 1–99.
+            let cycle_count =
+                (model == LoadModel::Bw600 && (1..=99).contains(&data[55])).then_some(data[55]);
+            let has_target =
+                matches!(data[48], 0..=3 | 7 | 8) || (data[48] == 9 && cycle_count.is_some());
             let mut numbers = [0.0; 11];
             for (i, value) in numbers.iter_mut().enumerate() {
                 if i == 0 && !has_target {
@@ -148,6 +194,7 @@ pub fn parse(data: &[u8], address: u8, timestamp: u64) -> Result<Report, Protoco
                 standby_seconds: data[52],
                 limit_hours: data[53],
                 limit_minutes: data[54],
+                cycle_count,
             }))
         }
         other => Err(ProtocolError::UnknownReport(other)),
@@ -198,12 +245,16 @@ impl Command {
                 "standbySeconds" => close(s.standby_seconds as f64),
                 "limitHours" => close(s.limit_hours as f64),
                 "limitMinutes" => close(s.limit_minutes as f64),
+                "cycleCount" => s.cycle_count.is_some_and(|count| close(f64::from(count))),
                 "language" => close(s.language as f64),
                 _ => false,
             },
-            // A mode selection is complete only when the requested mode is read back.
+            // Mode, stage, run state and cycle count require a matching readback.
             Report::Ack { status, .. } => {
-                !matches!(self.kind.as_str(), "mode" | "stage") && *status == 1
+                !matches!(
+                    self.kind.as_str(),
+                    "mode" | "stage" | "cycleCount" | "running"
+                ) && *status == 1
             }
         }
     }
@@ -215,6 +266,14 @@ impl Command {
         let mut frame = [0; REPORT_SIZE];
         frame[..3].copy_from_slice(&[0x55, 0x05, address]);
         frame[8..10].copy_from_slice(&[0xee, 0xff]);
+        if self.kind == "cycleCount" {
+            if value.fract() != 0.0 || !(1.0..=99.0).contains(&value) {
+                return Err(ProtocolError::InvalidParameter(self.kind.clone()));
+            }
+            frame[3] = 0x37;
+            frame[7] = value as u8;
+            return Ok(frame);
+        }
         if self.kind == "stage" {
             if value.fract() != 0.0 || !matches!(value as i32, 1 | 2 | 3 | 5) {
                 return Err(ProtocolError::InvalidParameter(self.kind.clone()));
@@ -317,6 +376,70 @@ mod tests {
             .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
             .collect()
     }
+    #[test]
+    fn captured_bw600_settings_and_telemetry_are_decoded_without_rescaling() {
+        // Replies emitted by V2.0.5 in the official application's HID capture.
+        let frame = hex("aa0501033f8000003f8000003f7df0163f7b24e73f800000408fffff412000004120000043c8000042c8000042c80000000109093c02000a666666666666eeff");
+        let Report::Settings(settings) = parse_for_model(&frame, 1, 10, LoadModel::Bw600).unwrap()
+        else {
+            panic!("expected BW600 settings");
+        };
+        assert_eq!(settings.mode, 0);
+        assert_eq!(settings.target, Some(1.0));
+        assert_eq!(settings.cutoff_voltage, 1.0);
+        assert_eq!(settings.cycle_count, Some(10));
+        let bytes = hex("aa05010500000000000000005e26010000000000000000006a4100001c100d00007d00005954000082560100a08601000000000000000000000000008000eeff");
+        let Report::Telemetry(t) = parse_for_model(&bytes, 1, 11, LoadModel::Bw600).unwrap() else {
+            panic!("expected BW600 telemetry");
+        };
+        assert_eq!(
+            (t.timestamp, t.current, t.energy, t.capacity),
+            (11, -75.358, Some(16.746), 856.092)
+        );
+        assert_eq!(t.mos_temperature, Some(87.682));
+        assert_eq!(t.running, Some(false));
+    }
+
+    #[test]
+    fn bw600_cd_xn_extension_uses_a_byte_at_offset_55_and_requires_readback() {
+        let mut frame = hex("aa0501033f8000003f8000003f7df0163f7b24e73f800000408fffff412000004120000043c8000042c8000042c80000090109093c02000a666666666666eeff");
+        let command = Command {
+            kind: "cycleCount".into(),
+            value: 10.0,
+            ..Default::default()
+        };
+        assert_eq!(
+            command.encode(1).unwrap()[..10],
+            hex("550501370000000aeeff")
+        );
+        assert!(!command.matches(&Report::Ack {
+            address: 1,
+            status: 1
+        }));
+        let report = parse_for_model(&frame, 1, 0, LoadModel::Bw600).unwrap();
+        assert!(command.matches(&report));
+        let Report::Settings(settings) = report else {
+            panic!()
+        };
+        assert_eq!(settings.target, Some(1.0));
+        assert_eq!(settings.cycle_count, Some(10));
+        assert!(!command.matches(&parse(&frame, 1, 0).unwrap()));
+        frame[55] = 0x66;
+        let Report::Settings(older) = parse_for_model(&frame, 1, 0, LoadModel::Bw600).unwrap()
+        else {
+            panic!()
+        };
+        assert_eq!((older.cycle_count, older.target), (None, None));
+        for value in [0.0, 1.5, 100.0] {
+            assert!(Command {
+                value,
+                ..command.clone()
+            }
+            .encode(1)
+            .is_err());
+        }
+    }
+
     #[test]
     fn captured_bw150_configuration() {
         let bytes=hex("aa0501034053332f3f8000003f7df0163f7b24e7401ffffe408666663d4ccccd4180000043c8000042c8000042c80000000109043c020066666666666666eeff");

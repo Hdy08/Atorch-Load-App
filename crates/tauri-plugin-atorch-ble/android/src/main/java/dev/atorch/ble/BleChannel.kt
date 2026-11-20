@@ -51,11 +51,11 @@ internal class BleChannel : Closeable {
             val c = g.getService(SERVICE)?.getCharacteristic(NOTIFY)
             if (c == null || c.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0 ||
                 c.properties and BluetoothGattCharacteristic.PROPERTY_WRITE == 0) {
-                fail("此设备没有 BW150 的 FFE0 / FFE1 双向服务"); return
+                fail("此设备没有 ATORCH 的 FFE0 / FFE1 双向服务"); return
             }
             val descriptor = c.getDescriptor(CCCD)
             if (descriptor == null || !g.setCharacteristicNotification(c, true)) {
-                fail("无法订阅 BW150 蓝牙数据"); return
+                fail("无法订阅 ATORCH 蓝牙数据"); return
             }
             val accepted = if (android.os.Build.VERSION.SDK_INT >= 33) {
                 g.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS

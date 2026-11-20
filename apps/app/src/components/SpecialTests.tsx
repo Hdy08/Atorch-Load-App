@@ -92,7 +92,7 @@ export function SpecialTests({
         ),
       ].join("\n") +
       "\n";
-    const path = await api.saveCsv(`BW150_special_${Date.now()}.csv`, content);
+    const path = await api.saveCsv(`Atorch_special_${Date.now()}.csv`, content);
     return path;
   };
   return (
@@ -135,19 +135,24 @@ export function SpecialTests({
               </strong>
             </div>
           </div>
-          {(mode === 7 || mode === 8) && (
+          {(mode === 7 ||
+            mode === 8 ||
+            (mode === 9 && settings?.cycleCount != null)) && (
             <p>
               循环设置：放电 {number(settings?.target)} A · 截止{" "}
               {number(settings?.cutoffVoltage)} V · 充满{" "}
               {number(settings?.fullVoltage)} V · 充电截止{" "}
-              {number(settings?.cutoffCurrent)}{" "}
-              A。请在“设备设置”核对电池参数，设备负责自动推进充放电流程。
+              {number(settings?.cutoffCurrent)} A
+              {mode === 9 ? ` · ${settings?.cycleCount} 次` : ""}。
+              {mode === 9
+                ? null
+                : "请在“设备设置”核对电池参数，设备负责自动推进充放电流程。"}
             </p>
           )}
-          {mode === 9 && (
+          {mode === 9 && settings?.cycleCount == null && (
             <Notification
               intent="info"
-              text="CDxn 可读取专用状态与记录结果；循环次数和阶段动作尚未核准，请在设备面板启动。"
+              text="请在设备面板设置循环次数并启动。"
             />
           )}
           {prompt ? (

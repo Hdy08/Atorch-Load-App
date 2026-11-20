@@ -50,7 +50,10 @@ async function fixture(
                 logs: [],
               };
             if (command === "get_history") return [];
-            if (command === "discover_devices") return hardware ? [device] : [];
+            if (command === "discover_devices")
+              return hardware
+                ? ((window as any).firmwareDevices ?? [device])
+                : [];
             if (command === "get_usb_diagnostics") return null;
             if (command === "inspect_firmware") {
               if (fail) throw Error("固件编码无效");
@@ -196,6 +199,34 @@ test("the USB card appears only after inspection and keeps refresh and flash bes
   ).toHaveLength(0);
 });
 
+test("an unselected USB target is a prompt, with only devices in the menu", async ({
+  page,
+}) => {
+  await fixture(page, false, true, false, true, "ATORCH DL24 V1.1.0");
+  await page.evaluate(() => {
+    (window as any).firmwareDevices = [
+      { path: "test-usb-path", name: "ATORCH DL24 V1.1.0", serial: "924415" },
+      { path: "other-usb-path", name: "ATORCH BW150 V1.1.0", serial: "123456" },
+    ];
+  });
+  await page.getByTestId("firmware-input").setInputFiles(file("DL24.bin"));
+  const selector = page.getByRole("button", {
+    name: "升级 USB 设备",
+    exact: true,
+  });
+  await expect(selector).toHaveText("请选择 USB 设备");
+  await expect(
+    page.getByRole("button", { name: "刷写", exact: true }),
+  ).toBeDisabled();
+  await selector.click();
+  await expect(page.getByRole("menuitemradio")).toHaveCount(2);
+  await page.getByRole("menuitemradio", { name: /ATORCH DL24/ }).click();
+  await expect(selector).toHaveText("ATORCH DL24 V1.1.0 · 924415");
+  await expect(
+    page.getByRole("button", { name: "刷写", exact: true }),
+  ).toBeEnabled();
+});
+
 test("firmware status has four full-width rows and its log button opens the native job file", async ({
   page,
 }, testInfo) => {
@@ -253,6 +284,10 @@ test("firmware status has four full-width rows and its log button opens the nati
     });
     const progress = (await job.getByRole("progressbar").boundingBox())!;
     expect(Math.abs(progress.width - bounds.width)).toBeLessThan(1);
+    const blocks = (await job.getByText("1/2", { exact: true }).boundingBox())!;
+    expect(
+      Math.abs(blocks.x + blocks.width - progress.x - progress.width),
+    ).toBeLessThan(1);
     await page.screenshot({
       path: testInfo.outputPath(`firmware-compact-${width}.png`),
       fullPage: true,

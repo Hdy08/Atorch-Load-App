@@ -1,13 +1,18 @@
-//! Legacy DC notifications recovered from E-test and a real BW150_BLE.
-//! BW150 accepts seven named 10-byte panel commands. USB commands are distinct.
+//! Legacy DC notifications and panel commands used by ATORCH loads with FFE0 / FFE1.
 use crate::{ProtocolError, Telemetry};
 use serde::{Deserialize, Serialize};
+
+/// FFE0 is also advertised by unrelated devices. Match a known load name first.
+pub fn is_supported_name(name: &str) -> bool {
+    let name = name.trim();
+    name.to_ascii_uppercase().starts_with("BW150")
+        || crate::LoadModel::from_name(name) != crate::LoadModel::Standard
+}
 
 const HEADER: [u8; 4] = [0xff, 0x55, 0x01, 0x02];
 pub const FRAME_SIZE: usize = 36;
 
-/// BW150 V1.1.0's receive callback accepts only these opcodes. In particular,
-/// the meter APK's backlight/tariff commands are NOT implemented by this load.
+/// Supported panel operations from the vendor's E-test app.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Command {
@@ -65,7 +70,7 @@ pub fn validate_command(bytes: &[u8]) -> Result<(), String> {
     {
         Ok(())
     } else {
-        Err("此报文不是 BW150 已核准的蓝牙面板命令".into())
+        Err("不支持此 ATORCH 蓝牙面板命令".into())
     }
 }
 
@@ -136,6 +141,23 @@ mod tests {
             .chunks(2)
             .map(|p| u8::from_str_radix(std::str::from_utf8(p).unwrap(), 16).unwrap())
             .collect()
+    }
+    #[test]
+    fn recognizes_supported_load_advertisements_and_rejects_other_ffe0_devices() {
+        for name in [
+            "DL24",
+            "DL24_BLE",
+            "dl24p-ble",
+            "ATORCH DL24",
+            "BW150_BLE",
+            "BW600_BLE",
+            "ATORCH BW600-DK",
+        ] {
+            assert!(is_supported_name(name), "{name}");
+        }
+        for name in ["DL240", "DL24EW", "BW6000", "HMSoft", "Not DL24", "ATORCH"] {
+            assert!(!is_supported_name(name), "{name}");
+        }
     }
     #[test]
     fn panel_commands_match_the_reference_apk_and_real_gatt_captures() {

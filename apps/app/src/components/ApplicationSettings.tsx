@@ -129,7 +129,7 @@ export function ApplicationSettings({
               scale < 50 ||
               scale > 200
             ) {
-              notify({ text: "界面缩放范围为 50%–200%", error: true });
+              notify({ text: "缩放范围为 50%–200%", error: true });
               return;
             }
             if (!/^#[0-9a-f]{6}$/i.test(draft.accentColor)) {
@@ -141,7 +141,7 @@ export function ApplicationSettings({
           }}
         >
           <Card>
-            <h2>外观</h2>
+            <h2>界面</h2>
             <Field label="主题">
               <MenuSelect
                 aria-label="主题"
@@ -159,10 +159,10 @@ export function ApplicationSettings({
                 ]}
               />
             </Field>
-            <Field label="界面缩放">
+            <Field label="缩放">
               <div className="appearance-scale">
                 <Slider
-                  aria-label="界面缩放滑动条"
+                  aria-label="缩放滑动条"
                   min={50}
                   max={200}
                   input={{ step: 1 }}
@@ -174,7 +174,7 @@ export function ApplicationSettings({
                   onChange={(_, data) => setScaleText(String(data.value))}
                 />
                 <NumericInput
-                  aria-label="界面缩放"
+                  aria-label="缩放"
                   min={50}
                   max={200}
                   step={1}
@@ -223,22 +223,20 @@ export function ApplicationSettings({
           </Card>
           <Card>
             <h2>强调色</h2>
-            <Field label="强调色来源">
-              <MenuSelect
-                aria-label="强调色来源"
-                value={draft.accent}
-                onChange={(value) =>
-                  setDraft({
-                    ...draft,
-                    accent: value as Appearance["accent"],
-                  })
-                }
-                options={[
-                  { value: "system", label: "跟随系统" },
-                  { value: "custom", label: "自定义" },
-                ]}
-              />
-            </Field>
+            <MenuSelect
+              aria-label="强调色来源"
+              value={draft.accent}
+              onChange={(value) =>
+                setDraft({
+                  ...draft,
+                  accent: value as Appearance["accent"],
+                })
+              }
+              options={[
+                { value: "system", label: "跟随系统" },
+                { value: "custom", label: "自定义" },
+              ]}
+            />
             <SwatchPicker
               aria-label="强调色预设"
               selectedValue={
@@ -261,33 +259,31 @@ export function ApplicationSettings({
                 />
               ))}
             </SwatchPicker>
-            <Field label="颜色">
-              <Input
-                aria-label="强调色"
-                className="accent-color-input"
-                value={
-                  draft.accent === "system" ? systemAccent : draft.accentColor
-                }
-                maxLength={7}
-                onChange={(_, data) =>
-                  setDraft({
-                    ...draft,
-                    accent: "custom",
-                    accentColor: data.value,
-                  })
-                }
-                contentAfter={
-                  <Button
-                    type="button"
-                    appearance="subtle"
-                    size="small"
-                    aria-label="强调色取色器"
-                    icon={<Eyedropper20Regular />}
-                    onClick={() => picker.current?.click()}
-                  />
-                }
-              />
-            </Field>
+            <Input
+              aria-label="强调色"
+              className="accent-color-input"
+              value={
+                draft.accent === "system" ? systemAccent : draft.accentColor
+              }
+              maxLength={7}
+              onChange={(_, data) =>
+                setDraft({
+                  ...draft,
+                  accent: "custom",
+                  accentColor: data.value,
+                })
+              }
+              contentAfter={
+                <Button
+                  type="button"
+                  appearance="subtle"
+                  size="small"
+                  aria-label="强调色取色器"
+                  icon={<Eyedropper20Regular />}
+                  onClick={() => picker.current?.click()}
+                />
+              }
+            />
             <input
               ref={picker}
               className="axis-native-color"
@@ -362,24 +358,22 @@ export function ApplicationSettings({
           }}
         >
           <Card>
-            <h2>连接</h2>
-            <Field label="自动连接">
-              <MenuSelect
-                aria-label="自动连接"
-                disabled={busy}
-                value={connectionDraft}
-                onChange={(value) =>
-                  setConnectionDraft(value as AutoConnectPreference)
-                }
-                options={[
-                  { value: "off", label: "关" },
-                  { value: "prefer-usb", label: "优先 USB" },
-                  { value: "prefer-ble", label: "优先 BLE" },
-                  { value: "usb-only", label: "仅 USB" },
-                  { value: "ble-only", label: "仅 BLE" },
-                ]}
-              />
-            </Field>
+            <h2>自动连接</h2>
+            <MenuSelect
+              aria-label="自动连接"
+              disabled={busy}
+              value={connectionDraft}
+              onChange={(value) =>
+                setConnectionDraft(value as AutoConnectPreference)
+              }
+              options={[
+                { value: "prefer-usb", label: "优先 USB" },
+                { value: "prefer-ble", label: "优先 BLE" },
+                { value: "usb-only", label: "仅 USB" },
+                { value: "ble-only", label: "仅 BLE" },
+                { value: "off", label: "关" },
+              ]}
+            />
           </Card>
         </form>
       </section>

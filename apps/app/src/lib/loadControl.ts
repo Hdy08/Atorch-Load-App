@@ -1,4 +1,4 @@
-import type { DeviceSettings } from "./types";
+import type { DeviceSettings, LoadLimits } from "./types";
 
 export type LoadParameterRange = {
   label: string;
@@ -10,6 +10,14 @@ export type LoadParameterRange = {
 };
 
 const deviceParameterRanges = {
+  cycleCount: {
+    label: "循环次数",
+    unit: "次",
+    min: 1,
+    max: 99,
+    step: 1,
+    digits: 0,
+  },
   fullVoltage: {
     label: "充电上限电压",
     unit: "V",
@@ -84,6 +92,7 @@ export function loadParameterRange(
     DeviceSettings,
     "mode" | "target" | "cutoffVoltage" | "overCurrent" | "overPower"
   >,
+  limits: LoadLimits = { voltage: 100, current: 20, power: 400 },
 ): LoadParameterRange {
   const target = settings.target ?? 0;
   switch (kind) {
@@ -94,7 +103,7 @@ export function loadParameterRange(
             label: "目标电压",
             unit: "V",
             min: rounded(settings.cutoffVoltage, 2),
-            max: 100,
+            max: limits.voltage,
             step: 0.1,
             digits: 2,
           };
@@ -112,16 +121,16 @@ export function loadParameterRange(
             label: "目标功率",
             unit: "W",
             min: 0,
-            max: Math.min(400, rounded(settings.overPower, 1)),
+            max: Math.min(limits.power, rounded(settings.overPower, 1)),
             step: 1,
             digits: 1,
           };
         default:
           return {
-            label: "目标电流",
+            label: settings.mode === 9 ? "放电电流" : "目标电流",
             unit: "A",
             min: 0,
-            max: Math.min(20, rounded(settings.overCurrent, 3)),
+            max: Math.min(limits.current, rounded(settings.overCurrent, 3)),
             step: 0.1,
             digits: 3,
           };
@@ -131,7 +140,10 @@ export function loadParameterRange(
         label: "截止电压",
         unit: "V",
         min: 0,
-        max: settings.mode === 1 ? Math.min(100, rounded(target, 2)) : 100,
+        max:
+          settings.mode === 1
+            ? Math.min(limits.voltage, rounded(target, 2))
+            : limits.voltage,
         step: 0.1,
         digits: 2,
       };
@@ -139,8 +151,9 @@ export function loadParameterRange(
       return {
         label: "过流保护",
         unit: "A",
-        min: settings.mode === 0 ? rounded(target, 3) : 0,
-        max: 20,
+        min:
+          settings.mode === 0 || settings.mode === 9 ? rounded(target, 3) : 0,
+        max: limits.current,
         step: 0.1,
         digits: 3,
       };
@@ -149,7 +162,7 @@ export function loadParameterRange(
         label: "过功率保护",
         unit: "W",
         min: settings.mode === 3 ? rounded(target, 1) : 0,
-        max: 400,
+        max: limits.power,
         step: 1,
         digits: 1,
       };

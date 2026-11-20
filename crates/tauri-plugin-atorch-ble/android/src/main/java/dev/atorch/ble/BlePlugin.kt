@@ -86,9 +86,9 @@ class BlePlugin(private val activity: Activity) : Plugin(activity) {
                 override fun onScanResult(type: Int, result: ScanResult) { main.post {
                     if (callback !== this || scanInvoke == null) return@post
                     val name = result.scanRecord?.deviceName ?: runCatching { result.device.name }.getOrNull() ?: return@post
-                    // Sharing FFE0 alone does not identify a BW150. Never offer
+                    // Sharing FFE0 alone does not identify an ATORCH load. Never offer
                     // nearby unrelated power meters as a compatible device.
-                    if (!name.uppercase().startsWith("BW150")) return@post
+                    if (!BlePacket.isSupportedName(name)) return@post
                     val path = "ble://${result.device.address}"
                     candidates[path] = JSObject().put("path", path).put("name", name).put("serial", "")
                         .put("vendorId", 0).put("productId", 0).put("transport", "bluetooth").put("rssi", result.rssi)
@@ -128,7 +128,7 @@ class BlePlugin(private val activity: Activity) : Plugin(activity) {
         val path = invoke.parseArgs(OpenArgs::class.java).path
         val info = candidates[path]
         if (info == null || !path.matches(Regex("ble://([0-9A-F]{2}:){5}[0-9A-F]{2}"))) {
-            invoke.reject("请先扫描并选择 BW150 蓝牙设备"); return
+            invoke.reject("请先扫描并选择 ATORCH 蓝牙设备"); return
         }
         finish(null)
         perform(invoke) {

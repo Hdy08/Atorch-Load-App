@@ -236,7 +236,7 @@ for (const dark of [false, true]) {
     );
     await expect(page.locator(".device-connection-status")).toHaveCSS(
       "color",
-      rgb(theme.colorStatusSuccessForeground1),
+      rgb(theme.colorPaletteGreenForeground1),
     );
     await expect(page.locator(".sidebar-device-name strong")).toHaveCSS(
       "font-size",
@@ -279,7 +279,7 @@ for (const dark of [false, true]) {
     await expect(button).toBeDisabled();
     await expect(page.locator(".device-connection-status")).toHaveCSS(
       "color",
-      rgb(theme.colorStatusDangerForeground1),
+      rgb(theme.colorPaletteRedForeground1),
     );
     await expect(button).toHaveCSS(
       "background-color",

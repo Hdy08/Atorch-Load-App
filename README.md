@@ -2,7 +2,7 @@
 
 **当前版本 0.1.0** · **Windows / Android**
 
-面向 ATORCH BW150 电子负载的监控与控制应用，使用 Tauri、React 和 Fluent UI 构建。
+面向 ATORCH BW150、DL24 和 BW600 电子负载的监控与控制应用，使用 Tauri、React 和 Fluent UI 构建。
 
 ## 主要功能
 

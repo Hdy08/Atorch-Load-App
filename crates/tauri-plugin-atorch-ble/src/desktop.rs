@@ -135,7 +135,7 @@ pub fn discover() -> Result<Vec<DeviceInfo>, String> {
                 let Some(name) = properties.local_name else {
                     continue;
                 };
-                if !name.to_ascii_uppercase().starts_with("BW150") {
+                if !atorch_protocol::ble::is_supported_name(&name) {
                     continue;
                 }
                 let path = format!("ble://{}", peripheral.id());
@@ -171,7 +171,7 @@ pub fn open(path: &str) -> Result<(DeviceInfo, Box<dyn Transport>), String> {
         .unwrap()
         .get(path)
         .cloned()
-        .ok_or("请先扫描并选择 BW150 蓝牙设备")?;
+        .ok_or("请先扫描并选择 ATORCH 蓝牙设备")?;
     stop_scan()?;
     let runtime = s.runtime.clone();
     runtime.block_on(async {
@@ -193,7 +193,7 @@ pub fn open(path: &str) -> Result<(DeviceInfo, Box<dyn Transport>), String> {
                         && c.properties
                             .contains(CharPropFlags::NOTIFY | CharPropFlags::WRITE)
                 })
-                .ok_or("此设备没有 BW150 的 FFE0 / FFE1 双向服务")?;
+                .ok_or("此设备没有 ATORCH 的 FFE0 / FFE1 双向服务")?;
             let mut notifications = peripheral
                 .notifications()
                 .await
